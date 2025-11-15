@@ -25,7 +25,7 @@ require __DIR__ . '/../layouts/header.php';
         <div class="col-md-10 offset-md-1 col-lg-8 offset-lg-2">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="mb-0">Biometrik Login</h4>
+                    <h4 class="mb-0">Setting</h4>
                 </div>
                 <div class="card-body">
                     <div id="biometricSection">
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const shortId = cred.credential_id.substring(0, 20) + '...';
                     
                     html += `
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="list-group-item d-flex justify-content-between align-items-center d-none">
                             <div>
                                 <div class="fw-semibold">Biometrik Credential</div>
                                 <small class="text-muted">ID: ${shortId}</small><br>
