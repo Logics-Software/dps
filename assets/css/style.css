@@ -825,14 +825,6 @@ header.app-header .navbar .container-fluid {
   .header-user-profile {
     order: 3;
   }
-
-  /* Container - Remove side margins on mobile */
-  .container {
-    margin-left: 0;
-    margin-right: 0;
-    padding-left: 0;
-    padding-right: 0;
-  }
 }
 
 /* Toast Messages - Bottom Left */
