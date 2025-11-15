@@ -40,18 +40,6 @@ if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
                     </button>
                 </div>
             </form>
-            
-            <!-- Biometric Login Section -->
-            <div id="biometricSection" class="text-center mt-3" style="display: none;">
-                <button type="button" id="btnBiometricLogin" class="btn btn-outline-primary w-100" style="display: none;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
-                        <path d="M12 11c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"></path>
-                        <path d="M12 3c-3.87 0-7 3.13-7 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"></path>
-                    </svg>
-                    Login dengan Biometrik (Fingerprint)
-                </button>
-                <div id="biometricError" class="alert alert-danger mt-2 mb-0" style="display: none;"></div>
-            </div>
         </div>
     </div>
 </div>
