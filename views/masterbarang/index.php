@@ -107,7 +107,7 @@ require __DIR__ . '/../layouts/header.php';
                             </div>
                             <div class="col-5 col-md-3 col-lg-1">
                                 <select name="per_page" class="form-select" onchange="this.form.submit()">
-                                    <?php foreach ([10, 20, 40, 60, 100] as $pp): ?>
+                                    <?php foreach ([10, 25, 50, 100, 200, 500, 1000] as $pp): ?>
                                     <option value="<?= $pp ?>" <?= $perPage == $pp ? 'selected' : '' ?>><?= $pp ?></option>
                                     <?php endforeach; ?>
                                 </select>
@@ -129,32 +129,32 @@ require __DIR__ . '/../layouts/header.php';
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlMasterbarang('kodebarang', $sortBy, $sortOrder, $search, $perPage, $filterPabrik, $filterGolongan, $filterSupplier, $filterStatus) ?>" class="sort-link">
-                                        Kode <?= getSortIconMasterbarang('kodebarang', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlMasterbarang('kodebarang', $sortBy, $sortOrder, $search, $perPage, $filterPabrik, $filterGolongan, $filterSupplier, $filterStatus) ?>">
+                                        Kode
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlMasterbarang('namabarang', $sortBy, $sortOrder, $search, $perPage, $filterPabrik, $filterGolongan, $filterSupplier, $filterStatus) ?>" class="sort-link">
-                                        Nama Barang <?= getSortIconMasterbarang('namabarang', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlMasterbarang('namabarang', $sortBy, $sortOrder, $search, $perPage, $filterPabrik, $filterGolongan, $filterSupplier, $filterStatus) ?>">
+                                        Nama Barang
                                     </a>
                                 </th>
                                 <th>Satuan</th>
                                 <th>Pabrik</th>
                                 <th>Golongan</th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlMasterbarang('hargajual', $sortBy, $sortOrder, $search, $perPage, $filterPabrik, $filterGolongan, $filterSupplier, $filterStatus) ?>" class="sort-link">
-                                        Harga Jual <?= getSortIconMasterbarang('hargajual', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlMasterbarang('hargajual', $sortBy, $sortOrder, $search, $perPage, $filterPabrik, $filterGolongan, $filterSupplier, $filterStatus) ?>">
+                                        Harga Jual
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlMasterbarang('stokakhir', $sortBy, $sortOrder, $search, $perPage, $filterPabrik, $filterGolongan, $filterSupplier, $filterStatus) ?>" class="sort-link">
-                                        Stok <?= getSortIconMasterbarang('stokakhir', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlMasterbarang('stokakhir', $sortBy, $sortOrder, $search, $perPage, $filterPabrik, $filterGolongan, $filterSupplier, $filterStatus) ?>">
+                                        Stok
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlMasterbarang('status', $sortBy, $sortOrder, $search, $perPage, $filterPabrik, $filterGolongan, $filterSupplier, $filterStatus) ?>" class="sort-link">
-                                        Status <?= getSortIconMasterbarang('status', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlMasterbarang('status', $sortBy, $sortOrder, $search, $perPage, $filterPabrik, $filterGolongan, $filterSupplier, $filterStatus) ?>">
+                                        Status
                                     </a>
                                 </th>
                                 <th>Aksi</th>

@@ -82,7 +82,7 @@ require __DIR__ . '/../layouts/header.php';
                             </div>
                             <div class="col-6 col-md-2">
                                 <select name="per_page" class="form-select" onchange="this.form.submit()">
-                                    <?php foreach ([10, 20, 40, 60, 100] as $pp): ?>
+                                    <?php foreach ([10, 25, 50, 100, 200, 500, 1000] as $pp): ?>
                                     <option value="<?= $pp ?>" <?= $perPage == $pp ? 'selected' : '' ?>><?= $pp ?></option>
                                     <?php endforeach; ?>
                                 </select>
@@ -104,35 +104,35 @@ require __DIR__ . '/../layouts/header.php';
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlMastersupplier('id', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        ID <?= getSortIconMastersupplier('id', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlMastersupplier('id', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        ID
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlMastersupplier('kodesupplier', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        Kode <?= getSortIconMastersupplier('kodesupplier', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlMastersupplier('kodesupplier', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        Kode
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlMastersupplier('namasupplier', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        Nama Supplier <?= getSortIconMastersupplier('namasupplier', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlMastersupplier('namasupplier', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        Nama Supplier
                                     </a>
                                 </th>
                                 <th>Alamat Supplier</th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlMastersupplier('kontakperson', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        Kontak Person <?= getSortIconMastersupplier('kontakperson', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlMastersupplier('kontakperson', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        Kontak Person
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlMastersupplier('notelepon', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        No Telepon <?= getSortIconMastersupplier('notelepon', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlMastersupplier('notelepon', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        No Telepon
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlMastersupplier('status', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        Status <?= getSortIconMastersupplier('status', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlMastersupplier('status', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        Status
                                     </a>
                                 </th>
                             </tr>

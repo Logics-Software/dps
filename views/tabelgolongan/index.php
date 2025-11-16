@@ -82,7 +82,7 @@ require __DIR__ . '/../layouts/header.php';
                             </div>
                             <div class="col-6 col-md-2">
                                 <select name="per_page" class="form-select" onchange="this.form.submit()">
-                                    <?php foreach ([10, 20, 40, 60, 100] as $pp): ?>
+                                    <?php foreach ([10, 25, 50, 100, 200, 500, 1000] as $pp): ?>
                                     <option value="<?= $pp ?>" <?= $perPage == $pp ? 'selected' : '' ?>><?= $pp ?></option>
                                     <?php endforeach; ?>
                                 </select>
@@ -104,29 +104,29 @@ require __DIR__ . '/../layouts/header.php';
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlTabelgolongan('id', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        ID <?= getSortIconTabelgolongan('id', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlTabelgolongan('id', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        ID
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlTabelgolongan('kodegolongan', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        Kode Golongan <?= getSortIconTabelgolongan('kodegolongan', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlTabelgolongan('kodegolongan', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        Kode Golongan
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlTabelgolongan('namagolongan', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        Nama Golongan <?= getSortIconTabelgolongan('namagolongan', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlTabelgolongan('namagolongan', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        Nama Golongan
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlTabelgolongan('status', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        Status <?= getSortIconTabelgolongan('status', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlTabelgolongan('status', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        Status
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrlTabelgolongan('created_at', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        Created At <?= getSortIconTabelgolongan('created_at', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrlTabelgolongan('created_at', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        Created At
                                     </a>
                                 </th>
                             </tr>

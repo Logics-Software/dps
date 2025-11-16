@@ -13,7 +13,7 @@ class MasterbarangController extends Controller {
         $filterSupplier = $_GET['kodesupplier'] ?? '';
         $filterStatus = isset($_GET['status']) ? strtolower(trim($_GET['status'])) : '';
 
-        $validPerPage = [10, 20, 40, 60, 100];
+        $validPerPage = [10, 25, 50, 100, 200, 500, 1000];
         if (!in_array($perPage, $validPerPage)) {
             $perPage = 10;
         }

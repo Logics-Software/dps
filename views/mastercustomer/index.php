@@ -109,36 +109,36 @@ require __DIR__ . '/../layouts/header.php';
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrl('id', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        ID <?= getSortIcon('id', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrl('id', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        ID
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrl('kodecustomer', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        Kode <?= getSortIcon('kodecustomer', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrl('kodecustomer', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        Kode
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrl('namacustomer', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        Nama Customer <?= getSortIcon('namacustomer', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrl('namacustomer', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        Nama Customer
                                     </a>
                                 </th>
                                 <th>Alamat Customer</th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrl('kotacustomer', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        Kota <?= getSortIcon('kotacustomer', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrl('kotacustomer', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        Kota
                                     </a>
                                 </th>
                                 <th>No Telepon</th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrl('status', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        Status <?= getSortIcon('status', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrl('status', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        Status
                                     </a>
                                 </th>
-                                <th class="sortable">
-                                    <a href="<?= getSortUrl('statuspkp', $sortBy, $sortOrder, $search, $perPage, $status) ?>" class="sort-link">
-                                        PKP <?= getSortIcon('statuspkp', $sortBy, $sortOrder) ?>
+                                <th class="th-sortable">
+                                    <a href="<?= getSortUrl('statuspkp', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                        PKP
                                     </a>
                                 </th>
                                 <th>Aksi</th>

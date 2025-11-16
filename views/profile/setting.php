@@ -9,13 +9,13 @@ require __DIR__ . '/../layouts/header.php';
 ?>
 
 <div class="container">
-    <div class="row mb-3">
+    <div class="breadcrumb-item">
         <div class="col-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="/profile">Profile</a></li>
-                    <li class="breadcrumb-item active">Settings</li>
+                    <li class="breadcrumb-item"><a href="/profile">Profil</a></li>
+                    <li class="breadcrumb-item active">Setting</li>
                 </ol>
             </nav>
         </div>
@@ -25,8 +25,11 @@ require __DIR__ . '/../layouts/header.php';
         <div class="col-md-10 offset-md-1 col-lg-8 offset-lg-2">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="mb-0">Setting</h4>
+                    <div class="d-flex align-items-center">
+                        <h4 class="mb-0">Setting</h4>
+                    </div>
                 </div>
+
                 <div class="card-body">
                     <div id="biometricSection">
                         <div id="biometricNotSupported" class="alert alert-warning mb-3" style="display: none;">
@@ -45,9 +48,12 @@ require __DIR__ . '/../layouts/header.php';
                         </div>
                         
                         <div id="biometricCredentialsList" class="mb-3" style="display: none;"></div>
-                        
                         <div id="biometricMessage" class="alert mb-0" style="display: none;"></div>
                     </div>
+                </div>
+
+                <div class="card-footer d-flex justify-content-between">
+                    <a href="/dashboard" class="btn btn-secondary">Kembali</a>
                 </div>
             </div>
         </div>

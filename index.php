@@ -81,6 +81,32 @@ $router->post('/mastercustomer/{id}/coordinates', 'MastercustomerController', 'u
 // Master Supplier routes
 $router->get('/mastersupplier', 'MastersupplierController', 'index');
 
+// Master Sales routes
+$router->get('/mastersales', 'MastersalesController', 'index');
+
+// Order transaction routes
+$router->get('/orders', 'OrderController', 'index');
+$router->get('/orders/create', 'OrderController', 'create');
+$router->post('/orders/create', 'OrderController', 'create');
+$router->get('/orders/view/{noorder}', 'OrderController', 'show');
+$router->get('/orders/edit/{noorder}', 'OrderController', 'edit');
+$router->post('/orders/edit/{noorder}', 'OrderController', 'edit');
+$router->get('/orders/delete/{noorder}', 'OrderController', 'delete');
+
+// Penjualan routes
+$router->get('/penjualan', 'PenjualanController', 'index');
+$router->get('/penjualan/view/{nopenjualan}', 'PenjualanController', 'show');
+
+// Penerimaan Piutang routes
+$router->get('/penerimaan', 'PenerimaanController', 'index');
+$router->get('/penerimaan/create', 'PenerimaanController', 'create');
+$router->post('/penerimaan/create', 'PenerimaanController', 'create');
+$router->get('/penerimaan/view/{nopenerimaan}', 'PenerimaanController', 'show');
+$router->get('/penerimaan/edit/{nopenerimaan}', 'PenerimaanController', 'edit');
+$router->post('/penerimaan/edit/{nopenerimaan}', 'PenerimaanController', 'edit');
+$router->get('/penerimaan/delete/{nopenerimaan}', 'PenerimaanController', 'delete');
+$router->get('/penerimaan/get-available-penjualan', 'PenerimaanController', 'getAvailablePenjualan');
+
 // Tabel Aktivitas routes
 $router->get('/tabelaktivitas', 'TabelaktivitasController', 'index');
 $router->get('/tabelaktivitas/create', 'TabelaktivitasController', 'create');

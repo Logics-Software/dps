@@ -9,7 +9,7 @@ class UserController extends Controller {
         $sortBy = $_GET['sort_by'] ?? 'id';
         $sortOrder = $_GET['sort_order'] ?? 'ASC';
         
-        $validPerPage = [10, 20, 40, 60, 100];
+        $validPerPage = [10, 25, 50, 100, 200, 500, 1000];
         if (!in_array($perPage, $validPerPage)) {
             $perPage = 10;
         }

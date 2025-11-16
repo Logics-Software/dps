@@ -134,8 +134,9 @@ small,
 
 /* Form Elements - Mobile */
 button,
-.btn {
+.btn-filter {
   font-size: 0.9375rem;
+  padding: 0.75rem 1rem;
 }
 
 input,
@@ -157,6 +158,16 @@ label {
 .card {
   border-radius: 0.5rem;
   overflow: hidden;
+}
+
+/* Card Footer - Equal Top and Bottom Padding */
+.card-footer {
+  border-radius: 0, 0, 0.75rem 0.75rem;
+  overflow: hidden;
+}
+
+.card-footer {
+  padding: 1rem 1rem;
 }
 
 /* Card Header - Equal Top and Bottom Padding */
@@ -238,8 +249,9 @@ label {
   }
 
   button,
-  .btn {
-    font-size: 1rem;
+  .btn-filter {
+    font-size: 0.9375rem;
+    padding: 0.8rem 1rem;
   }
 
   input,
@@ -904,9 +916,29 @@ header.app-header .navbar .container-fluid {
     padding: 0.75rem 1rem;
   }
 
+  /* Card Footer - Equal Top and Bottom Padding */
+  .card-footer {
+    border-radius: 0.75rem 0.75rem 0 0;
+    overflow: hidden;
+  }
+
+  .card-footer {
+    padding: 1rem 1rem;
+  }
+
   .container {
     margin-top: 1rem;
-    margin-bottom: 0;
+    margin-bottom: 1rem;
+  }
+
+  button,
+  .btn {
+    border-radius: 0.5rem;
+  }
+
+  .btn-filter {
+    font-size: 0.9375rem;
+    padding: 0.65rem 1rem;
   }
 
   .toast-container {
@@ -1011,6 +1043,9 @@ header.app-header .navbar .container-fluid {
   background-color: #ffffff;
 }
 
+.form-control::placeholder {
+  font-size: 0.9rem;
+}
 .form-control:focus {
   border-color: #0b0e1a;
   box-shadow: 0 0 0 3px rgba(11, 14, 26, 0.1);
@@ -1060,6 +1095,8 @@ header.app-header .navbar .container-fluid {
   color: rgba(141, 146, 156, 0.2);
   transition: color 0.2s ease, opacity 0.2s ease;
   z-index: 10;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .password-toggle-btn:hover {
@@ -1081,6 +1118,13 @@ header.app-header .navbar .container-fluid {
 
 .password-toggle-btn:hover .icon-inline {
   opacity: 0.6;
+}
+
+/* Show toggle only on hover or focus within the wrapper */
+.password-input-wrapper:hover .password-toggle-btn,
+.password-input-wrapper:focus-within .password-toggle-btn {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Login Button */
@@ -1116,6 +1160,11 @@ header.app-header .navbar .container-fluid {
 /* Login Icon */
 .login-btn .icon-inline {
   filter: brightness(0) invert(1);
+}
+
+/* Breadcrumb item spacing similar to mb-3 */
+.breadcrumb-item {
+  margin-bottom: 0;
 }
 
 /* Mobile Responsive - Login */
@@ -1177,6 +1226,35 @@ header.app-header .navbar .container-fluid {
     padding: 0.75rem 1.25rem;
     font-size: 0.9375rem;
   }
+
+  /* Also hide breadcrumb items on small screens */
+  .breadcrumb-item {
+    display: none;
+  }
+
+  /* Mobile back button in card headers */
+  .mobile-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    margin-right: 0;
+    margin-left: -0.75rem;
+    color: #0b0e1a;
+  }
+
+  .mobile-back-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(11, 14, 26, 0.15);
+  }
+
+  .mobile-back-btn:hover {
+    background: rgba(11, 14, 26, 0.05);
+  }
 }
 
 /* Biometric Toggle Switch */
@@ -1199,6 +1277,187 @@ header.app-header .navbar .container-fluid {
 
 .form-check-label {
   cursor: pointer;
+}
+
+/* ========================================
+   GLOBAL TABLE STYLES
+   ======================================== */
+
+/* Vertically center all table headers and cells */
+table th,
+table td,
+.table th,
+.table td {
+  vertical-align: middle;
+}
+
+/* Show full grid lines for tables */
+table,
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table th,
+.table td,
+table th,
+table td {
+  border: 0.5px solid #e5e7eb;
+}
+
+.table thead th,
+table thead th {
+  background-color: #f9fafb;
+  text-align: center;
+}
+
+.table {
+  border: 0.5px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Table font-size and header height are configurable via CSS variables */
+.table {
+  --table-font-size: 0.95rem;
+  --table-header-font-size: 0.95rem;
+  --table-header-padding-y: 0.875rem; /* vertical padding controls header height */
+  --table-header-padding-x: 0.75rem;
+}
+
+.table,
+table {
+  font-size: var(--table-font-size);
+}
+
+.table thead th,
+table thead th {
+  font-size: var(--table-header-font-size);
+  padding-top: var(--table-header-padding-y);
+  padding-bottom: var(--table-header-padding-y);
+  padding-left: var(--table-header-padding-x);
+  padding-right: var(--table-header-padding-x);
+}
+
+/* Helpers to quickly adjust table font-size */
+.table-font-xs {
+  --table-font-size: 0.8125rem;
+  --table-header-font-size: 0.8125rem;
+}
+.table-font-sm {
+  --table-font-size: 0.875rem;
+  --table-header-font-size: 0.875rem;
+}
+.table-font-md {
+  --table-font-size: 0.95rem;
+  --table-header-font-size: 0.95rem;
+}
+.table-font-lg {
+  --table-font-size: 1rem;
+  --table-header-font-size: 1rem;
+}
+.table-font-xl {
+  --table-font-size: 1.125rem;
+  --table-header-font-size: 1.0625rem;
+}
+
+/* Helpers to quickly adjust header height/padding */
+.table-header-compact {
+  --table-header-padding-y: 0.5rem;
+}
+.table-header-normal {
+  --table-header-padding-y: 0.875rem;
+}
+.table-header-comfortable {
+  --table-header-padding-y: 1.125rem;
+}
+.table-header-roomy {
+  --table-header-padding-y: 1.375rem;
+}
+
+/* Table header links (sortable / non-sortable) - remove text decorations */
+.table thead th a,
+.table thead th a:hover,
+.table thead th a:focus,
+table thead th a,
+table thead th a:hover,
+table thead th a:focus,
+.th-sortable > a,
+.th-sortable > a:hover,
+.th-sortable > a:focus,
+.th-non-sortable > a,
+.th-non-sortable > a:hover,
+.th-non-sortable > a:focus {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Sort icons for sortable headers */
+.table thead th.th-sortable a,
+table thead th.th-sortable a {
+  position: relative;
+  padding-right: 1.25rem; /* space for icon */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.table thead th.th-sortable a::after,
+table thead th.th-sortable a::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  background: url("/assets/icons/sort.svg") center center / 14px 14px no-repeat;
+  opacity: 0.3; /* slightly brighter */
+  filter: grayscale(100%) brightness(1.4) contrast(0.85);
+}
+
+.table thead th.th-sortable.sorted-asc a::after,
+table thead th.th-sortable.sorted-asc a::after {
+  background-image: url("/assets/icons/sort-up.svg");
+  opacity: 0.3;
+  filter: grayscale(100%) brightness(1.2) contrast(0.9);
+}
+
+.table thead th.th-sortable.sorted-desc a::after,
+table thead th.th-sortable.sorted-desc a::after {
+  background-image: url("/assets/icons/sort-down.svg");
+  opacity: 0.3;
+  filter: grayscale(100%) brightness(1.2) contrast(0.9);
+}
+
+/* Mobile-specific table sizing (configurable) */
+@media (max-width: 575.98px) {
+  .table,
+  table {
+    font-size: 0.875rem;
+  }
+  .table thead th,
+  table thead th {
+    padding-top: var(
+      --table-header-padding-y-mobile,
+      var(--table-header-padding-y, 0.65rem)
+    );
+    padding-bottom: var(
+      --table-header-padding-y-mobile,
+      var(--table-header-padding-y, 0.65rem)
+    );
+  }
+
+  /* Helpers: set mobile-only header padding (height) */
+  .table-header-mobile-compact {
+    --table-header-padding-y-mobile: 0.4rem;
+  }
+  .table-header-mobile-normal {
+    --table-header-padding-y-mobile: 0.65rem;
+  }
+  .table-header-mobile-comfortable {
+    --table-header-padding-y-mobile: 0.85rem;
+  }
+  .table-header-mobile-roomy {
+    --table-header-padding-y-mobile: 1rem;
+  }
 }
 
 /* Visit Module Styles */

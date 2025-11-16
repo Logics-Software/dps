@@ -9,12 +9,12 @@ require __DIR__ . '/../layouts/header.php';
 ?>
 
 <div class="container">
-    <div class="row mb-3">
+    <div class="breadcrumb-item">
         <div class="col-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="/profile">Profile</a></li>
+                    <li class="breadcrumb-item"><a href="/profile">Profil</a></li>
                     <li class="breadcrumb-item active">Ubah Password</li>
                 </ol>
             </nav>
@@ -25,10 +25,13 @@ require __DIR__ . '/../layouts/header.php';
         <div class="col-md-10 offset-md-1 col-lg-8 offset-lg-2">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="mb-0">Form Ubah Password</h4>
+                    <div class="d-flex align-items-center">
+                        <h4 class="mb-0">Ubah Password</h4>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="/profile/change-password">
+
+                <form method="POST" action="/profile/change-password">
+                    <div class="card-body">
                         <div class="mb-3">
                             <label for="current_password" class="form-label">Password Lama <span class="text-danger">*</span></label>
                             <div class="password-input-wrapper">
@@ -58,15 +61,13 @@ require __DIR__ . '/../layouts/header.php';
                                 </button>
                             </div>
                         </div>
-                        
-                        <hr class="my-4">
-                        
-                        <div class="d-flex justify-content-between">
-                            <a href="/profile" class="btn btn-secondary">Kembali</a>
-                            <button type="submit" class="btn btn-warning">Ubah Password</button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div class="card-footer d-flex justify-content-between">
+                        <a href="/dashboard" class="btn btn-secondary">Batal</a>
+                        <button type="submit" class="btn btn-warning">Ubah Password</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

@@ -99,25 +99,7 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                             </div>
                         </div>
                         <?php endif; ?>
-                        
-                        <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator', 'sales'])): ?>
-                        <div class="nav-dropdown">
-                            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
-                                Master
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
-                                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
-                            <div class="nav-dropdown-menu">
-                                <a href="/masterbarang" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/masterbarang') !== false ? 'active' : '' ?>">Master Barang</a>
-                                <a href="/mastercustomer" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/mastercustomer') !== false ? 'active' : '' ?>">Master Customer</a>
-                                <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator', 'sales'])): ?>
-                                <a href="/mastersales" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/mastersales') !== false ? 'active' : '' ?>">Master Sales</a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                        
+
                         <?php if (Auth::check() && (in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator', 'sales']))): ?>
                         <div class="nav-dropdown">
                             <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
@@ -137,6 +119,24 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                             </div>
                         </div>
                         <?php endif; ?>
+
+                        <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator', 'sales'])): ?>
+                        <div class="nav-dropdown">
+                            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
+                                Master
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
+                                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <div class="nav-dropdown-menu">
+                                <a href="/masterbarang" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/masterbarang') !== false ? 'active' : '' ?>">Master Barang</a>
+                                <a href="/mastercustomer" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/mastercustomer') !== false ? 'active' : '' ?>">Master Customer</a>
+                                <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator', 'sales'])): ?>
+                                <a href="/mastersales" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/mastersales') !== false ? 'active' : '' ?>">Master Sales</a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>                        
                     </nav>
 
                     <!-- User Profile Section -->
@@ -167,9 +167,9 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                                         <p class="dropdown-user-email"><?= htmlspecialchars($currentUser['email']) ?></p>
                                     <?php endif; ?>
                                 </div>
-                                <a href="/profile" class="dropdown-item">Profile</a>
-                                <a href="/profile/change-password" class="dropdown-item">Ubah Password</a>
-                                <a href="/settings" class="dropdown-item">Settings</a>
+                                <a href="/profile" class="dropdown-item"><?= icon('user-gear', 'me-2', 16) ?> Edit Profil</a>
+                                <a href="/profile/change-password" class="dropdown-item"><?= icon('key', 'me-2', 16) ?> Ubah Password</a>
+                                <a href="/settings" class="dropdown-item"><?= icon('gear', 'me-2', 16) ?> Setting</a>
                                 <div class="dropdown-divider"></div>
                                 <a href="/logout" class="dropdown-item danger">
                                     <?= icon('logout', 'me-2', 16) ?> Logout
@@ -265,6 +265,45 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                     toggle.closest('.nav-dropdown').classList.remove('show');
                 });
             }
+        });
+
+        // Inject mobile back buttons into card headers on small screens
+        function setupMobileBackButtons() {
+            var isSmall = window.matchMedia('(max-width: 575.98px)').matches;
+            if (!isSmall) return;
+
+            var headers = document.querySelectorAll('.card .card-header');
+            headers.forEach(function(header) {
+                if (header.querySelector('.mobile-back-btn')) return;
+
+                var container = header.querySelector('.d-flex') || header;
+                var title = header.querySelector('h4, h3, h2, .card-title');
+                if (!title) return;
+
+                // Resolve base URL from PHP for asset path
+                var baseUrl = <?= json_encode($baseUrl, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'mobile-back-btn';
+                btn.setAttribute('aria-label', 'Kembali');
+                btn.innerHTML = '<img src="' + baseUrl + '/assets/icons/arrow-left.svg" alt="Kembali" width="20" height="20" class="icon-inline">';
+                btn.addEventListener('click', function() {
+                    if (document.referrer && document.referrer !== window.location.href) {
+                        history.back();
+                    } else {
+                        window.location.href = "/dashboard";
+                    }
+                });
+
+                container.insertBefore(btn, title);
+            });
+        }
+
+        setupMobileBackButtons();
+        window.addEventListener('resize', function() {
+            // Re-run to add buttons if layout changes to small
+            setupMobileBackButtons();
         });
     });
     </script><?php endif; ?><?php require __DIR__ . '/../partials/alerts.php'; ?>

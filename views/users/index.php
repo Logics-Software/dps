@@ -25,12 +25,12 @@ require __DIR__ . '/../layouts/header.php';
 ?>
 
 <div class="container">
-    <div class="row mb-3">
+    <div class="breadcrumb-item">
         <div class="col-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Users</li>
+                    <li class="breadcrumb-item active">User</li>
                 </ol>
             </nav>
         </div>
@@ -39,12 +39,13 @@ require __DIR__ . '/../layouts/header.php';
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">Daftar Users</h4>
-                        <a href="/users/create" class="btn btn-primary btn-sm">+ Tambah User</a>
+				<div class="card-header">
+					<div class="d-flex align-items-center">
+                        <h4 class="mb-0">Daftar User</h4>
+						<a href="/users/create" class="btn btn-primary btn-sm ms-auto">Tambah User</a>
                     </div>
                 </div>
+                
                 <div class="card-body">
                     <div class="row mb-3">
                         <form method="GET" action="/users" id="searchForm">
@@ -54,16 +55,16 @@ require __DIR__ . '/../layouts/header.php';
                                 </div>
                                 <div class="col-4 col-md-2">
                                     <select name="per_page" class="form-select" onchange="this.form.submit()">
-                                        <?php foreach ([10, 20, 40, 60, 100] as $pp): ?>
+                                        <?php foreach ([10, 25, 50, 100, 200, 500, 1000] as $pp): ?>
                                         <option value="<?= $pp ?>" <?= $perPage == $pp ? 'selected' : '' ?>><?= $pp ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="col-4 col-md-2">
-                                    <button type="submit" class="btn btn-secondary w-100">Filter</button>
+                                    <button type="submit" class="btn btn-filter btn-secondary w-100">Filter</button>
                                 </div>
                                 <div class="col-4 col-md-2">
-                                    <a href="/users?page=1&per_page=10&sort_by=<?= htmlspecialchars($sortBy) ?>&sort_order=<?= htmlspecialchars($sortOrder) ?>" class="btn btn-outline-secondary w-100">Reset</a>
+                                    <a href="/users?page=1&per_page=10&sort_by=<?= htmlspecialchars($sortBy) ?>&sort_order=<?= htmlspecialchars($sortOrder) ?>" class="btn btn-filter btn-outline-secondary w-100">Reset</a>
                                 </div>
                             </div>
                             <input type="hidden" name="page" value="1">
@@ -76,15 +77,13 @@ require __DIR__ . '/../layouts/header.php';
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Foto</th>
-                                    <th>Username</th>
-                                    <th>Nama Lengkap</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Kode Sales</th>
-                                    <th>Status</th>
-                                    <th>Created At</th>
+                                    <th class="th-sortable"><a href="<?= getSortUrl('username', $sortBy, $sortOrder, $search, $perPage) ?>">Username</a></th>
+                                    <th class="th-sortable"><a href="<?= getSortUrl('namalengkap', $sortBy, $sortOrder, $search, $perPage) ?>">Nama</a></th>
+                                    <th class="th-sortable"><a href="<?= getSortUrl('email', $sortBy, $sortOrder, $search, $perPage) ?>">Email</a></th>
+                                    <th class="th-sortable"><a href="<?= getSortUrl('role', $sortBy, $sortOrder, $search, $perPage) ?>">Role</a></th>
+                                    <th class="th-sortable"><a href="<?= getSortUrl('kodesales', $sortBy, $sortOrder, $search, $perPage) ?>">Sales</a></th>
+                                    <th class="th-sortable"><a href="<?= getSortUrl('status', $sortBy, $sortOrder, $search, $perPage) ?>">Status</a></th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -96,8 +95,7 @@ require __DIR__ . '/../layouts/header.php';
                                 <?php else: ?>
                                 <?php foreach ($users as $user): ?>
                                 <tr>
-                                    <td align="center"><?= $user['id'] ?></td>
-                                    <td>
+                                    <td align="center">
                                         <?php if ($user['picture'] && file_exists(__DIR__ . '/../../uploads/' . $user['picture'])): ?>
                                         <img src="<?= htmlspecialchars($baseUrl) ?>/uploads/<?= htmlspecialchars($user['picture']) ?>" alt="Profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
                                         <?php else: ?>
@@ -109,19 +107,24 @@ require __DIR__ . '/../layouts/header.php';
                                     <td><?= htmlspecialchars($user['username']) ?></td>
                                     <td><?= htmlspecialchars($user['namalengkap']) ?></td>
                                     <td><?= htmlspecialchars($user['email']) ?></td>
-                                    <td><span class="badge bg-info"><?= ucfirst($user['role']) ?></span></td>
+                                    <td align="center"><span class="badge bg-info"><?= ucfirst($user['role']) ?></span></td>
                                     <td><?= htmlspecialchars($user['kodesales'] ?? '-') ?></td>
-                                    <td>
+                                    <td align="center">
                                         <span class="badge bg-<?= $user['status'] == 'aktif' ? 'success' : 'danger' ?>">
                                             <?= ucfirst($user['status']) ?>
                                         </span>
                                     </td>
-                                    <td><?= date('d/m/Y H:i', strtotime($user['created_at'])) ?></td>
                                     <td>
-                                        <a href="/users/edit/<?= $user['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-                                        <?php if ($user['id'] != Auth::user()['id']): ?>
-                                        <a href="/users/delete/<?= $user['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus user <?= htmlspecialchars($user['namalengkap']) ?>?')">Hapus</a>
-                                        <?php endif; ?>
+                                        <div class="btn-group" role="group" aria-label="Aksi User">
+                                            <a href="/users/edit/<?= $user['id'] ?>" class="btn btn-sm btn-warning" title="Edit">
+                                                <?= icon('pen-to-square', 'me-0 mb-1', 16) ?>
+                                            </a>
+                                            <?php if ($user['id'] != Auth::user()['id']): ?>
+                                            <a href="/users/delete/<?= $user['id'] ?>" class="btn btn-sm btn-danger" onclick="event.preventDefault(); confirmDelete('Apakah Anda yakin ingin menghapus user <?= htmlspecialchars($user['namalengkap']) ?>?', this.href); return false;" title="Hapus">
+                                                <?= icon('trash-can', 'me-0 mb-1', 16) ?>
+                                            </a>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
