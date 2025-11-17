@@ -178,6 +178,89 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
 
                     <!-- User Profile Section -->
                     <div class="header-user-profile">
+                        <?php
+                        // Get unread message count for bell icon
+                        $unreadCount = 0;
+                        if (Auth::check()) {
+                            try {
+                                // Ensure Message model is loaded (not core Message)
+                                require_once __DIR__ . '/../../models/Message.php';
+                                $messageModel = new Message();
+                                $unreadCount = $messageModel->getUnreadCount($currentUser['id']);
+                            } catch (Exception $e) {
+                                // Silently fail if Message model not available
+                            }
+                        }
+                        ?>
+                        <!-- Messages Bell Icon with Dropdown -->
+                        <div class="header-messages-dropdown" id="headerMessagesDropdown">
+                            <button class="header-messages-icon" type="button" id="headerMessagesToggle" title="Pesan Masuk" aria-expanded="false">
+                                <?= icon('bell-light', '', 20) ?>
+                                <?php if ($unreadCount > 0): ?>
+                                    <span class="badge bg-danger messages-badge"><?= $unreadCount > 99 ? '99+' : $unreadCount ?></span>
+                                <?php endif; ?>
+                            </button>
+                            <div class="messages-dropdown-menu" id="messagesDropdownMenu">
+                                <div class="messages-dropdown-header">
+                                    <h6 class="mb-0">Pesan Masuk</h6>
+                                    <a href="/messages" class="text-decoration-none small">Lihat Semua</a>
+                                </div>
+                                <div class="messages-dropdown-body">
+                                    <?php
+                                    $unreadMessages = [];
+                                    if ($unreadCount > 0) {
+                                        try {
+                                            $unreadMessages = $messageModel->getUnreadMessages($currentUser['id'], 10);
+                                        } catch (Exception $e) {
+                                            // Silently fail
+                                        }
+                                    }
+                                    
+                                    if (empty($unreadMessages)):
+                                    ?>
+                                        <div class="messages-empty text-center py-3 text-muted">
+                                            <small>Tidak ada pesan baru</small>
+                                        </div>
+                                    <?php else: ?>
+                                        <?php foreach ($unreadMessages as $msg): 
+                                            $timeAgo = '';
+                                            $createdAt = strtotime($msg['created_at']);
+                                            $now = time();
+                                            $diff = $now - $createdAt;
+                                            
+                                            if ($diff < 60) {
+                                                $timeAgo = 'Baru saja';
+                                            } elseif ($diff < 3600) {
+                                                $timeAgo = floor($diff / 60) . ' menit lalu';
+                                            } elseif ($diff < 86400) {
+                                                $timeAgo = floor($diff / 3600) . ' jam lalu';
+                                            } elseif ($diff < 604800) {
+                                                $timeAgo = floor($diff / 86400) . ' hari lalu';
+                                            } else {
+                                                $timeAgo = date('d M Y', $createdAt);
+                                            }
+                                            
+                                            $subject = htmlspecialchars($msg['subject'] ?? 'Tidak ada subjek');
+                                            $senderName = htmlspecialchars($msg['sender_name'] ?? 'Unknown');
+                                            $contentPreview = strip_tags($msg['content'] ?? '');
+                                            $contentPreview = mb_substr($contentPreview, 0, 50);
+                                            if (mb_strlen($msg['content'] ?? '') > 50) {
+                                                $contentPreview .= '...';
+                                            }
+                                        ?>
+                                            <a href="/messages/show/<?= $msg['id'] ?>" class="message-item">
+                                                <div class="message-item-header">
+                                                    <span class="message-sender"><?= $senderName ?></span>
+                                                    <span class="message-time"><?= $timeAgo ?></span>
+                                                </div>
+                                                <div class="message-subject"><?= $subject ?></div>
+                                                <div class="message-preview text-muted small"><?= htmlspecialchars($contentPreview) ?></div>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
                         <div class="user-profile-dropdown" id="userProfileDropdown">
                             <button class="user-profile-toggle" type="button" id="userProfileToggle" aria-expanded="false">
                                 <div class="user-avatar">
@@ -204,6 +287,13 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                                         <p class="dropdown-user-email"><?= htmlspecialchars($currentUser['email']) ?></p>
                                     <?php endif; ?>
                                 </div>
+                                <a href="/messages" class="dropdown-item">
+                                    <?= icon('envelope', 'me-2', 16) ?> Pesan
+                                    <?php if ($unreadCount > 0): ?>
+                                        <span class="badge bg-danger ms-auto"><?= $unreadCount ?></span>
+                                    <?php endif; ?>
+                                </a>
+                                <div class="dropdown-divider"></div>
                                 <a href="/profile" class="dropdown-item"><?= icon('user-gear', 'me-2', 16) ?> Edit Profil</a>
                                 <a href="/profile/change-password" class="dropdown-item"><?= icon('key', 'me-2', 16) ?> Ubah Password</a>
                                 <a href="/settings" class="dropdown-item"><?= icon('gear', 'me-2', 16) ?> Setting</a>
@@ -220,8 +310,24 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
     </header>
 
     <script>
-    // Toggle user profile dropdown
+    // Toggle messages dropdown
     document.addEventListener('DOMContentLoaded', function() {
+        const messagesDropdown = document.getElementById('headerMessagesDropdown');
+        const messagesToggle = document.getElementById('headerMessagesToggle');
+        
+        if (messagesToggle) {
+            messagesToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                messagesDropdown.classList.toggle('show');
+                // Close profile dropdown if open
+                const profileDropdown = document.getElementById('userProfileDropdown');
+                if (profileDropdown) {
+                    profileDropdown.classList.remove('show');
+                }
+            });
+        }
+        
+        // Toggle user profile dropdown
         const dropdown = document.getElementById('userProfileDropdown');
         const toggle = document.getElementById('userProfileToggle');
         
@@ -229,13 +335,20 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
             toggle.addEventListener('click', function(e) {
                 e.stopPropagation();
                 dropdown.classList.toggle('show');
+                // Close messages dropdown if open
+                if (messagesDropdown) {
+                    messagesDropdown.classList.remove('show');
+                }
             });
         }
         
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
-            if (!dropdown.contains(e.target)) {
+            if (dropdown && !dropdown.contains(e.target)) {
                 dropdown.classList.remove('show');
+            }
+            if (messagesDropdown && !messagesDropdown.contains(e.target)) {
+                messagesDropdown.classList.remove('show');
             }
         });
 

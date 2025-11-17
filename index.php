@@ -193,6 +193,19 @@ $router->get('/laporan/daftar-barang', 'LaporanController', 'daftarBarang');
 $router->get('/laporan/daftar-stok', 'LaporanController', 'daftarStok');
 $router->get('/laporan/daftar-harga', 'LaporanController', 'daftarHarga');
 
+// Message routes
+$router->get('/messages', 'MessageController', 'index');
+$router->get('/messages/sent', 'MessageController', 'sent');
+$router->get('/messages/create', 'MessageController', 'create');
+$router->post('/messages/store', 'MessageController', 'store');
+$router->get('/messages/show/{id}', 'MessageController', 'show');
+$router->get('/messages/delete/{id}', 'MessageController', 'delete');
+$router->get('/messages/search', 'MessageController', 'search');
+$router->get('/messages/searchUsers', 'MessageController', 'searchUsers');
+$router->get('/messages/getUnreadCount', 'MessageController', 'getUnreadCount');
+$router->get('/messages/markAllAsRead', 'MessageController', 'markAllAsRead');
+$router->get('/messages/markAsRead', 'MessageController', 'markAsRead');
+
 // Dispatch
 $router->dispatch();
 
