@@ -9,6 +9,7 @@ class MastercustomerController extends Controller {
         $sortBy = $_GET['sort_by'] ?? 'id';
         $sortOrder = $_GET['sort_order'] ?? 'ASC';
         $status = isset($_GET['status']) ? strtolower(trim($_GET['status'])) : '';
+        $statuspkp = isset($_GET['statuspkp']) ? strtolower(trim($_GET['statuspkp'])) : '';
         
         $validPerPage = [10, 20, 40, 50, 100, 200, 500];
         if (!in_array($perPage, $validPerPage)) {
@@ -16,8 +17,8 @@ class MastercustomerController extends Controller {
         }
         
         $mastercustomerModel = new Mastercustomer();
-        $customers = $mastercustomerModel->getAll($page, $perPage, $search, $sortBy, $sortOrder, $status);
-        $total = $mastercustomerModel->count($search, $status);
+        $customers = $mastercustomerModel->getAll($page, $perPage, $search, $sortBy, $sortOrder, $status, $statuspkp);
+        $total = $mastercustomerModel->count($search, $status, $statuspkp);
         $totalPages = ceil($total / $perPage);
         
         $data = [
@@ -29,7 +30,8 @@ class MastercustomerController extends Controller {
             'search' => $search,
             'sortBy' => $sortBy,
             'sortOrder' => $sortOrder,
-            'status' => $status
+            'status' => $status,
+            'statuspkp' => $statuspkp
         ];
         
         $this->view('mastercustomer/index', $data);

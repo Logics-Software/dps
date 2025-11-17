@@ -239,13 +239,24 @@ document.addEventListener('DOMContentLoaded', function() {
         coordinateCustomerId = customer.id;
         coordinateCustomerName.textContent = `${customer.namacustomer || '-'} (${customer.kodecustomer})`;
 
-        if (customer.latitude && customer.longitude) {
-            coordinateSelectedLat = parseFloat(customer.latitude);
-            coordinateSelectedLng = parseFloat(customer.longitude);
+        // Check if coordinates are 0,0 or null/undefined
+        const customerLat = customer.latitude ? parseFloat(customer.latitude) : null;
+        const customerLng = customer.longitude ? parseFloat(customer.longitude) : null;
+        const isZeroCoordinates = (customerLat === 0 && customerLng === 0) || 
+                                   (customerLat === null && customerLng === null) ||
+                                   (customerLat === 0 && customerLng === null) ||
+                                   (customerLat === null && customerLng === 0);
+
+        if (customerLat !== null && customerLat !== 0 && customerLng !== null && customerLng !== 0) {
+            // Customer has valid coordinates
+            coordinateSelectedLat = customerLat;
+            coordinateSelectedLng = customerLng;
         } else if (currentCoords) {
+            // Use current user location if customer coordinates are 0,0 or null
             coordinateSelectedLat = currentCoords.lat;
             coordinateSelectedLng = currentCoords.lng;
         } else {
+            // Default fallback
             coordinateSelectedLat = -6.200000;
             coordinateSelectedLng = 106.816666;
         }
@@ -297,12 +308,64 @@ document.addEventListener('DOMContentLoaded', function() {
                         coordinateFeedback.textContent = 'Klik peta untuk menentukan posisi customer.';
                     });
                 }
+
+                // Auto-detect GPS if coordinates are 0,0 or null
+                coordinateMap.on('load', () => {
+                    if (isZeroCoordinates && currentCoords) {
+                        // Use current user location
+                        coordinateSelectedLat = currentCoords.lat;
+                        coordinateSelectedLng = currentCoords.lng;
+                        coordinateMap.flyTo({ center: [coordinateSelectedLng, coordinateSelectedLat], zoom: 16 });
+                        setCoordinateMarker(coordinateSelectedLat, coordinateSelectedLng);
+                        coordinateFeedback.textContent = `Koordinat otomatis diambil dari lokasi Anda: ${coordinateSelectedLat.toFixed(6)}, ${coordinateSelectedLng.toFixed(6)}`;
+                    } else if (isZeroCoordinates && !currentCoords) {
+                        // Try to get GPS location
+                        if (navigator.geolocation) {
+                            coordinateFeedback.textContent = 'Mengambil lokasi GPS Anda...';
+                            navigator.geolocation.getCurrentPosition((position) => {
+                                coordinateSelectedLat = position.coords.latitude;
+                                coordinateSelectedLng = position.coords.longitude;
+                                coordinateMap.flyTo({ center: [coordinateSelectedLng, coordinateSelectedLat], zoom: 16 });
+                                setCoordinateMarker(coordinateSelectedLat, coordinateSelectedLng);
+                                coordinateFeedback.textContent = `Koordinat otomatis diambil dari GPS: ${coordinateSelectedLat.toFixed(6)}, ${coordinateSelectedLng.toFixed(6)}`;
+                            }, (error) => {
+                                coordinateFeedback.textContent = 'Tidak dapat memperoleh lokasi GPS. Silakan klik peta untuk menentukan lokasi customer.';
+                                coordinateFeedback.classList.add('text-danger');
+                            }, { enableHighAccuracy: true, timeout: 10000 });
+                        }
+                    }
+                });
             } else {
                 coordinateMap.setCenter([coordinateSelectedLng, coordinateSelectedLat]);
                 coordinateMap.setZoom(14);
                 if (coordinateGeocoder && coordinateGeocoderContainer && coordinateGeocoderElement) {
                     coordinateGeocoderContainer.innerHTML = '';
                     coordinateGeocoderContainer.appendChild(coordinateGeocoderElement);
+                }
+
+                // Auto-detect GPS if coordinates are 0,0 or null (when map already exists)
+                if (isZeroCoordinates && currentCoords) {
+                    // Use current user location
+                    coordinateSelectedLat = currentCoords.lat;
+                    coordinateSelectedLng = currentCoords.lng;
+                    coordinateMap.flyTo({ center: [coordinateSelectedLng, coordinateSelectedLat], zoom: 16 });
+                    setCoordinateMarker(coordinateSelectedLat, coordinateSelectedLng);
+                    coordinateFeedback.textContent = `Koordinat otomatis diambil dari lokasi Anda: ${coordinateSelectedLat.toFixed(6)}, ${coordinateSelectedLng.toFixed(6)}`;
+                } else if (isZeroCoordinates && !currentCoords) {
+                    // Try to get GPS location
+                    if (navigator.geolocation) {
+                        coordinateFeedback.textContent = 'Mengambil lokasi GPS Anda...';
+                        navigator.geolocation.getCurrentPosition((position) => {
+                            coordinateSelectedLat = position.coords.latitude;
+                            coordinateSelectedLng = position.coords.longitude;
+                            coordinateMap.flyTo({ center: [coordinateSelectedLng, coordinateSelectedLat], zoom: 16 });
+                            setCoordinateMarker(coordinateSelectedLat, coordinateSelectedLng);
+                            coordinateFeedback.textContent = `Koordinat otomatis diambil dari GPS: ${coordinateSelectedLat.toFixed(6)}, ${coordinateSelectedLng.toFixed(6)}`;
+                        }, (error) => {
+                            coordinateFeedback.textContent = 'Tidak dapat memperoleh lokasi GPS. Silakan klik peta untuk menentukan lokasi customer.';
+                            coordinateFeedback.classList.add('text-danger');
+                        }, { enableHighAccuracy: true, timeout: 10000 });
+                    }
                 }
             }
 
@@ -391,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="fw-semibold mb-1">${customer.namacustomer || '-'} <span class="badge bg-light text-dark">${customer.kodecustomer}</span></div>
                 <div class="small text-muted mb-1">${customer.alamatcustomer || ''} - ${customer.kotacustomer || ''}</div>
                 <div class="small text-primary fw-semibold mb-1">${distanceText}</div>
-                ${hasDistance ? '' : '<button type="button" class="btn btn-link p-0 customer-set-location text-decoration-none" data-action="set-location">Tentukan lokasi di peta</button>'}
+                ${hasDistance ? '' : '<button type="button" class="btn text-white bg-success btn-outline-success btn-link p-2 customer-set-location text-decoration-none" data-action="set-location">Tentukan lokasi di peta</button>'}
             `;
 
             item.addEventListener('click', function(event) {

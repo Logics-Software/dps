@@ -33,187 +33,185 @@ $alamatwpValue = $isPkp ? ($customer['alamatwp'] ?? '') : '';
 require __DIR__ . '/../layouts/header.php';
 ?>
 
-<div class="row mb-3">
-    <div class="col-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="/mastercustomer">Customer</a></li>
-                <li class="breadcrumb-item active">Edit</li>
-            </ol>
-        </nav>
+<div class="container">
+    <div class="breadcrumb-item">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/mastercustomer">Customer</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </nav>
+        </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">Edit Data Customer</h4>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="/mastercustomer/edit/<?= $customer['id'] ?>">
-                    <!-- Kelompok 1: Data Dasar (Readonly) -->
-                    <div class="row mb-4">
-                        <div class="col-md-12 mb-3">
-                            <label for="namacustomer" class="form-label">Nama Customer</label>
-                            <input type="text" class="form-control" id="namacustomer" value="<?= htmlspecialchars($customer['namacustomer']. ', ' .$customer['namabadanusaha']) ?>" readonly>
-                        </div>
-                        <div class="col-md-12 mb-3">
-                            <label for="alamatcustomer" class="form-label">Alamat Customer</label>
-                            <input type="text" class="form-control" id="alamatcustomer" value="<?= htmlspecialchars($customer['alamatcustomer']. ' ' .$customer['kotacustomer'] ?? '') ?>" readonly>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="notelepon" class="form-label">No Telepon</label>
-                            <input type="text" class="form-control" id="notelepon" value="<?= htmlspecialchars($customer['notelepon'] ?? '') ?>" readonly>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="kontakperson" class="form-label">Kontak Person</label>
-                            <input type="text" class="form-control" id="kontakperson" value="<?= htmlspecialchars($customer['kontakperson'] ?? '') ?>" readonly>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="statuspkp" class="form-label">Status PKP</label>
-                            <select class="form-select" id="statuspkp" name="statuspkp" disabled>
-                                <option value="pkp" <?= $currentStatusPkp === 'pkp' ? 'selected' : '' ?>>PKP</option>
-                                <option value="nonpkp" <?= $currentStatusPkp === 'nonpkp' ? 'selected' : '' ?>>Non PKP</option>
-                            </select>
-                            <input type="hidden" name="statuspkp" value="<?= htmlspecialchars($currentStatusPkp) ?>">
-                        </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <h4 class="mb-0">Edit Data Customer</h4>
                     </div>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/mastercustomer/edit/<?= $customer['id'] ?>">
+                        <!-- Kelompok 1: Data Dasar (Readonly) -->
+                        <div class="row mb-4">
+                            <div class="col-md-12 mb-3">
+                                <label for="namacustomer" class="form-label">Nama Customer</label>
+                                <input type="text" class="form-control" id="namacustomer" value="<?= htmlspecialchars($customer['namacustomer']. ', ' .$customer['namabadanusaha']) ?>" readonly>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="alamatcustomer" class="form-label">Alamat Customer</label>
+                                <input type="text" class="form-control" id="alamatcustomer" value="<?= htmlspecialchars($customer['alamatcustomer']. ' ' .$customer['kotacustomer'] ?? '') ?>" readonly>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="notelepon" class="form-label">No Telepon</label>
+                                <input type="text" class="form-control" id="notelepon" value="<?= htmlspecialchars($customer['notelepon'] ?? '') ?>" readonly>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="kontakperson" class="form-label">Kontak Person</label>
+                                <input type="text" class="form-control" id="kontakperson" value="<?= htmlspecialchars($customer['kontakperson'] ?? '') ?>" readonly>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="statuspkp" class="form-label">Status PKP</label>
+                                <select class="form-select" id="statuspkp" name="statuspkp" disabled>
+                                    <option value="pkp" <?= $currentStatusPkp === 'pkp' ? 'selected' : '' ?>>PKP</option>
+                                    <option value="nonpkp" <?= $currentStatusPkp === 'nonpkp' ? 'selected' : '' ?>>Non PKP</option>
+                                </select>
+                                <input type="hidden" name="statuspkp" value="<?= htmlspecialchars($currentStatusPkp) ?>">
+                            </div>
+                        </div>
 
-                    <hr class="my-2">
-
-                    <!-- Kelompok 2: Wajib Pajak (Editable) -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="card border-primary">
-                                <div class="card-header bg-head-green2 text-white">
-                                    <h5 class="mb-0">Data Wajib Pajak</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-2 mb-3">
-                                            <label for="npwp" class="form-label">NPWP</label>
-                                            <input type="text" class="form-control" id="npwp_display" value="<?= htmlspecialchars($npwpValue) ?>" placeholder="Masukkan NPWP" data-pkp-hidden="npwp_hidden" <?= $isPkp ? '' : 'disabled' ?>>
-                                            <input type="hidden" name="npwp" id="npwp_hidden" value="<?= htmlspecialchars($npwpValue) ?>">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label for="namawp" class="form-label">Nama WP</label>
-                                            <input type="text" class="form-control" id="namawp_display" value="<?= htmlspecialchars($namawpValue) ?>" placeholder="Masukkan Nama Wajib Pajak" data-pkp-hidden="namawp_hidden" <?= $isPkp ? '' : 'disabled' ?>>
-                                            <input type="hidden" name="namawp" id="namawp_hidden" value="<?= htmlspecialchars($namawpValue) ?>">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="alamatwp" class="form-label">Alamat WP</label>
-                                            <input type="text" class="form-control" id="alamatwp_display" value="<?= htmlspecialchars($alamatwpValue) ?>" placeholder="Masukkan Alamat Wajib Pajak" data-pkp-hidden="alamatwp_hidden" <?= $isPkp ? '' : 'disabled' ?>>
-                                            <input type="hidden" name="alamatwp" id="alamatwp_hidden" value="<?= htmlspecialchars($alamatwpValue) ?>">
+                        <!-- Kelompok 2: Wajib Pajak (Editable) -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header bg-head-green2 text-white">
+                                        <h5 class="mb-0 text-dark">Data Wajib Pajak</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-2 mb-3">
+                                                <label for="npwp" class="form-label">NPWP</label>
+                                                <input type="text" class="form-control" id="npwp_display" value="<?= htmlspecialchars($npwpValue) ?>" placeholder="Masukkan NPWP" data-pkp-hidden="npwp_hidden" <?= $isPkp ? '' : 'disabled' ?>>
+                                                <input type="hidden" name="npwp" id="npwp_hidden" value="<?= htmlspecialchars($npwpValue) ?>">
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label for="namawp" class="form-label">Nama WP</label>
+                                                <input type="text" class="form-control" id="namawp_display" value="<?= htmlspecialchars($namawpValue) ?>" placeholder="Masukkan Nama Wajib Pajak" data-pkp-hidden="namawp_hidden" <?= $isPkp ? '' : 'disabled' ?>>
+                                                <input type="hidden" name="namawp" id="namawp_hidden" value="<?= htmlspecialchars($namawpValue) ?>">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="alamatwp" class="form-label">Alamat WP</label>
+                                                <input type="text" class="form-control" id="alamatwp_display" value="<?= htmlspecialchars($alamatwpValue) ?>" placeholder="Masukkan Alamat Wajib Pajak" data-pkp-hidden="alamatwp_hidden" <?= $isPkp ? '' : 'disabled' ?>>
+                                                <input type="hidden" name="alamatwp" id="alamatwp_hidden" value="<?= htmlspecialchars($alamatwpValue) ?>">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <hr class="my-2">
-
-                    <!-- Kelompok 3: Ijin SIPA dan CDOB (Editable) -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="card border-info">
-                                <div class="card-header bg-head-green3 text-white">
-                                    <h5 class="mb-0">Data Ijin SIPA dan CDOB</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-12 mb-3">
-                                            <label for="namaapoteker" class="form-label">Nama Apoteker</label>
-                                            <input type="text" class="form-control" id="namaapoteker" name="namaapoteker" value="<?= htmlspecialchars($customer['namaapoteker'] ?? '') ?>" placeholder="Masukkan Nama Apoteker">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="nosipa" class="form-label">No. SIPA</label>
-                                            <input type="text" class="form-control" id="nosipa" name="nosipa" value="<?= htmlspecialchars($customer['nosipa'] ?? '') ?>" placeholder="Masukkan No. SIPA">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="tanggaledsipa" class="form-label">Tanggal ED SIPA</label>
-                                            <input type="date" class="form-control" id="tanggaledsipa" name="tanggaledsipa" value="<?= $customer['tanggaledsipa'] ? date('Y-m-d', strtotime($customer['tanggaledsipa'])) : '' ?>">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="noijinusaha" class="form-label">No. Ijin Usaha</label>
-                                            <input type="text" class="form-control" id="noijinusaha" name="noijinusaha" value="<?= htmlspecialchars($customer['noijinusaha'] ?? '') ?>" placeholder="Masukkan No. Ijin Usaha">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="tanggaledijinusaha" class="form-label">Tanggal ED Ijin Usaha</label>
-                                            <input type="date" class="form-control" id="tanggaledijinusaha" name="tanggaledijinusaha" value="<?= $customer['tanggaledijinusaha'] ? date('Y-m-d', strtotime($customer['tanggaledijinusaha'])) : '' ?>">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="nocdob" class="form-label">No. CDOB</label>
-                                            <input type="text" class="form-control" id="nocdob" name="nocdob" value="<?= htmlspecialchars($customer['nocdob'] ?? '') ?>" placeholder="Masukkan No. CDOB">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="tanggaledcdob" class="form-label">Tanggal ED CDOB</label>
-                                            <input type="date" class="form-control" id="tanggaledcdob" name="tanggaledcdob" value="<?= $customer['tanggaledcdob'] ? date('Y-m-d', strtotime($customer['tanggaledcdob'])) : '' ?>">
+                        <!-- Kelompok 3: Ijin SIPA dan CDOB (Editable) -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header bg-head-green3 text-white">
+                                        <h5 class="mb-0 text-dark">Data Ijin SIPA dan CDOB</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-12 mb-3">
+                                                <label for="namaapoteker" class="form-label">Nama Apoteker</label>
+                                                <input type="text" class="form-control" id="namaapoteker" name="namaapoteker" value="<?= htmlspecialchars($customer['namaapoteker'] ?? '') ?>" placeholder="Masukkan Nama Apoteker">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="nosipa" class="form-label">No. SIPA</label>
+                                                <input type="text" class="form-control" id="nosipa" name="nosipa" value="<?= htmlspecialchars($customer['nosipa'] ?? '') ?>" placeholder="Masukkan No. SIPA">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="tanggaledsipa" class="form-label">Tanggal ED SIPA</label>
+                                                <input type="date" class="form-control" id="tanggaledsipa" name="tanggaledsipa" value="<?= $customer['tanggaledsipa'] ? date('Y-m-d', strtotime($customer['tanggaledsipa'])) : '' ?>">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="noijinusaha" class="form-label">No. Ijin Usaha</label>
+                                                <input type="text" class="form-control" id="noijinusaha" name="noijinusaha" value="<?= htmlspecialchars($customer['noijinusaha'] ?? '') ?>" placeholder="Masukkan No. Ijin Usaha">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="tanggaledijinusaha" class="form-label">Tanggal ED Ijin Usaha</label>
+                                                <input type="date" class="form-control" id="tanggaledijinusaha" name="tanggaledijinusaha" value="<?= $customer['tanggaledijinusaha'] ? date('Y-m-d', strtotime($customer['tanggaledijinusaha'])) : '' ?>">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="nocdob" class="form-label">No. CDOB</label>
+                                                <input type="text" class="form-control" id="nocdob" name="nocdob" value="<?= htmlspecialchars($customer['nocdob'] ?? '') ?>" placeholder="Masukkan No. CDOB">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="tanggaledcdob" class="form-label">Tanggal ED CDOB</label>
+                                                <input type="date" class="form-control" id="tanggaledcdob" name="tanggaledcdob" value="<?= $customer['tanggaledcdob'] ? date('Y-m-d', strtotime($customer['tanggaledcdob'])) : '' ?>">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <hr class="my-2">
-
-                    <!-- Kelompok 4: Lokasi Customer -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="card border-success">
-                                <div class="card-header bg-head-green3 text-white">
-                                    <h5 class="mb-0">Lokasi Customer</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-3 align-items-end">
-                                        <div class="col-md-4">
-                                            <label for="latitude" class="form-label">Latitude</label>
-                                            <input type="number" step="0.000001" class="form-control" id="latitude" name="latitude" value="<?= htmlspecialchars($formattedLatitude) ?>" placeholder="Contoh: -6.200000">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label for="longitude" class="form-label">Longitude</label>
-                                            <input type="number" step="0.000001" class="form-control" id="longitude" name="longitude" value="<?= htmlspecialchars($formattedLongitude) ?>" placeholder="Contoh: 106.816666">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">&nbsp;</label>
-                                            <button type="button" class="btn btn-outline-success w-100" id="btnUseCurrentLocation" <?= $hasMapboxToken ? '' : 'disabled' ?>>Gunakan Lokasi Saya</button>
-                                        </div>
-                                        <div class="col-12 d-lg-none">
-                                            <button type="button" class="btn btn-success w-100" id="btnOpenMapFullscreen">Buka Peta Fullscreen</button>
-                                        </div>
+                        
+                        <!-- Kelompok 4: Lokasi Customer -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header bg-head-green3 text-white">
+                                        <h5 class="mb-0 text-dark">Lokasi Customer</h5>
                                     </div>
-                                    <div id="mapGeocoder" class="mapbox-geocoder-container mt-3"></div>
-                                    <div class="mapbox-wrapper mt-3" id="mapWrapper">
-                                        <button type="button" class="btn btn-light btn-sm mapbox-close" id="btnCloseMapFullscreen">
-                                            Tutup
-                                        </button>
-                                        <div id="customerLocationMap"></div>
-                                    </div>
-                                    <div id="locationFeedback" class="location-feedback small mt-2 <?= $hasMapboxToken ? 'text-muted' : 'text-danger' ?>">
-                                        <?= $hasMapboxToken
-                                            ? 'Cari lokasi, klik peta, seret marker, atau gunakan tombol di atas untuk memperbarui koordinat customer.'
-                                            : 'Mapbox access token belum dikonfigurasi. Tambahkan MAPBOX_ACCESS_TOKEN pada environment server untuk mengaktifkan peta.'
-                                        ?>
+                                    <div class="card-body">
+                                        <div class="row g-3 align-items-end">
+                                            <div class="col-md-4">
+                                                <label for="latitude" class="form-label">Latitude</label>
+                                                <input type="number" step="0.000001" class="form-control" id="latitude" name="latitude" value="<?= htmlspecialchars($formattedLatitude) ?>" placeholder="Contoh: -6.200000">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="longitude" class="form-label">Longitude</label>
+                                                <input type="number" step="0.000001" class="form-control" id="longitude" name="longitude" value="<?= htmlspecialchars($formattedLongitude) ?>" placeholder="Contoh: 106.816666">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">&nbsp;</label>
+                                                <button type="button" class="btn btn-filter btn-outline-success w-100" id="btnUseCurrentLocation" <?= $hasMapboxToken ? '' : 'disabled' ?>>Gunakan Lokasi Saya</button>
+                                            </div>
+                                            <div class="col-12 d-lg-none">
+                                                <button type="button" class="btn btn-success w-100" id="btnOpenMapFullscreen">Buka Peta Fullscreen</button>
+                                            </div>
+                                        </div>
+                                        <div id="mapGeocoder" class="mapbox-geocoder-container mt-3"></div>
+                                        <div class="mapbox-wrapper mt-3" id="mapWrapper">
+                                            <button type="button" class="btn btn-light btn-sm mapbox-close" id="btnCloseMapFullscreen">
+                                                Tutup
+                                            </button>
+                                            <div id="customerLocationMap"></div>
+                                        </div>
+                                        <div id="locationFeedback" class="location-feedback small mt-2 <?= $hasMapboxToken ? 'text-muted' : 'text-danger' ?>">
+                                            <?= $hasMapboxToken
+                                                ? 'Cari lokasi, klik peta, seret marker, atau gunakan tombol di atas untuk memperbarui koordinat customer.'
+                                                : 'Mapbox access token belum dikonfigurasi. Tambahkan MAPBOX_ACCESS_TOKEN pada environment server untuk mengaktifkan peta.'
+                                            ?>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <hr class="my-4">
-                    
-                    <div class="d-flex justify-content-between">
-                        <a href="/mastercustomer" class="btn btn-secondary">
-                            <?= icon('back', 'me-2', 16) ?> Kembali
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <?= icon('update', 'me-2', 16) ?> Update Customer
-                        </button>
-                    </div>
-                </form>
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="/mastercustomer" class="btn btn-secondary">
+                                <?= icon('cancel', 'me-2', 16) ?> Batal
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <?= icon('pen-to-square', 'me-2', 16) ?> Update Customer
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -292,6 +290,16 @@ $additionalInlineScripts[] = <<<JS
         center: defaultCenter,
         zoom: defaultZoom
     });
+
+    // Ensure map resizes after load
+    map.on('load', function() {
+        map.resize();
+    });
+
+    // Also resize after a short delay to ensure CSS is applied
+    setTimeout(function() {
+        map.resize();
+    }, 100);
 
     map.addControl(new mapboxgl.NavigationControl());
 
@@ -425,9 +433,13 @@ $additionalInlineScripts[] = <<<JS
         if (closeFullscreenBtn) {
             closeFullscreenBtn.focus();
         }
+        // Resize multiple times to ensure proper rendering
         setTimeout(function() {
             map.resize();
-        }, 250);
+        }, 100);
+        setTimeout(function() {
+            map.resize();
+        }, 300);
     }
 
     function exitFullscreen() {
@@ -436,9 +448,13 @@ $additionalInlineScripts[] = <<<JS
         }
         mapWrapper.classList.remove('fullscreen');
         document.body.classList.remove('mapbox-fullscreen-open');
+        // Resize multiple times to ensure proper rendering
         setTimeout(function() {
             map.resize();
-        }, 150);
+        }, 100);
+        setTimeout(function() {
+            map.resize();
+        }, 250);
     }
 
     if (openFullscreenBtn && mapWrapper) {
@@ -454,11 +470,9 @@ $additionalInlineScripts[] = <<<JS
     }
 
     window.addEventListener('resize', function() {
-        if (mapWrapper && mapWrapper.classList.contains('fullscreen')) {
-            setTimeout(function() {
-                map.resize();
-            }, 150);
-        }
+        setTimeout(function() {
+            map.resize();
+        }, 150);
     });
 
     document.addEventListener('keydown', function(event) {

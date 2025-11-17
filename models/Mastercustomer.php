@@ -16,7 +16,7 @@ class Mastercustomer {
         return $this->db->fetchOne($sql, [$kodecustomer]);
     }
 
-    public function getAll($page = 1, $perPage = 100, $search = '', $sortBy = 'id', $sortOrder = 'ASC', $status = '') {
+    public function getAll($page = 1, $perPage = 100, $search = '', $sortBy = 'id', $sortOrder = 'ASC', $status = '', $statuspkp = '') {
         $offset = ($page - 1) * $perPage;
 
         $where = "1=1";
@@ -33,6 +33,14 @@ class Mastercustomer {
             if ($normalizedStatus !== null) {
                 $where .= " AND LOWER(status) = ?";
                 $params[] = $normalizedStatus;
+            }
+        }
+
+        if (!empty($statuspkp)) {
+            $normalizedStatusPkp = $this->normalizeStatusPkp($statuspkp, null);
+            if ($normalizedStatusPkp !== null) {
+                $where .= " AND LOWER(statuspkp) = ?";
+                $params[] = $normalizedStatusPkp;
             }
         }
 
@@ -59,7 +67,7 @@ class Mastercustomer {
         return $this->db->fetchAll($sql, $params);
     }
 
-    public function count($search = '', $status = '') {
+    public function count($search = '', $status = '', $statuspkp = '') {
         $where = "1=1";
         $params = [];
 
@@ -74,6 +82,14 @@ class Mastercustomer {
             if ($normalizedStatus !== null) {
                 $where .= " AND LOWER(status) = ?";
                 $params[] = $normalizedStatus;
+            }
+        }
+
+        if (!empty($statuspkp)) {
+            $normalizedStatusPkp = $this->normalizeStatusPkp($statuspkp, null);
+            if ($normalizedStatusPkp !== null) {
+                $where .= " AND LOWER(statuspkp) = ?";
+                $params[] = $normalizedStatusPkp;
             }
         }
 
@@ -184,7 +200,7 @@ class Mastercustomer {
             longitude,
             userid,
             status
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
         $params = [
             $data['kodecustomer'],

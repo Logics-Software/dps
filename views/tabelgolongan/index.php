@@ -47,159 +47,140 @@ if (!function_exists('getSortIconTabelgolongan')) {
 require __DIR__ . '/../layouts/header.php';
 ?>
 
-<div class="row mb-3">
-    <div class="col-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                <li class="breadcrumb-item active">Tabel Golongan</li>
-            </ol>
-        </nav>
+<div class="container">
+    <div class="breadcrumb-item">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Tabel Golongan</li>
+                </ol>
+            </nav>
+        </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Daftar Golongan Barang</h4>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row search-filter-card">
-                    <form method="GET" action="/tabelgolongan" id="searchForm">
-                        <div class="row g-2 align-items-end">
-                            <div class="col-12 col-md-4">
-                                <input type="text" class="form-control" name="search" placeholder="Cari kode atau nama golongan..." value="<?= htmlspecialchars($search) ?>">
-                            </div>
-                            <div class="col-6 col-md-2">
-                                <select name="status" class="form-select" onchange="this.form.submit()">
-                                    <option value="" <?= $status === '' ? 'selected' : '' ?>>Semua Status</option>
-                                    <option value="aktif" <?= $status === 'aktif' ? 'selected' : '' ?>>Aktif</option>
-                                    <option value="nonaktif" <?= $status === 'nonaktif' ? 'selected' : '' ?>>Nonaktif</option>
-                                </select>
-                            </div>
-                            <div class="col-6 col-md-2">
-                                <select name="per_page" class="form-select" onchange="this.form.submit()">
-                                    <?php foreach ([10, 25, 50, 100, 200, 500, 1000] as $pp): ?>
-                                    <option value="<?= $pp ?>" <?= $perPage == $pp ? 'selected' : '' ?>><?= $pp ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-6 col-md-2">
-                                <button type="submit" class="btn btn-secondary w-100">Filter</button>
-                            </div>
-                            <div class="col-6 col-md-2">
-                                <a href="/tabelgolongan?page=1&per_page=10&status=&sort_by=<?= htmlspecialchars($sortBy) ?>&sort_order=<?= htmlspecialchars($sortOrder) ?>" class="btn btn-outline-secondary w-100">Reset</a>
-                            </div>
-                        </div>
-                        <input type="hidden" name="page" value="1">
-                        <input type="hidden" name="sort_by" value="<?= htmlspecialchars($sortBy) ?>">
-                        <input type="hidden" name="sort_order" value="<?= htmlspecialchars($sortOrder) ?>">
-                    </form>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <h4 class="mb-0">Daftar Golongan Barang</h4>
+                    </div>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th class="th-sortable">
-                                    <a href="<?= getSortUrlTabelgolongan('id', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
-                                        ID
-                                    </a>
-                                </th>
-                                <th class="th-sortable">
-                                    <a href="<?= getSortUrlTabelgolongan('kodegolongan', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
-                                        Kode Golongan
-                                    </a>
-                                </th>
-                                <th class="th-sortable">
-                                    <a href="<?= getSortUrlTabelgolongan('namagolongan', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
-                                        Nama Golongan
-                                    </a>
-                                </th>
-                                <th class="th-sortable">
-                                    <a href="<?= getSortUrlTabelgolongan('status', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
-                                        Status
-                                    </a>
-                                </th>
-                                <th class="th-sortable">
-                                    <a href="<?= getSortUrlTabelgolongan('created_at', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
-                                        Created At
-                                    </a>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (empty($golongans)): ?>
-                            <tr>
-                                <td colspan="5" class="text-center">Tidak ada data</td>
-                            </tr>
-                            <?php else: ?>
-                            <?php foreach ($golongans as $golongan): ?>
-                            <tr>
-                                <td align="center"><?= $golongan['id'] ?></td>
-                                <td><?= htmlspecialchars($golongan['kodegolongan']) ?></td>
-                                <td><?= htmlspecialchars($golongan['namagolongan']) ?></td>
-                                <td>
-                                    <span class="badge bg-<?= ($golongan['status'] ?? '') === 'aktif' ? 'success' : 'danger' ?>">
-                                        <?= htmlspecialchars(ucfirst($golongan['status'] ?? '-')) ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php if (!empty($golongan['created_at'])): ?>
-                                        <?= date('d/m/Y H:i', strtotime($golongan['created_at'])) ?>
-                                    <?php else: ?>
-                                        -
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <form method="GET" action="/tabelgolongan" id="searchForm">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-12 col-md-4">
+                                    <input type="text" class="form-control" name="search" placeholder="Cari kode atau nama golongan..." value="<?= htmlspecialchars($search) ?>">
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <select name="status" class="form-select" onchange="this.form.submit()">
+                                        <option value="" <?= $status === '' ? 'selected' : '' ?>>Semua Status</option>
+                                        <option value="aktif" <?= $status === 'aktif' ? 'selected' : '' ?>>Aktif</option>
+                                        <option value="nonaktif" <?= $status === 'nonaktif' ? 'selected' : '' ?>>Nonaktif</option>
+                                    </select>
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <select name="per_page" class="form-select" onchange="this.form.submit()">
+                                        <?php foreach ([10, 25, 50, 100, 200, 500, 1000] as $pp): ?>
+                                        <option value="<?= $pp ?>" <?= $perPage == $pp ? 'selected' : '' ?>><?= $pp ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <button type="submit" class="btn btn-filter btn-secondary w-100">Filter</button>
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <a href="/tabelgolongan?page=1&per_page=10&status=&sort_by=<?= htmlspecialchars($sortBy) ?>&sort_order=<?= htmlspecialchars($sortOrder) ?>" class="btn btn-filter btn-outline-secondary w-100">Reset</a>
+                                </div>
+                            </div>
+                            <input type="hidden" name="page" value="1">
+                            <input type="hidden" name="sort_by" value="<?= htmlspecialchars($sortBy) ?>">
+                            <input type="hidden" name="sort_order" value="<?= htmlspecialchars($sortOrder) ?>">
+                        </form>
+                    </div>
 
-                <?php if ($totalPages > 1): ?>
-                <nav>
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-                            <a class="page-link" href="?page=<?= $page - 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>">Previous</a>
-                        </li>
-                        <?php
-                        $maxLinks = 3;
-                        $half = (int)floor($maxLinks / 2);
-                        $start = max(1, $page - $half);
-                        $end = min($totalPages, $start + $maxLinks - 1);
-                        if ($end - $start + 1 < $maxLinks) {
-                            $start = max(1, $end - $maxLinks + 1);
-                        }
-                        $buildLink = function ($p) use ($perPage, $search) {
-                            return '?page=' . $p . '&per_page=' . $perPage . '&search=' . urlencode($search);
-                        };
-                        if ($start > 1) {
-                            echo '<li class="page-item"><a class="page-link" href="' . $buildLink(1) . '">1</a></li>';
-                            if ($start > 2) {
-                                echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="th-sortable">
+                                        <a href="<?= getSortUrlTabelgolongan('kodegolongan', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                            Kode
+                                        </a>
+                                    </th>
+                                    <th class="th-sortable">
+                                        <a href="<?= getSortUrlTabelgolongan('namagolongan', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
+                                            Golongan
+                                        </a>
+                                    </th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($golongans)): ?>
+                                <tr>
+                                    <td colspan="5" class="text-center">Tidak ada data</td>
+                                </tr>
+                                <?php else: ?>
+                                <?php foreach ($golongans as $golongan): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($golongan['kodegolongan']) ?></td>
+                                    <td><?= htmlspecialchars($golongan['namagolongan']) ?></td>
+                                    <td align="center">
+                                        <span class="badge bg-<?= ($golongan['status'] ?? '') === 'aktif' ? 'success' : 'danger' ?>">
+                                            <?= htmlspecialchars(ucfirst($golongan['status'] ?? '-')) ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <?php if ($totalPages > 1): ?>
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                                <a class="page-link" href="?page=<?= $page - 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>">Previous</a>
+                            </li>
+                            <?php
+                            $maxLinks = 3;
+                            $half = (int)floor($maxLinks / 2);
+                            $start = max(1, $page - $half);
+                            $end = min($totalPages, $start + $maxLinks - 1);
+                            if ($end - $start + 1 < $maxLinks) {
+                                $start = max(1, $end - $maxLinks + 1);
                             }
-                        }
-                        for ($i = $start; $i <= $end; $i++) {
-                            echo '<li class="page-item ' . ($page == $i ? 'active' : '') . '"><a class="page-link" href="' . $buildLink($i) . '">' . $i . '</a></li>';
-                        }
-                        if ($end < $totalPages) {
-                            if ($end < $totalPages - 1) {
-                                echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                            $buildLink = function ($p) use ($perPage, $search) {
+                                return '?page=' . $p . '&per_page=' . $perPage . '&search=' . urlencode($search);
+                            };
+                            if ($start > 1) {
+                                echo '<li class="page-item"><a class="page-link" href="' . $buildLink(1) . '">1</a></li>';
+                                if ($start > 2) {
+                                    echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                                }
                             }
-                            echo '<li class="page-item"><a class="page-link" href="' . $buildLink($totalPages) . '">' . $totalPages . '</a></li>';
-                        }
-                        ?>
-                        <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
-                            <a class="page-link" href="?page=<?= $page + 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>">Next</a>
-                        </li>
-                    </ul>
-                </nav>
-                <?php endif; ?>
+                            for ($i = $start; $i <= $end; $i++) {
+                                echo '<li class="page-item ' . ($page == $i ? 'active' : '') . '"><a class="page-link" href="' . $buildLink($i) . '">' . $i . '</a></li>';
+                            }
+                            if ($end < $totalPages) {
+                                if ($end < $totalPages - 1) {
+                                    echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                                }
+                                echo '<li class="page-item"><a class="page-link" href="' . $buildLink($totalPages) . '">' . $totalPages . '</a></li>';
+                            }
+                            ?>
+                            <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
+                                <a class="page-link" href="?page=<?= $page + 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>

@@ -118,16 +118,8 @@ require __DIR__ . '/../layouts/header.php';
 										</a>
 									</th>
 									<th>Alamat</th>
-									<th class="th-sortable">
-										<a href="<?= getSortUrlMastersales('notelepon', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
-											No Telepon
-										</a>
-									</th>
-									<th class="th-sortable">
-										<a href="<?= getSortUrlMastersales('status', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
-											Status
-										</a>
-									</th>
+									<th>No Telepon</th>
+									<th>Status</th>
 								</tr>
 							</thead>
 							<tbody>

@@ -19,10 +19,10 @@ class OrderController extends Controller {
 		$user = Auth::user();
 		$page = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
 		$perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
-		$perPage = in_array($perPage, [10, 20, 40, 60, 100]) ? $perPage : 10;
+		$perPage = in_array($perPage, [10, 25, 50, 100, 200, 500, 1000]) ? $perPage : 10;
 		$search = trim($_GET['search'] ?? '');
 		$status = trim($_GET['status'] ?? '');
-		$dateFilter = $_GET['date_filter'] ?? 'today';
+		$dateFilter = $_GET['periode'] ?? ($_GET['date_filter'] ?? 'today');
 		$startDate = $_GET['start_date'] ?? '';
 		$endDate = $_GET['end_date'] ?? '';
 
@@ -104,7 +104,8 @@ class OrderController extends Controller {
 			'status' => 'order',
 			'detailItems' => $this->getPostedDetails(),
 			'barangsJson' => json_encode($barangs),
-			'customersByStatusJson' => json_encode($customersByStatus)
+			'customersByStatusJson' => json_encode($customersByStatus),
+			'backUrl' => $_GET['back'] ?? '/orders' // Custom back URL from query parameter or default
 		];
 
 		$this->view('orders/create', $data);
@@ -163,7 +164,8 @@ class OrderController extends Controller {
 			'barangs' => $barangs,
 			'statuspkp' => $_POST['statuspkp'] ?? ($order['statuspkp'] ?? 'pkp'),
 			'barangsJson' => json_encode($barangs),
-			'customersByStatusJson' => json_encode($customersByStatus)
+			'customersByStatusJson' => json_encode($customersByStatus),
+			'backUrl' => $_GET['back'] ?? '/orders' // Custom back URL from query parameter or default
 		];
 
 		$this->view('orders/edit', $data);
@@ -188,7 +190,8 @@ class OrderController extends Controller {
 
 		$data = [
 			'order' => $order,
-			'details' => $details
+			'details' => $details,
+			'backUrl' => $_GET['back'] ?? '/orders' // Custom back URL from query parameter or default
 		];
 
 		$this->view('orders/show', $data);
@@ -233,6 +236,10 @@ class OrderController extends Controller {
 			case 'month':
 				$startDate = date('Y-m-01');
 				$endDate = date('Y-m-t');
+				break;
+			case 'year':
+				$startDate = date('Y-01-01');
+				$endDate = date('Y-12-31');
 				break;
 			case 'custom':
 				$startDate = !empty($start) ? $start : date('Y-m-d');

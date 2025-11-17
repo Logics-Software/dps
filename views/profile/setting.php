@@ -53,7 +53,7 @@ require __DIR__ . '/../layouts/header.php';
                 </div>
 
                 <div class="card-footer d-flex justify-content-between">
-                    <a href="/dashboard" class="btn btn-secondary">Kembali</a>
+                    <a href="/dashboard" class="btn btn-secondary"><?= icon('back', 'me-1 mb-1', 18) ?>Kembali</a>
                 </div>
             </div>
         </div>

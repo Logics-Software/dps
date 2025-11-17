@@ -16,7 +16,7 @@ class PenerimaanController extends Controller {
 
 		$currentUser = Auth::user();
 		$page = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
-		$perPageOptions = [10, 20, 50, 75, 100, 200, 500];
+		$perPageOptions = [10, 25, 50, 100, 200, 500, 1000];
 		$perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
 		if (!in_array($perPage, $perPageOptions, true)) {
 			$perPage = 10;

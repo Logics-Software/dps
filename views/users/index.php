@@ -83,7 +83,7 @@ require __DIR__ . '/../layouts/header.php';
                                     <th class="th-sortable"><a href="<?= getSortUrl('email', $sortBy, $sortOrder, $search, $perPage) ?>">Email</a></th>
                                     <th class="th-sortable"><a href="<?= getSortUrl('role', $sortBy, $sortOrder, $search, $perPage) ?>">Role</a></th>
                                     <th class="th-sortable"><a href="<?= getSortUrl('kodesales', $sortBy, $sortOrder, $search, $perPage) ?>">Sales</a></th>
-                                    <th class="th-sortable"><a href="<?= getSortUrl('status', $sortBy, $sortOrder, $search, $perPage) ?>">Status</a></th>
+                                    <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -115,7 +115,7 @@ require __DIR__ . '/../layouts/header.php';
                                         </span>
                                     </td>
                                     <td>
-                                        <div class="btn-group" role="group" aria-label="Aksi User">
+                                        <div class="d-flex gap-1">
                                             <a href="/users/edit/<?= $user['id'] ?>" class="btn btn-sm btn-warning" title="Edit">
                                                 <?= icon('pen-to-square', 'me-0 mb-1', 16) ?>
                                             </a>

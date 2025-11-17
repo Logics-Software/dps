@@ -189,6 +189,25 @@ label {
   line-height: 1.2;
 }
 
+/* Card Header Table - Similar to card-header but without mobile back button */
+.card-header-table {
+  padding: 1rem 1rem;
+  border-radius: 0.05rem 0.5rem 0 0;
+  background-color: #fff8de;
+  overflow: hidden;
+}
+
+.card-header-table h1,
+.card-header-table h2,
+.card-header-table h3,
+.card-header-table h4,
+.card-header-table h5,
+.card-header-table h6 {
+  margin-top: 0;
+  margin-bottom: 0;
+  line-height: 1.2;
+}
+
 /* Desktop Typography (992px and above) */
 @media (min-width: 992px) {
   html {
@@ -916,6 +935,69 @@ header.app-header .navbar .container-fluid {
     padding: 0.75rem 1rem;
   }
 
+  /* Card Header Table - Mobile responsive */
+  .card-header-table {
+    border-radius: 0.75rem 0.75rem 0 0;
+    overflow: hidden;
+  }
+
+  .card-header-table {
+    padding: 0.75rem 1rem;
+  }
+
+  /* Card Detail Barang - Remove left and right margin on mobile */
+  .card:has(.card-header-table) {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* Order Items Cards - Mobile view for detail barang */
+  .order-items-cards {
+    padding: 0.75rem;
+  }
+
+  .order-item-card {
+    background-color: #ffffff;
+    border: 0.5px solid #e5e7eb;
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .order-item-card:last-child {
+    margin-bottom: 0;
+  }
+
+  .order-item-card-header {
+    margin-bottom: 0.5rem;
+  }
+
+  .order-item-card-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin: 0;
+    color: #0b0e1a;
+  }
+
+  .order-item-card-body {
+    margin-bottom: 0.5rem;
+  }
+
+  .order-item-card-row {
+    font-size: 0.875rem;
+    color: #374151;
+  }
+
+  .order-item-card-value {
+    display: block;
+  }
+
+  .order-item-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
   /* Card Footer - Equal Top and Bottom Padding */
   .card-footer {
     border-radius: 0.75rem 0.75rem 0 0;
@@ -1325,6 +1407,73 @@ table thead th {
   --table-header-padding-x: 0.75rem;
 }
 
+/* Table Detail Barang - No border outline and border radius 0 */
+.table-detail-barang,
+table.table-detail-barang {
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.table-detail-barang th,
+.table-detail-barang td,
+table.table-detail-barang th,
+table.table-detail-barang td {
+  border: 0.5px solid #e5e7eb;
+}
+
+.table-detail-barang thead th,
+table.table-detail-barang thead th {
+  background-color: #f9fafb;
+  text-align: center;
+}
+
+/* Floating Home Button - Fixed bottom right */
+.floating-home-btn {
+  display: none; /* Hidden by default (desktop) */
+}
+
+/* Mobile responsive for floating home button */
+@media (max-width: 575.98px) {
+  .floating-home-btn {
+    display: flex; /* Show only on mobile */
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    width: 3rem;
+    height: 3rem;
+    background-color: rgba(11, 14, 26, 0.5); /* Header color #0b0e1a with 50% opacity */
+    color: #ffffff;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1050;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .floating-home-btn:hover {
+    background-color: rgba(11, 14, 26, 0.7); /* Slightly more opaque on hover */
+    color: #ffffff;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+  }
+
+  .floating-home-btn:active {
+    transform: scale(0.95);
+  }
+
+  .floating-home-btn img {
+    filter: brightness(0) invert(1);
+    width: 20px;
+    height: 20px;
+  }
+}
+
 .table,
 table {
   font-size: var(--table-font-size);
@@ -1499,6 +1648,18 @@ table thead th.th-sortable.sorted-desc a::after {
   min-height: 220px;
 }
 
+.mapbox-close {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+}
+
+.mapbox-wrapper.fullscreen .mapbox-close {
+  display: block;
+}
+
 .coordinate-picker-map {
   width: 100%;
   height: 320px;
@@ -1507,4 +1668,44 @@ table thead th.th-sortable.sorted-desc a::after {
 
 .mapbox-geocoder-container {
   margin-bottom: 1rem;
+}
+
+#customerLocationMap {
+  width: 100%;
+  height: 400px;
+  min-height: 400px;
+}
+
+.mapbox-wrapper #customerLocationMap {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+}
+
+.mapbox-wrapper.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  z-index: 9999;
+  border: none;
+  border-radius: 0;
+}
+
+.mapbox-wrapper.fullscreen #customerLocationMap {
+  height: 100vh;
+  min-height: 100vh;
+}
+
+body.mapbox-fullscreen-open {
+  overflow: hidden;
+}
+
+.location-feedback {
+  font-size: 0.875rem;
+  line-height: 1.4;
 }

@@ -45,7 +45,7 @@ require __DIR__ . '/../layouts/header.php';
                                 <input type="date" class="form-control" name="date_to" value="<?= htmlspecialchars($dateTo ?? '') ?>">
                             </div>
                             <div class="col-6 col-md-2">
-                                <button type="submit" class="btn btn-filter btn-primary w-100">Filter</button>
+                                <button type="submit" class="btn btn-filter btn-secondary w-100">Filter</button>
                             </div>
                             <div class="col-6 col-md-2">
                                 <a href="/login-logs" class="btn btn-filter btn-outline-secondary w-100">Reset</a>

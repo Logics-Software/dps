@@ -7,7 +7,7 @@ class Headerorder {
 	}
 
 	public function findByNoorder($noorder) {
-		$sql = "SELECT ho.*, mc.namacustomer, mc.alamatcustomer, mc.kotacustomer, u.namalengkap AS namasales
+		$sql = "SELECT ho.*, mc.namacustomer, mc.alamatcustomer, mc.kotacustomer AS kota, mc.namabadanusaha, u.namalengkap AS namasales
 				FROM headerorder ho
 				LEFT JOIN mastercustomer mc ON ho.kodecustomer = mc.kodecustomer
 				LEFT JOIN users u ON ho.kodesales = u.kodesales
@@ -57,7 +57,7 @@ class Headerorder {
 
 		$whereClause = implode(' AND ', $where);
 
-		$sql = "SELECT ho.*, mc.namacustomer, mc.alamatcustomer, mc.kotacustomer
+		$sql = "SELECT ho.*, mc.namacustomer, mc.alamatcustomer, mc.kotacustomer AS kota, mc.namabadanusaha
 				FROM headerorder ho
 				LEFT JOIN mastercustomer mc ON ho.kodecustomer = mc.kodecustomer
 				WHERE {$whereClause}

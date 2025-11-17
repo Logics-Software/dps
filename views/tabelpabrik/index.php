@@ -67,6 +67,7 @@ require __DIR__ . '/../layouts/header.php';
                         <h4 class="mb-0">Daftar Pabrik</h4>
                     </div>
                 </div>
+
                 <div class="card-body">
                     <div class="row mb-3">
                         <form method="GET" action="/tabelpabrik" id="searchForm">
@@ -107,19 +108,15 @@ require __DIR__ . '/../layouts/header.php';
                                 <tr>
                                     <th class="th-sortable">
                                         <a href="<?= getSortUrlTabelpabrik('kodepabrik', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
-                                            Kode Pabrik
+                                            Kode
                                         </a>
                                     </th>
                                     <th class="th-sortable">
                                         <a href="<?= getSortUrlTabelpabrik('namapabrik', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
-                                            Nama Pabrik
+                                            Pabrik
                                         </a>
                                     </th>
-                                    <th class="th-sortable">
-                                        <a href="<?= getSortUrlTabelpabrik('status', $sortBy, $sortOrder, $search, $perPage, $status) ?>">
-                                            Status
-                                        </a>
-                                    </th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -132,7 +129,7 @@ require __DIR__ . '/../layouts/header.php';
                                 <tr>
                                     <td><?= htmlspecialchars($pabrik['kodepabrik']) ?></td>
                                     <td><?= htmlspecialchars($pabrik['namapabrik']) ?></td>
-                                    <td>
+                                    <td align="center">
                                         <span class="badge bg-<?= ($pabrik['status'] ?? '') === 'aktif' ? 'success' : 'danger' ?>">
                                             <?= htmlspecialchars(ucfirst($pabrik['status'] ?? '-')) ?>
                                         </span>

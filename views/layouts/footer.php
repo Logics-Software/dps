@@ -407,11 +407,16 @@
         $scripts = is_array($additionalInlineScripts) ? $additionalInlineScripts : [$additionalInlineScripts];
         foreach ($scripts as $script) {
             if (!empty($script)) {
-                echo $script;
+                echo '<script>' . "\n" . $script . "\n" . '</script>' . "\n";
             }
         }
     }
     ?>
+    
+    <!-- Floating Home Button -->
+    <a href="/dashboard" class="floating-home-btn" aria-label="Kembali ke Dashboard">
+        <?= icon('house', '', 24) ?>
+    </a>
 </body>
 </html>
 

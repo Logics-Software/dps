@@ -188,6 +188,11 @@ $router->post('/api/mastercustomer', 'ApiMastercustomerController', 'index');
 $router->put('/api/mastercustomer', 'ApiMastercustomerController', 'index');
 $router->delete('/api/mastercustomer', 'ApiMastercustomerController', 'index');
 
+// Laporan routes
+$router->get('/laporan/daftar-barang', 'LaporanController', 'daftarBarang');
+$router->get('/laporan/daftar-stok', 'LaporanController', 'daftarStok');
+$router->get('/laporan/daftar-harga', 'LaporanController', 'daftarHarga');
+
 // Dispatch
 $router->dispatch();
 

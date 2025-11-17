@@ -64,8 +64,8 @@ require __DIR__ . '/../layouts/header.php';
                     </div>
 
                     <div class="card-footer d-flex justify-content-between">
-                        <a href="/dashboard" class="btn btn-secondary">Batal</a>
-                        <button type="submit" class="btn btn-warning">Ubah Password</button>
+                        <a href="/dashboard" class="btn btn-secondary"><?= icon('cancel', 'me-1 mb-1', 18) ?>Batal</a>
+                        <button type="submit" class="btn btn-warning"><?= icon('save', 'me-1 mb-1', 18) ?>Ubah Password</button>
                     </div>
                 </form>
             </div>

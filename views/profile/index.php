@@ -25,7 +25,7 @@ require __DIR__ . '/../layouts/header.php';
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex align-items-center">    
-                        <h4 class="mb-0">Ubah Profil</h4>
+                        <h4 class="mb-0">Edit Profil</h4>
                     </div>
                 </div>
 
@@ -86,9 +86,9 @@ require __DIR__ . '/../layouts/header.php';
                     </div>
 
                     <div class="card-footer d-flex justify-content-between">
-                        <a href="/dashboard" class="btn btn-secondary">Batal</a>
+                        <a href="/dashboard" class="btn btn-secondary"><?= icon('cancel', 'me-1 mb-1', 18) ?>Batal</a>
                         <div>
-                            <button type="submit" class="btn btn-primary">Update Profil</button>
+                            <button type="submit" class="btn btn-primary"><?= icon('save', 'me-1 mb-1', 18) ?>Update Profil</button>
                         </div>
                     </div>
                 </form>

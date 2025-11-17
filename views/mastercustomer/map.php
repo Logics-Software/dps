@@ -229,9 +229,18 @@ $additionalInlineScripts[] = <<<JS
 
     mapboxgl.accessToken = token;
 
-    const initialLat = customerData && typeof customerData.latitude === 'number' ? customerData.latitude : -6.200000;
-    const initialLng = customerData && typeof customerData.longitude === 'number' ? customerData.longitude : 106.816666;
-    const hasInitial = customerData && typeof customerData.latitude === 'number' && typeof customerData.longitude === 'number';
+    // Check if coordinates are 0,0 or null/undefined
+    const customerLat = customerData && typeof customerData.latitude === 'number' ? customerData.latitude : null;
+    const customerLng = customerData && typeof customerData.longitude === 'number' ? customerData.longitude : null;
+    // Auto-detect if both coordinates are 0, or if both are null/undefined
+    const isZeroCoordinates = (customerLat === 0 && customerLng === 0) || 
+                               (customerLat === null && customerLng === null) ||
+                               (customerLat === 0 && customerLng === null) ||
+                               (customerLat === null && customerLng === 0);
+    
+    const initialLat = customerLat !== null && customerLat !== 0 ? customerLat : -6.200000;
+    const initialLng = customerLng !== null && customerLng !== 0 ? customerLng : 106.816666;
+    const hasInitial = customerData && typeof customerData.latitude === 'number' && typeof customerData.longitude === 'number' && !isZeroCoordinates;
 
     const map = new mapboxgl.Map({
         container: mapContainer,
@@ -293,30 +302,38 @@ $additionalInlineScripts[] = <<<JS
         });
     }
 
+    // Function to get user location
+    function getUserLocation() {
+        if (!navigator.geolocation) {
+            setStatus('Perangkat tidak mendukung geolocation.', 'error');
+            return;
+        }
+        setStatus('Mengambil lokasi perangkat…', '');
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            map.flyTo({ center: [coords.lng, coords.lat], zoom: 16 });
+            marker.setLngLat([coords.lng, coords.lat]);
+            updateFields(coords);
+            setStatus('Koordinat diperoleh dari lokasi perangkat.', 'success');
+        }, function(err) {
+            setStatus('Tidak dapat memperoleh lokasi: ' + (err && err.message ? err.message : 'akses ditolak'), 'error');
+        }, {
+            enableHighAccuracy: true,
+            timeout: 10000
+        });
+    }
+
     if (useLocationBtn) {
-        useLocationBtn.addEventListener('click', function() {
-            if (!navigator.geolocation) {
-                showAlert({
-                    title: 'Informasi',
-                    message: 'Perangkat tidak mendukung geolocation.',
-                    buttonText: 'Mengerti',
-                    buttonClass: 'btn-primary'
-                });
-                return;
-            }
-            setStatus('Mengambil lokasi perangkat…', '');
-            navigator.geolocation.getCurrentPosition(function(pos) {
-                const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                map.flyTo({ center: [coords.lng, coords.lat], zoom: 16 });
-                marker.setLngLat([coords.lng, coords.lat]);
-                updateFields(coords);
-                setStatus('Koordinat diperoleh dari lokasi perangkat.', 'success');
-            }, function(err) {
-                setStatus('Tidak dapat memperoleh lokasi: ' + (err && err.message ? err.message : 'akses ditolak'), 'error');
-            }, {
-                enableHighAccuracy: true,
-                timeout: 10000
-            });
+        useLocationBtn.addEventListener('click', getUserLocation);
+    }
+
+    // Auto-detect GPS if coordinates are 0,0 or null
+    if (isZeroCoordinates) {
+        // Wait for map to load first
+        map.on('load', function() {
+            setTimeout(function() {
+                getUserLocation();
+            }, 500);
         });
     }
 
@@ -413,7 +430,10 @@ $additionalInlineScripts[] = <<<JS
         });
     }
 
-    updateFields({ lat: initialLat, lng: initialLng }, true);
+    // Only update fields if we have valid coordinates (not 0,0 or null)
+    if (!isZeroCoordinates) {
+        updateFields({ lat: initialLat, lng: initialLng }, true);
+    }
 })();
 JS;
 

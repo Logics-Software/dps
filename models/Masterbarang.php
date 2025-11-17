@@ -78,6 +78,8 @@ class Masterbarang {
             'namabarang',
             'kodepabrik',
             'kodegolongan',
+            'namapabrik',
+            'namagolongan',
             'kodesupplier',
             'hpp',
             'hargajual',
@@ -89,6 +91,25 @@ class Masterbarang {
         $sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'id';
         $sortOrder = strtoupper($sortOrder) === 'DESC' ? 'DESC' : 'ASC';
 
+        // Map sort column to actual database column (for joined tables)
+        $sortColumnMap = [
+            'namapabrik' => 'tp.namapabrik',
+            'namagolongan' => 'tg.namagolongan',
+            'kodepabrik' => 'mb.kodepabrik',
+            'kodegolongan' => 'mb.kodegolongan',
+            'kodesupplier' => 'mb.kodesupplier',
+            'hpp' => 'mb.hpp',
+            'hargajual' => 'mb.hargajual',
+            'stokakhir' => 'mb.stokakhir',
+            'status' => 'mb.status',
+            'id' => 'mb.id',
+            'kodebarang' => 'mb.kodebarang',
+            'namabarang' => 'mb.namabarang',
+            'created_at' => 'mb.created_at',
+            'updated_at' => 'mb.updated_at'
+        ];
+        $orderByColumn = $sortColumnMap[$sortBy] ?? 'mb.id';
+
         $whereClause = implode(' AND ', $where);
 
         $sql = "SELECT mb.*, tp.namapabrik, tg.namagolongan, ms.namasupplier
@@ -97,7 +118,7 @@ class Masterbarang {
                 LEFT JOIN tabelgolongan tg ON mb.kodegolongan = tg.kodegolongan
                 LEFT JOIN mastersupplier ms ON mb.kodesupplier = ms.kodesupplier
                 WHERE {$whereClause}
-                ORDER BY {$sortBy} {$sortOrder}
+                ORDER BY {$orderByColumn} {$sortOrder}
                 LIMIT ? OFFSET ?";
         $params[] = $perPage;
         $params[] = $offset;

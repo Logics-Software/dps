@@ -202,7 +202,7 @@ require __DIR__ . '/../layouts/header.php';
                     <a class="page-link" href="?page=<?= $page - 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($statusFilter) ?>">Previous</a>
                 </li>
                 <?php
-                $maxLinks = 5;
+                $maxLinks = 3;
                 $half = (int)floor($maxLinks / 2);
                 $start = max(1, $page - $half);
                 $end = min($totalPages, $start + $maxLinks - 1);
@@ -576,7 +576,7 @@ $jsCode = <<<'JAVASCRIPT'
 })();
 JAVASCRIPT;
 $jsCode = str_replace('BASE_URL_PLACEHOLDER', $baseUrlJs, $jsCode);
-$additionalInlineScripts[] = '<script>' . $jsCode . '</script>';
+$additionalInlineScripts[] = $jsCode;
 ?>
 
 <?php require __DIR__ . '/../layouts/footer.php'; ?>
