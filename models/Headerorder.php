@@ -52,8 +52,17 @@ class Headerorder {
 			$params[] = "%{$search}%";
 		}
 
-		$validSortColumns = ['tanggalorder', 'noorder', 'nilaiorder', 'status'];
+		$validSortColumns = ['tanggalorder', 'noorder', 'nilaiorder', 'status', 'namacustomer', 'nopenjualan'];
 		$sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'tanggalorder';
+		
+		// Handle sorting for joined columns
+		if ($sortBy === 'namacustomer') {
+			$sortColumn = 'mc.namacustomer';
+		} elseif ($sortBy === 'nopenjualan') {
+			$sortColumn = 'ho.nopenjualan';
+		} else {
+			$sortColumn = 'ho.' . $sortBy;
+		}
 
 		$whereClause = implode(' AND ', $where);
 
@@ -61,7 +70,7 @@ class Headerorder {
 				FROM headerorder ho
 				LEFT JOIN mastercustomer mc ON ho.kodecustomer = mc.kodecustomer
 				WHERE {$whereClause}
-				ORDER BY ho.{$sortBy} {$sortOrder}
+				ORDER BY {$sortColumn} {$sortOrder}
 				LIMIT ? OFFSET ?";
 		$params[] = $perPage;
 		$params[] = $offset;

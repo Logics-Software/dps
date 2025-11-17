@@ -51,7 +51,7 @@ require __DIR__ . '/../layouts/header.php';
                                     📷 Ganti Foto
                                 </label>
                                 <input type="file" class="d-none" id="picture" name="picture" accept="image/*">
-                                <p class="text-muted mt-2 mb-0"><small>Format: JPG, PNG, GIF (Max 2MB)</small></p>
+                                <p class="text-muted mt-2 mb-0"><small>Format: JPG, PNG, GIF (Max 5MB)</small></p>
                             </div>
                         </div>
                         

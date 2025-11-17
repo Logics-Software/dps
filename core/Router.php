@@ -36,6 +36,24 @@ class Router {
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $method = $_SERVER['REQUEST_METHOD'];
         
+        // Skip routing for static files (assets, uploads, images, etc.)
+        $staticExtensions = ['.css', '.js', '.jpg', '.jpeg', '.png', '.gif', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.pdf', '.doc', '.docx', '.xls', '.xlsx'];
+        $staticPaths = ['/assets/', '/uploads/', '/favicon.ico'];
+        
+        foreach ($staticPaths as $staticPath) {
+            if (strpos($uri, $staticPath) === 0) {
+                // Let web server handle static files
+                return;
+            }
+        }
+        
+        foreach ($staticExtensions as $ext) {
+            if (substr($uri, -strlen($ext)) === $ext) {
+                // Let web server handle static files
+                return;
+            }
+        }
+        
         // Handle method override for PUT/DELETE (browsers don't support these natively)
         if ($method === 'POST' && isset($_POST['_method'])) {
             $method = strtoupper($_POST['_method']);
@@ -60,12 +78,27 @@ class Router {
         foreach ($this->routes as $route) {
             $pattern = $this->convertToRegex($route['path']);
             
+            // Debug for messages routes
+            if (strpos($route['path'], 'messages') !== false) {
+                $testMatch = preg_match($pattern, $uri, $testMatches);
+                error_log("Testing route: {$route['path']} -> Pattern: {$pattern} -> Match: " . ($testMatch ? 'YES' : 'NO'));
+                if ($testMatch) {
+                    error_log("Matched params: " . print_r($testMatches, true));
+                }
+            }
+            
             if ($route['method'] === $method && preg_match($pattern, $uri, $matches)) {
                 array_shift($matches);
                 $this->params = $matches;
                 
                 $controllerName = $route['controller'];
                 $actionName = $route['action'];
+                
+                // Debug: Log route match for messages
+                if (strpos($route['path'], 'messages') !== false) {
+                    error_log("Router matched: " . $route['path'] . " -> " . $controllerName . "::" . $actionName);
+                    error_log("Router params: " . print_r($this->params, true));
+                }
                 
                 if (!class_exists($controllerName)) {
                     http_response_code(500);
@@ -91,15 +124,17 @@ class Router {
         echo "Method: " . htmlspecialchars($method) . "<br>";
         echo "<br>Available routes:<br>";
         foreach ($this->routes as $route) {
-            echo htmlspecialchars($route['method'] . ' ' . $route['path']) . "<br>";
+            $pattern = $this->convertToRegex($route['path']);
+            $matched = preg_match($pattern, $uri, $testMatches) ? '✓ MATCH' : '';
+            echo htmlspecialchars($route['method'] . ' ' . $route['path']) . " " . $matched . "<br>";
         }
     }
     
     private function convertToRegex($path) {
         // Simple approach: replace {param} with regex, escape the rest
         $pattern = $path;
-        // Replace {param} placeholders with regex groups
-        $pattern = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '([a-zA-Z0-9_-]+)', $pattern);
+        // Replace {param} placeholders with regex groups (allow alphanumeric and dashes)
+        $pattern = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '([a-zA-Z0-9\-]+)', $pattern);
         // Escape forward slashes and other special chars, but preserve our capture groups
         $pattern = str_replace('/', '\/', $pattern);
         return '#^' . $pattern . '$#';

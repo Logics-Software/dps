@@ -104,7 +104,7 @@ require __DIR__ . '/../layouts/header.php';
                             </div>
                             <?php endif; ?>
                             <input type="file" class="form-control" id="picture" name="picture" accept="image/*">
-                            <small class="text-muted">Format: JPG, PNG, GIF (Max 2MB). Kosongkan jika tidak ingin mengubah foto.</small>
+                            <small class="text-muted">Format: JPG, PNG, GIF (Max 5MB). Kosongkan jika tidak ingin mengubah foto.</small>
                         </div>                        
                     </div>
                     <div class="card-footer d-flex justify-content-between">

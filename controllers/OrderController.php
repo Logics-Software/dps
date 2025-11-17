@@ -4,6 +4,7 @@ class OrderController extends Controller {
 	private $detailModel;
 	private $customerModel;
 	private $barangModel;
+	private $orderFileModel;
 
 	public function __construct() {
 		parent::__construct();
@@ -11,6 +12,7 @@ class OrderController extends Controller {
 		$this->detailModel = new Detailorder();
 		$this->customerModel = new Mastercustomer();
 		$this->barangModel = new Masterbarang();
+		$this->orderFileModel = new OrderFile();
 	}
 
 	public function index() {
@@ -28,6 +30,9 @@ class OrderController extends Controller {
 
 		[$computedStartDate, $computedEndDate] = $this->computeDateRange($dateFilter, $startDate, $endDate);
 
+		$sortBy = $_GET['sort_by'] ?? 'tanggalorder';
+		$sortOrder = strtoupper($_GET['sort_order'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+		
 		$options = [
 			'page' => $page,
 			'per_page' => $perPage,
@@ -35,8 +40,8 @@ class OrderController extends Controller {
 			'status' => $status,
 			'start_date' => $computedStartDate,
 			'end_date' => $computedEndDate,
-			'sort_by' => 'tanggalorder',
-			'sort_order' => 'DESC'
+			'sort_by' => $sortBy,
+			'sort_order' => $sortOrder
 		];
 
 		if (($user['role'] ?? '') === 'sales') {
@@ -59,7 +64,9 @@ class OrderController extends Controller {
 			'startDate' => $computedStartDate,
 			'endDate' => $computedEndDate,
 			'rawStartDate' => $startDate,
-			'rawEndDate' => $endDate
+			'rawEndDate' => $endDate,
+			'sortBy' => $sortBy,
+			'sortOrder' => $sortOrder
 		];
 
 		$this->view('orders/index', $data);
@@ -85,7 +92,12 @@ class OrderController extends Controller {
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 			$result = $this->processFormData($noorder, $user, true);
 			if ($result['success']) {
-				Session::flash('success', 'Order berhasil dibuat');
+				$message = 'Order berhasil dibuat';
+				if (isset($result['warning'])) {
+					Session::flash('warning', $result['warning']);
+				} else {
+					Session::flash('success', $message);
+				}
 				$this->redirect('/orders');
 			} else {
 				Session::flash('error', $result['message']);
@@ -138,11 +150,17 @@ class OrderController extends Controller {
 		];
 		$barangs = $this->barangModel->getAllForSelection();
 		$detailItems = $this->detailModel->getByNoorder($noorder);
+		$orderFiles = $this->orderFileModel->listByOrder($noorder);
 
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 			$result = $this->processFormData($noorder, $user, false, $order);
 			if ($result['success']) {
-				Session::flash('success', 'Order berhasil diperbarui');
+				$message = 'Order berhasil diperbarui';
+				if (isset($result['warning'])) {
+					Session::flash('warning', $result['warning']);
+				} else {
+					Session::flash('success', $message);
+				}
 				$this->redirect('/orders');
 			} else {
 				Session::flash('error', $result['message']);
@@ -162,6 +180,7 @@ class OrderController extends Controller {
 			'customers' => $customers,
 			'customersByStatus' => $customersByStatus,
 			'barangs' => $barangs,
+			'orderFiles' => $orderFiles,
 			'statuspkp' => $_POST['statuspkp'] ?? ($order['statuspkp'] ?? 'pkp'),
 			'barangsJson' => json_encode($barangs),
 			'customersByStatusJson' => json_encode($customersByStatus),
@@ -187,10 +206,12 @@ class OrderController extends Controller {
 		}
 
 		$details = $this->detailModel->getByNoorder($noorder);
+		$orderFiles = $this->orderFileModel->listByOrder($noorder);
 
 		$data = [
 			'order' => $order,
 			'details' => $details,
+			'orderFiles' => $orderFiles,
 			'backUrl' => $_GET['back'] ?? '/orders' // Custom back URL from query parameter or default
 		];
 
@@ -218,6 +239,9 @@ class OrderController extends Controller {
 		}
 
 		try {
+			// Delete associated files first
+			$this->orderFileModel->deleteByOrder($noorder);
+			// Then delete the order
 			$this->headerModel->delete($noorder);
 			Session::flash('success', 'Order berhasil dihapus');
 		} catch (Exception $e) {
@@ -309,6 +333,16 @@ class OrderController extends Controller {
 				$this->headerModel->create($headerData, $detailData);
 			} else {
 				$this->headerModel->update($noorder, $headerData, $detailData);
+			}
+
+			// Handle file uploads
+			if (isset($_FILES['order_files']) && !empty($_FILES['order_files']['name'])) {
+				$uploadErrors = $this->handleFileUploads($noorder, $_FILES['order_files'], $user);
+				if (!empty($uploadErrors)) {
+					// File upload errors, but order is already saved
+					// Return success with warning message
+					return ['success' => true, 'warning' => 'Order berhasil disimpan, namun beberapa file gagal diupload: ' . implode(', ', $uploadErrors)];
+				}
 			}
 		} catch (Exception $e) {
 			return ['success' => false, 'message' => 'Terjadi kesalahan: ' . $e->getMessage()];
@@ -410,6 +444,134 @@ class OrderController extends Controller {
 		}
 
 		return sprintf('%s%05d', $prefix, $nextNumber);
+	}
+
+	private function handleFileUploads($noorder, $files, $user) {
+		$appConfig = require __DIR__ . '/../config/app.php';
+		$uploadPath = $appConfig['upload_path'] . 'orders/';
+		$allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'zip', 'rar'];
+		$maxFileSize = 5242880; // 5MB
+		$maxFiles = 5;
+
+		// Ensure upload directory exists and is writable
+		if (!is_dir($uploadPath)) {
+			if (!mkdir($uploadPath, 0755, true)) {
+				return ['Gagal membuat folder upload. Pastikan folder uploads/orders/ dapat ditulis.'];
+			}
+		}
+
+		if (!is_writable($uploadPath)) {
+			return ['Folder upload tidak dapat ditulis. Pastikan folder uploads/orders/ memiliki permission yang benar.'];
+		}
+
+		$errors = [];
+		$fileCount = 0;
+
+		// Count non-empty files
+		foreach ($files['name'] as $name) {
+			if (!empty($name)) {
+				$fileCount++;
+			}
+		}
+
+		// Check max files limit
+		if ($fileCount > $maxFiles) {
+			return ['Maksimal ' . $maxFiles . ' file yang dapat diupload'];
+		}
+
+		// Get existing files count
+		$existingFiles = $this->orderFileModel->listByOrder($noorder);
+		$existingCount = count($existingFiles);
+		if (($existingCount + $fileCount) > $maxFiles) {
+			return ['Total file tidak boleh melebihi ' . $maxFiles . ' file (sudah ada ' . $existingCount . ' file)'];
+		}
+
+		$uploadedCount = 0;
+		$totalFiles = count($files['name']);
+
+		for ($i = 0; $i < $totalFiles; $i++) {
+			// Skip empty file names
+			if (empty($files['name'][$i])) {
+				continue;
+			}
+
+			if ($files['error'][$i] !== UPLOAD_ERR_OK) {
+				$errorMsg = 'Error upload';
+				switch ($files['error'][$i]) {
+					case UPLOAD_ERR_INI_SIZE:
+					case UPLOAD_ERR_FORM_SIZE:
+						$errorMsg = 'File terlalu besar';
+						break;
+					case UPLOAD_ERR_PARTIAL:
+						$errorMsg = 'File hanya terupload sebagian';
+						break;
+					case UPLOAD_ERR_NO_FILE:
+						$errorMsg = 'Tidak ada file yang diupload';
+						break;
+					case UPLOAD_ERR_NO_TMP_DIR:
+						$errorMsg = 'Folder temporary tidak ditemukan';
+						break;
+					case UPLOAD_ERR_CANT_WRITE:
+						$errorMsg = 'Gagal menulis file ke disk';
+						break;
+					case UPLOAD_ERR_EXTENSION:
+						$errorMsg = 'Upload dihentikan oleh extension PHP';
+						break;
+				}
+				$errors[] = $files['name'][$i] . ' - ' . $errorMsg;
+				continue;
+			}
+
+			$originalName = $files['name'][$i];
+			$tmpName = $files['tmp_name'][$i];
+			$fileSize = $files['size'][$i];
+			$fileType = $files['type'][$i];
+			$extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+			// Validate file type
+			if (!in_array($extension, $allowedTypes)) {
+				$errors[] = $originalName . ' - Format file tidak diizinkan (hanya: ' . implode(', ', $allowedTypes) . ')';
+				continue;
+			}
+
+			// Validate file size
+			if ($fileSize > $maxFileSize) {
+				$errors[] = $originalName . ' - Ukuran file terlalu besar (maksimal ' . ($maxFileSize / 1024 / 1024) . 'MB)';
+				continue;
+			}
+
+			// Generate unique filename
+			$filename = uniqid() . '_' . time() . '.' . $extension;
+			$targetPath = $uploadPath . $filename;
+			$relativePath = 'uploads/orders/' . $filename;
+
+			// Move uploaded file
+			if (move_uploaded_file($tmpName, $targetPath)) {
+				// Save file info to database
+				try {
+					$this->orderFileModel->create([
+						'noorder' => $noorder,
+						'filename' => $filename,
+						'original_filename' => $originalName,
+						'file_path' => $relativePath,
+						'file_type' => $fileType,
+						'file_size' => $fileSize,
+						'uploaded_by' => $user['id'] ?? null
+					]);
+					$uploadedCount++;
+				} catch (Exception $e) {
+					// If database save fails, delete the uploaded file
+					if (file_exists($targetPath)) {
+						unlink($targetPath);
+					}
+					$errors[] = $originalName . ' - Gagal menyimpan ke database: ' . $e->getMessage();
+				}
+			} else {
+				$errors[] = $originalName . ' - Gagal menyimpan file ke server';
+			}
+		}
+
+		return $errors;
 	}
 }
 

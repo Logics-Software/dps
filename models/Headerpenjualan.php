@@ -46,6 +46,21 @@ class Headerpenjualan {
 			$params[] = $statuspkp;
 		}
 
+		$sortBy = $options['sort_by'] ?? 'tanggalpenjualan';
+		$sortOrder = strtoupper($options['sort_order'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+		
+		$validSortColumns = ['tanggalpenjualan', 'nopenjualan', 'namacustomer', 'namasales', 'noorder'];
+		$sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'tanggalpenjualan';
+		
+		// Handle sorting for joined columns
+		if ($sortBy === 'namacustomer') {
+			$sortColumn = 'mc.namacustomer';
+		} elseif ($sortBy === 'namasales') {
+			$sortColumn = 'u.namasales';
+		} else {
+			$sortColumn = 'hp.' . $sortBy;
+		}
+
 		$whereClause = implode(' AND ', $where);
 
 		$sql = "SELECT hp.*, mc.namacustomer, u.namasales
@@ -53,7 +68,7 @@ class Headerpenjualan {
 				LEFT JOIN mastercustomer mc ON hp.kodecustomer = mc.kodecustomer
 				LEFT JOIN mastersales u ON hp.kodesales = u.kodesales
 				WHERE {$whereClause}
-				ORDER BY hp.tanggalpenjualan DESC, hp.nopenjualan DESC
+				ORDER BY {$sortColumn} {$sortOrder}
 				LIMIT ? OFFSET ?";
 		$params[] = $perPage;
 		$params[] = $offset;

@@ -18,7 +18,9 @@ require __DIR__ . '/../layouts/header.php';
 
 	<div class="card">
 		<div class="card-header">
-			<h4 class="mb-0">Pesan Baru</h4>
+			<div class="d-flex align-items-center">
+				<h4 class="mb-0 me-auto">Pesan Baru</h4>
+			 </div>
 		</div>
 
 		<div class="card-body">
@@ -43,30 +45,30 @@ require __DIR__ . '/../layouts/header.php';
 							<label class="form-label">Penerima <span class="text-danger">*</span></label>
 							
 							<!-- Search and Filter Controls -->
-							<div class="row mb-3">
-								<div class="col-md-7 mb-2">
+							<div class="row g-2 mb-3">
+								<div class="col-6 col-md-8">
 									<div class="input-group">
-										<span class="input-group-text">
-											🔍
-										</span>
 										<input type="text" class="form-control" id="userSearch" placeholder="Cari berdasarkan nama, username, atau email...">
+										<button type="button" class="btn btn-secondary" id="userSearchToggleBtn" title="Search">
+											<span id="userSearchIcon"><?= icon('magnifying-glass', 'me-0 mb-1', 16) ?></span>
+										</button>
 									</div>
 								</div>
-								<div class="col-md-3 mb-2">
+								<div class="col-3 col-md-3">
 									<select class="form-select" id="roleFilter">
-										<option value="">Semua Role</option>
+										<option value="">Semua</option>
 										<option value="admin">Admin</option>
 										<option value="manajemen">Manajemen</option>
 										<option value="operator">Operator</option>
 										<option value="sales">Sales</option>
 									</select>
 								</div>
-								<div class="col-md-2">
+								<div class="col-2 col-md-1">
 									<div class="btn-group w-100" role="group">
-										<button type="button" class="btn btn-primary btn-sm" id="selectAllBtn" title="Pilih Semua">
+										<button type="button" class="btn btn-primary" id="selectAllBtn" title="Pilih Semua">
 											<?= icon('list-check', 'mb-0', 16) ?>
 										</button>
-										<button type="button" class="btn btn-danger btn-sm" id="clearAllBtn" title="Hapus Semua">
+										<button type="button" class="btn btn-danger" id="clearAllBtn" title="Hapus Semua">
 											<?= icon('cancel', 'mb-0', 16) ?>
 										</button>
 									</div>
@@ -150,6 +152,7 @@ require __DIR__ . '/../layouts/header.php';
 <link href="<?= BASE_URL ?>assets/css/quill.snow.css" rel="stylesheet">
 <script src="<?= BASE_URL ?>assets/js/quill.js"></script>
 
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 	// Initialize Quill Editor
@@ -180,11 +183,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	// Auto-fill content for forward
 	<?php if (isset($forward_data) && $forward_data): ?>
-	const forwardSenderName = "<?= htmlspecialchars($forward_data['forward_sender']['name'], ENT_QUOTES) ?>";
-	const forwardSenderEmail = "<?= htmlspecialchars($forward_data['forward_sender']['email'], ENT_QUOTES) ?>";
-	const forwardContent = `<?= addslashes($forward_data['content']) ?>`;
-	const forwardSubject = "<?= htmlspecialchars($forward_data['subject'], ENT_QUOTES) ?>";
-	const forwardDate = "<?= date('d F Y, H:i', strtotime($forward_data['created_at'])) ?>";
+	const forwardSenderName = <?= json_encode($forward_data['forward_sender']['name'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+	const forwardSenderEmail = <?= json_encode($forward_data['forward_sender']['email'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+	const forwardContent = <?= json_encode($forward_data['content'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+	const forwardSubject = <?= json_encode($forward_data['subject'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+	const forwardDate = <?= json_encode(date('d F Y, H:i', strtotime($forward_data['created_at'] ?? 'now')), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 	
 	setTimeout(() => {
 		const forwardMessage = `
@@ -357,16 +360,23 @@ document.addEventListener('DOMContentLoaded', function() {
 		
 		const usersHtml = users.map(user => {
 			const isSelected = selectedUsers.some(selected => selected.id == user.id);
-			const userPicture = user.picture ? 
-				`<img src="<?= BASE_URL ?>${user.picture}" alt="${user.namalengkap}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">` :
-				`<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">${user.namalengkap.charAt(0).toUpperCase()}</div>`;
+			const config = <?= json_encode(require __DIR__ . '/../../config/app.php', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+			const uploadUrl = config.upload_url || '/uploads/';
+			const baseUrl = <?= json_encode(BASE_URL, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+			const avatarInitial = user.namalengkap.charAt(0).toUpperCase();
+			let userPicture = '';
+			if (user.picture) {
+				userPicture = `<img src="${baseUrl}${uploadUrl}${user.picture}" alt="${user.namalengkap}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
+			} else {
+				userPicture = `<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">${avatarInitial}</div>`;
+			}
 			
 			return `
 				<div class="col-xxl-2 col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-2">
 					<div class="card user-selection-item position-relative ${isSelected ? 'border-primary' : ''}" data-user-id="${user.id}" style="cursor: pointer;">
-						<div class="position-absolute top-0 start-0 m-2" style="z-index: 10;">
+						<div class="position-absolute" style="top: 0; left: 0.25rem; z-index: 10;">
 							<div class="form-check">
-								<input type="checkbox" class="form-check-input" ${isSelected ? 'checked' : ''} onchange="toggleUser(${user.id})">
+								<input type="checkbox" class="form-check-input" style="border-radius: 0;" ${isSelected ? 'checked' : ''} onchange="toggleUser(${user.id})">
 							</div>
 						</div>
 						<div class="card-body d-flex align-items-center" style="padding: 0.75rem; min-height: 60px;">

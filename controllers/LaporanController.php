@@ -37,8 +37,9 @@ class LaporanController extends Controller {
 
         // For display, use pagination
         $page = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
-        $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 50;
-        $perPage = in_array($perPage, [25, 50, 100, 200, 500]) ? $perPage : 50;
+        $perPageOptions = [10, 25, 50, 100, 200, 500, 1000];
+        $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
+        $perPage = in_array($perPage, $perPageOptions, true) ? $perPage : 10;
 
         $barangs = $this->getBarangsForReport($search, $kodepabrik, $kodegolongan, $kondisiStok, $sortBy, $sortOrder, $page, $perPage);
         $total = $this->countBarangsForReport($search, $kodepabrik, $kodegolongan, $kondisiStok);
@@ -67,7 +68,7 @@ class LaporanController extends Controller {
         $this->view('laporan/daftar-barang', $data);
     }
 
-    private function getBarangsForReport($search = '', $kodepabrik = '', $kodegolongan = '', $kondisiStok = 'semua', $sortBy = 'namabarang', $sortOrder = 'ASC', $page = 1, $perPage = 50) {
+    private function getBarangsForReport($search = '', $kodepabrik = '', $kodegolongan = '', $kondisiStok = 'semua', $sortBy = 'namabarang', $sortOrder = 'ASC', $page = 1, $perPage = 10) {
         $offset = ($page - 1) * $perPage;
         
         $where = ["1=1"];
@@ -409,8 +410,9 @@ class LaporanController extends Controller {
 
         // For display, use pagination
         $page = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
-        $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 50;
-        $perPage = in_array($perPage, [25, 50, 100, 200, 500]) ? $perPage : 50;
+        $perPageOptions = [10, 25, 50, 100, 200, 500, 1000];
+        $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
+        $perPage = in_array($perPage, $perPageOptions, true) ? $perPage : 10;
 
         $barangs = $this->getStoksForReport($search, $kodepabrik, $kodegolongan, $kondisiStok, $sortBy, $sortOrder, $page, $perPage);
         $total = $this->countStoksForReport($search, $kodepabrik, $kodegolongan, $kondisiStok);
@@ -439,7 +441,7 @@ class LaporanController extends Controller {
         $this->view('laporan/daftar-stok', $data);
     }
 
-    private function getStoksForReport($search = '', $kodepabrik = '', $kodegolongan = '', $kondisiStok = 'semua', $sortBy = 'namabarang', $sortOrder = 'ASC', $page = 1, $perPage = 50) {
+    private function getStoksForReport($search = '', $kodepabrik = '', $kodegolongan = '', $kondisiStok = 'semua', $sortBy = 'namabarang', $sortOrder = 'ASC', $page = 1, $perPage = 10) {
         $offset = ($page - 1) * $perPage;
         
         $where = ["1=1"];
@@ -771,8 +773,9 @@ class LaporanController extends Controller {
 
         // For display, use pagination
         $page = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
-        $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 50;
-        $perPage = in_array($perPage, [25, 50, 100, 200, 500]) ? $perPage : 50;
+        $perPageOptions = [10, 25, 50, 100, 200, 500, 1000];
+        $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
+        $perPage = in_array($perPage, $perPageOptions, true) ? $perPage : 10;
 
         $barangs = $this->getHargasForReport($search, $kodepabrik, $kodegolongan, $kondisiStok, $sortBy, $sortOrder, $page, $perPage);
         $total = $this->countHargasForReport($search, $kodepabrik, $kodegolongan, $kondisiStok);
@@ -801,7 +804,7 @@ class LaporanController extends Controller {
         $this->view('laporan/daftar-harga', $data);
     }
 
-    private function getHargasForReport($search = '', $kodepabrik = '', $kodegolongan = '', $kondisiStok = 'semua', $sortBy = 'namabarang', $sortOrder = 'ASC', $page = 1, $perPage = 50) {
+    private function getHargasForReport($search = '', $kodepabrik = '', $kodegolongan = '', $kondisiStok = 'semua', $sortBy = 'namabarang', $sortOrder = 'ASC', $page = 1, $perPage = 10) {
         $offset = ($page - 1) * $perPage;
         
         $where = ["1=1"];

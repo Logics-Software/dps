@@ -155,11 +155,22 @@ class Headerpenerimaan {
 
 			$seq = 1;
 			foreach ($details as $detail) {
+				$nogiro = $detail['nogiro'] ?? null;
+				$tanggalcair = $detail['tanggalcair'] ?? null;
+				
+				// Ensure empty strings are converted to null for database compatibility
+				if ($nogiro === '') {
+					$nogiro = null;
+				}
+				if ($tanggalcair === '') {
+					$tanggalcair = null;
+				}
+				
 				$this->db->query($detailSql, [
 					$headerData['nopenerimaan'],
 					$detail['nopenjualan'],
-					$detail['nogiro'] ?? null,
-					$detail['tanggalcair'] ?? null,
+					$nogiro,
+					$tanggalcair,
 					$detail['piutang'] ?? 0,
 					$detail['potongan'] ?? 0,
 					$detail['lainlain'] ?? 0,
@@ -203,11 +214,22 @@ class Headerpenerimaan {
 
 				$seq = 1;
 				foreach ($details as $detail) {
+					$nogiro = $detail['nogiro'] ?? null;
+					$tanggalcair = $detail['tanggalcair'] ?? null;
+					
+					// Ensure empty strings are converted to null for database compatibility
+					if ($nogiro === '') {
+						$nogiro = null;
+					}
+					if ($tanggalcair === '') {
+						$tanggalcair = null;
+					}
+					
 					$this->db->query($detailSql, [
 						$nopenerimaan,
 						$detail['nopenjualan'],
-						$detail['nogiro'] ?? null,
-						$detail['tanggalcair'] ?? null,
+						$nogiro,
+						$tanggalcair,
 						$detail['piutang'] ?? 0,
 						$detail['potongan'] ?? 0,
 						$detail['lainlain'] ?? 0,

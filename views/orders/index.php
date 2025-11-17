@@ -1,5 +1,34 @@
 <?php
 $title = 'Transaksi Order';
+$config = require __DIR__ . '/../../config/app.php';
+$baseUrl = rtrim($config['base_url'], '/');
+if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
+    $baseUrl = '/';
+}
+
+// Helper function to generate sort URL
+if (!function_exists('getSortUrl')) {
+    function getSortUrl($column, $currentSortBy, $currentSortOrder, $search, $status, $dateFilter, $rawStartDate, $rawEndDate, $perPage) {
+        $newSortOrder = ($currentSortBy == $column && $currentSortOrder == 'ASC') ? 'DESC' : 'ASC';
+        $params = [
+            'page' => 1,
+            'per_page' => $perPage,
+            'search' => $search,
+            'status' => $status,
+            'periode' => $dateFilter,
+            'sort_by' => $column,
+            'sort_order' => $newSortOrder
+        ];
+        if ($dateFilter === 'custom' && !empty($rawStartDate)) {
+            $params['start_date'] = $rawStartDate;
+        }
+        if ($dateFilter === 'custom' && !empty($rawEndDate)) {
+            $params['end_date'] = $rawEndDate;
+        }
+        return '/orders?' . http_build_query(array_filter($params));
+    }
+}
+
 require __DIR__ . '/../layouts/header.php';
 ?>
 
@@ -72,25 +101,43 @@ require __DIR__ . '/../layouts/header.php';
 					<a class="btn btn-filter btn-outline-secondary w-100" href="/orders"><?= icon('filter-circle-xmark', 'me-2 mb-0', 18) ?> Reset</a>
 				</div>
 				<input type="hidden" name="page" value="1">
+				<input type="hidden" name="sort_by" value="<?= htmlspecialchars($sortBy ?? 'tanggalorder') ?>">
+				<input type="hidden" name="sort_order" value="<?= htmlspecialchars($sortOrder ?? 'DESC') ?>">
 			</form>
 
 			<div class="table-responsive">
 				<table class="table table-striped align-middle">
 					<thead>
 						<tr>
-							<th>No Order</th>
-							<th>Tanggal</th>
-							<th>Customer</th>
+							<th class="th-sortable <?= ($sortBy ?? 'tanggalorder') === 'noorder' ? (($sortOrder ?? 'DESC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
+								<a href="<?= getSortUrl('noorder', $sortBy ?? 'tanggalorder', $sortOrder ?? 'DESC', $search ?? '', $status ?? '', $dateFilter ?? 'today', $rawStartDate ?? '', $rawEndDate ?? '', $perPage ?? 10) ?>" class="text-decoration-none text-dark">
+									No Order
+								</a>
+							</th>
+							<th class="th-sortable <?= ($sortBy ?? 'tanggalorder') === 'tanggalorder' ? (($sortOrder ?? 'DESC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
+								<a href="<?= getSortUrl('tanggalorder', $sortBy ?? 'tanggalorder', $sortOrder ?? 'DESC', $search ?? '', $status ?? '', $dateFilter ?? 'today', $rawStartDate ?? '', $rawEndDate ?? '', $perPage ?? 10) ?>" class="text-decoration-none text-dark">
+									Tanggal
+								</a>
+							</th>
+							<th class="th-sortable <?= ($sortBy ?? 'tanggalorder') === 'namacustomer' ? (($sortOrder ?? 'DESC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
+								<a href="<?= getSortUrl('namacustomer', $sortBy ?? 'tanggalorder', $sortOrder ?? 'DESC', $search ?? '', $status ?? '', $dateFilter ?? 'today', $rawStartDate ?? '', $rawEndDate ?? '', $perPage ?? 10) ?>" class="text-decoration-none text-dark">
+									Customer
+								</a>
+							</th>
 							<th>Alamat</th>
 							<th class="text-end">Nilai</th>
 							<th>Status</th>
-							<th>No.Faktur</th>
+							<th class="th-sortable <?= ($sortBy ?? 'tanggalorder') === 'nopenjualan' ? (($sortOrder ?? 'DESC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
+								<a href="<?= getSortUrl('nopenjualan', $sortBy ?? 'tanggalorder', $sortOrder ?? 'DESC', $search ?? '', $status ?? '', $dateFilter ?? 'today', $rawStartDate ?? '', $rawEndDate ?? '', $perPage ?? 10) ?>" class="text-decoration-none text-dark">
+									No.Faktur
+								</a>
+							</th>
 							<th>Aksi</th>
 						</tr>
 					</thead>
 					<tbody>
 					<?php if (empty($orders)): ?>
-						<tr><td colspan="6" class="text-center">Tidak ada data</td></tr>
+						<tr><td colspan="8" class="text-center">Tidak ada data</td></tr>
 					<?php else: foreach ($orders as $row): ?>
 						<tr>
 							<td class="fw-semibold"><?= htmlspecialchars($row['noorder']) ?></td>
@@ -99,7 +146,7 @@ require __DIR__ . '/../layouts/header.php';
 							<td><?= htmlspecialchars(($row['alamatcustomer'] ?? '') . (!empty($row['kota']) ? ', ' . $row['kota'] : '')) ?></td>
 							<td class="text-end"><?= number_format((float)($row['nilaiorder'] ?? 0), 0, ',', '.') ?></td>
 							<td align="center"><span class="badge bg-<?= ($row['status'] ?? '') === 'faktur' ? 'success' : 'warning' ?>"><?= htmlspecialchars(ucfirst($row['status'] ?? '')) ?></span></td>
-							<td><?= htmlspecialchars(($row['nofaktur'] ?? '-')) ?></td>
+							<td><?= htmlspecialchars(($row['nopenjualan'] ?? '-')) ?></td>
 							<td>
 								<div class="d-flex gap-1">
 									<a href="/orders/view/<?= urlencode($row['noorder']) ?>" class="btn btn-sm btn-info text-white"><?= icon('show', 'mb-0', 16) ?></a>

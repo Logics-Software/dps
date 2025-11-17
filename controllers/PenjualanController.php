@@ -24,6 +24,8 @@ class PenjualanController extends Controller {
 		$startDate = $_GET['start_date'] ?? null;
 		$endDate = $_GET['end_date'] ?? null;
 		$statuspkp = $_GET['statuspkp'] ?? null;
+		$sortBy = $_GET['sort_by'] ?? 'tanggalpenjualan';
+		$sortOrder = strtoupper($_GET['sort_order'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
 
 		$options = [
 			'page' => $page,
@@ -33,6 +35,8 @@ class PenjualanController extends Controller {
 			'start_date' => $startDate,
 			'end_date' => $endDate,
 			'statuspkp' => $statuspkp,
+			'sort_by' => $sortBy,
+			'sort_order' => $sortOrder
 		];
 
 		// Jika role adalah sales, filter hanya data penjualan dari sales tersebut
@@ -56,6 +60,8 @@ class PenjualanController extends Controller {
 			'startDate' => $startDate,
 			'endDate' => $endDate,
 			'statuspkp' => $statuspkp,
+			'sortBy' => $sortBy,
+			'sortOrder' => $sortOrder
 		];
 
 		$this->view('penjualan/index', $data);

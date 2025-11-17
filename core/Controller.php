@@ -7,9 +7,10 @@ class Controller {
     }
     
     protected function view($view, $data = []) {
-        extract($data);
         $viewFile = __DIR__ . '/../views/' . $view . '.php';
         if (file_exists($viewFile)) {
+            // Extract data to make variables available in view
+            extract($data, EXTR_SKIP);
             require $viewFile;
         } else {
             die("View not found: {$view}");

@@ -1,5 +1,10 @@
 <?php
 $title = 'Pesan Masuk';
+$config = require __DIR__ . '/../../config/app.php';
+$baseUrl = rtrim($config['base_url'], '/');
+if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
+    $baseUrl = '/';
+}
 require __DIR__ . '/../layouts/header.php';
 ?>
 
@@ -16,36 +21,37 @@ require __DIR__ . '/../layouts/header.php';
 	</div>
 
 	<div class="card">
-		<div class="card-header d-flex justify-content-between align-items-center">
-			<h4 class="mb-0 me-auto">
-				Pesan Masuk
+		<div class="card-header">
+			<div class="d-flex align-items-center">
+				<h4 class="mb-0 me-auto">Pesan Masuk
 				<?php if (($unread_count ?? 0) > 0): ?>
-					<span class="badge bg-danger ms-2"><?= $unread_count ?></span>
-				<?php endif; ?>
-			</h4>
-			<div class="d-flex gap-2">
-				<a href="/messages/create" class="btn btn-primary btn-sm"><?= icon('square-plus', 'me-1 mb-1', 18) ?> Tulis Pesan</a>
-				<a href="/messages/sent" class="btn btn-secondary btn-sm"><?= icon('paper-plane', 'me-1 mb-1', 18) ?> Terkirim</a>
+						<span class="badge bg-danger ms-2"><?= $unread_count ?></span>
+					<?php endif; ?>
+				</h4>
+				<div class="d-flex gap-2">
+					<a href="/messages/create" class="btn btn-primary btn-sm"><?= icon('square-plus', 'me-1 mb-1', 18) ?> Tulis Pesan</a>
+					<a href="/messages/sent" class="btn btn-secondary btn-sm"><?= icon('paper-plane', 'me-1 mb-1', 18) ?> Pesan Terkirim</a>
+				</div>
 			</div>
 		</div>
-
+	
 		<div class="card-body">
 			<!-- Search Form with Action Buttons -->
-			<div class="row mb-3">
-				<div class="col-md-6 mb-2">
+			<div class="d-flex flex-row gap-2 mb-3">
+				<div class="flex-grow-1">
 					<form method="GET" action="/messages" class="d-flex" id="searchForm">
 						<div class="input-group">
 							<input type="text" name="search" class="form-control" placeholder="Cari pesan..." value="<?= htmlspecialchars($search ?? '') ?>" id="searchInput">
 							<button type="button" class="btn btn-secondary" id="searchToggleBtn" title="Search">
-								<span id="searchIcon">🔍</span>
+								<span id="searchIcon"><?= icon('magnifying-glass', 'me-0 mb-1', 16) ?></span>
 							</button>
 						</div>
 					</form>
 				</div>
-				<div class="col-md-2 mb-2">
+				<div style="min-width: 100px;">
 					<select class="form-select" id="per_page" name="per_page" onchange="window.location.href='/messages?' + new URLSearchParams({...new URLSearchParams(window.location.search), per_page: this.value}).toString()">
-						<?php foreach ([10, 20, 30, 50, 100] as $pp): ?>
-						<option value="<?= $pp ?>" <?= ($pagination['per_page'] ?? 20) == $pp ? 'selected' : '' ?>><?= $pp ?></option>
+						<?php foreach ([10, 25, 50, 100, 200, 500, 1000] as $pp): ?>
+						<option value="<?= $pp ?>" <?= ($pagination['per_page'] ?? 10) == $pp ? 'selected' : '' ?>><?= $pp ?></option>
 						<?php endforeach; ?>
 					</select>
 				</div>
@@ -65,10 +71,10 @@ require __DIR__ . '/../layouts/header.php';
 					<table class="table table-striped align-middle">
 						<thead>
 							<tr>
-								<th width="5%"></th>
 								<th width="25%">Pengirim</th>
-								<th width="40%">Subjek</th>
+								<th width="40%" style="min-width: 200px;">Subjek</th>
 								<th width="15%">Tanggal</th>
+								<th width="5%">Status</th>
 								<th width="15%">Aksi</th>
 							</tr>
 						</thead>
@@ -76,22 +82,20 @@ require __DIR__ . '/../layouts/header.php';
 							<?php foreach ($messages as $message): ?>
 								<tr class="<?= !$message['is_read'] ? 'table-warning' : '' ?>">
 									<td>
-										<?php if (!$message['is_read']): ?>
-											<span class="badge bg-primary">Baru</span>
-										<?php else: ?>
-											<span class="badge bg-success">Dibaca</span>
-										<?php endif; ?>
-									</td>
-									<td>
 										<div class="d-flex align-items-center">
+											<?php 
+											$config = require __DIR__ . '/../../config/app.php';
+											$avatarInitial = strtoupper(substr($message['sender_name'] ?? 'U', 0, 1));
+											?>
 											<?php if (!empty($message['sender_picture'])): ?>
-												<img src="<?= BASE_URL . htmlspecialchars($message['sender_picture']) ?>" 
+												<img src="<?= BASE_URL . $config['upload_url'] . htmlspecialchars($message['sender_picture']) ?>" 
 														alt="<?= htmlspecialchars($message['sender_name']) ?>" 
 														class="rounded-circle me-2"
-														style="width: 32px; height: 32px; object-fit: cover;">
+														style="width: 32px; height: 32px; object-fit: cover;"
+														onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
 											<?php else: ?>
 												<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-													<?= strtoupper(substr($message['sender_name'] ?? 'U', 0, 1)) ?>
+													<?= $avatarInitial ?>
 												</div>
 											<?php endif; ?>
 											<div>
@@ -112,16 +116,24 @@ require __DIR__ . '/../layouts/header.php';
 											<?= date('d/m/Y H:i', strtotime($message['created_at'])) ?>
 										</small>
 									</td>
+									<td align="center">
+										<?php if (!$message['is_read']): ?>
+											<span class="badge bg-primary">Baru</span>
+										<?php else: ?>
+											<span class="badge bg-success">Dibaca</span>
+										<?php endif; ?>
+									</td>
 									<td>
 										<div class="d-flex gap-1">
 											<a href="/messages/show/<?= $message['id'] ?>" class="btn btn-info btn-sm" 
 											data-bs-toggle="tooltip" data-bs-title="Lihat Pesan">
-												<?= icon('eye', 'mb-0', 16) ?>
+												<?= icon('show', 'mb-0', 16) ?>
 											</a>
-											<button type="button" class="btn btn-danger btn-sm" onclick="deleteMessage(<?= $message['id'] ?>)" 
+											<a href="/messages/delete/<?= $message['id'] ?>" class="btn btn-danger btn-sm" 
+											onclick="event.preventDefault(); confirmDelete('Apakah Anda yakin ingin menghapus pesan ini?', this.href); return false;" 
 											data-bs-toggle="tooltip" data-bs-title="Hapus Pesan">
-												<?= icon('trash', 'mb-0', 16) ?>
-											</button>
+												<?= icon('trash-can', 'mb-0', 16) ?>
+											</a>
 										</div>
 									</td>
 								</tr>
@@ -179,66 +191,8 @@ require __DIR__ . '/../layouts/header.php';
 	</div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteMessageModal" tabindex="-1">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title">Konfirmasi Hapus</h5>
-				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-			</div>
-			<div class="modal-body">
-				Apakah Anda yakin ingin menghapus pesan ini? Tindakan ini tidak dapat dibatalkan.
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-				<button type="button" class="btn btn-danger" id="confirmDeleteMessage">Hapus</button>
-			</div>
-		</div>
-	</div>
-</div>
-
 <script>
-let deleteMessageId = null;
-
-function deleteMessage(messageId) {
-	deleteMessageId = messageId;
-	const modal = new bootstrap.Modal(document.getElementById("deleteMessageModal"));
-	modal.show();
-}
-
-// Delete message confirmation
 document.addEventListener("DOMContentLoaded", function() {
-	const confirmBtn = document.getElementById("confirmDeleteMessage");
-	if (confirmBtn) {
-		confirmBtn.addEventListener("click", function() {
-			if (deleteMessageId) {
-				fetch(`/messages/delete/${deleteMessageId}`, {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest'
-					}
-				})
-				.then(response => response.json())
-				.then(data => {
-					if (data.success) {
-						location.reload();
-					} else {
-						const modal = bootstrap.Modal.getInstance(document.getElementById("deleteMessageModal"));
-						modal.hide();
-						alert(data.message || 'Gagal menghapus pesan');
-					}
-				})
-				.catch(error => {
-					const modal = bootstrap.Modal.getInstance(document.getElementById("deleteMessageModal"));
-					modal.hide();
-					alert('Terjadi kesalahan saat menghapus pesan');
-				});
-			}
-		});
-	}
-
 	// Search/Reset Toggle Functionality
 	const searchForm = document.getElementById('searchForm');
 	const searchInput = document.getElementById('searchInput');
@@ -255,15 +209,20 @@ document.addEventListener("DOMContentLoaded", function() {
 		
 		function updateButtonState() {
 			const searchIcon = document.getElementById('searchIcon');
+			const baseUrl = <?= json_encode($baseUrl ?? '/', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 			if (isSearchMode) {
 				searchToggleBtn.title = 'Search';
-				if (searchIcon) searchIcon.textContent = '🔍';
+				if (searchIcon) {
+					searchIcon.innerHTML = '<img src="' + baseUrl + '/assets/icons/magnifying-glass.svg" alt="search" width="16" height="16" class="icon-inline me-0 mb-1">';
+				}
 				searchToggleBtn.onclick = function() {
 					searchForm.submit();
 				};
 			} else {
 				searchToggleBtn.title = 'Reset';
-				if (searchIcon) searchIcon.textContent = '✕';
+				if (searchIcon) {
+					searchIcon.innerHTML = '<img src="' + baseUrl + '/assets/icons/cancel.svg" alt="reset" width="16" height="16" class="icon-inline me-0 mb-1">';
+				}
 				searchToggleBtn.onclick = function() {
 					searchInput.value = '';
 					searchForm.submit();

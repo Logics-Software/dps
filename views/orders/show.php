@@ -1,5 +1,10 @@
 <?php
 $title = 'Detail Order';
+$config = require __DIR__ . '/../../config/app.php';
+$baseUrl = rtrim($config['base_url'], '/');
+if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
+    $baseUrl = '/';
+}
 require __DIR__ . '/../layouts/header.php';
 ?>
 
@@ -18,7 +23,7 @@ require __DIR__ . '/../layouts/header.php';
 
 	<div class="card">
 		<div class="card-header d-flex justify-content-between align-items-center"<?= !empty($backUrl ?? '') ? ' data-back-url="' . htmlspecialchars($backUrl) . '"' : '' ?>>
-			<h4 class="mb-0">Order: <?= htmlspecialchars($order['noorder'] ?? '') ?></h4>
+			<h4 class="mb-0 me-auto">Order: <?= htmlspecialchars($order['noorder'] ?? '') ?></h4>
 			<a href="<?= htmlspecialchars($backUrl ?? '/orders') ?>" class="btn btn-secondary btn-sm"><?= icon('back', 'me-2 mb-0', 18) ?> Kembali</a>
 		</div>
 		<div class="card-body">
@@ -61,6 +66,40 @@ require __DIR__ . '/../layouts/header.php';
 					</tbody>
 				</table>
 			</div>
+
+			<?php if (!empty($orderFiles ?? [])): ?>
+			<div class="mt-4">
+				<h5>Lampiran Order</h5>
+				<div class="table-responsive">
+					<table class="table table-striped align-middle">
+						<thead>
+							<tr>
+								<th>Nama File</th>
+								<th>Ukuran</th>
+								<th>Diupload Oleh</th>
+								<th>Tanggal Upload</th>
+								<th class="text-center">Aksi</th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ($orderFiles as $file): ?>
+							<tr>
+								<td><?= htmlspecialchars($file['original_filename']) ?></td>
+								<td><?= number_format((float)($file['file_size'] ?? 0) / 1024, 2, ',', '.') ?> KB</td>
+								<td><?= htmlspecialchars($file['uploaded_by_name'] ?? '-') ?></td>
+								<td><?= date('d/m/Y H:i', strtotime($file['created_at'])) ?></td>
+								<td class="text-center">
+									<a href="<?= htmlspecialchars($baseUrl) ?><?= htmlspecialchars($file['file_path']) ?>" target="_blank" class="btn btn-sm btn-primary">
+										<?= icon('download', 'me-1 mb-1', 16) ?> Download
+									</a>
+								</td>
+							</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<?php endif; ?>
 		</div>
 	</div>
 </div>

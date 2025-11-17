@@ -454,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="fw-semibold mb-1">${customer.namacustomer || '-'} <span class="badge bg-light text-dark">${customer.kodecustomer}</span></div>
                 <div class="small text-muted mb-1">${customer.alamatcustomer || ''} - ${customer.kotacustomer || ''}</div>
                 <div class="small text-primary fw-semibold mb-1">${distanceText}</div>
-                ${hasDistance ? '' : '<button type="button" class="btn text-white bg-success btn-outline-success btn-link p-2 customer-set-location text-decoration-none" data-action="set-location">Tentukan lokasi di peta</button>'}
+                ${hasDistance ? '' : '<button type="button" class="btn text-white bg-success btn-outline-success btn-link btn-sm p-1 customer-set-location text-decoration-none" data-action="set-location">Tentukan lokasi di peta</button>'}
             `;
 
             item.addEventListener('click', function(event) {

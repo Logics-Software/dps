@@ -347,10 +347,21 @@ class ApiPenerimaanController extends Controller {
             if (empty($detail['nopenjualan'])) {
                 throw new InvalidArgumentException('Detail requires nopenjualan');
             }
+            $nogiro = $detail['nogiro'] ?? null;
+            $tanggalcair = $detail['tanggalcair'] ?? null;
+            
+            // Convert empty strings to null for database compatibility
+            if ($nogiro === '') {
+                $nogiro = null;
+            }
+            if ($tanggalcair === '') {
+                $tanggalcair = null;
+            }
+            
             $formatted[] = [
                 'nopenjualan' => $detail['nopenjualan'],
-                'nogiro' => $detail['nogiro'] ?? null,
-                'tanggalcair' => $detail['tanggalcair'] ?? null,
+                'nogiro' => $nogiro,
+                'tanggalcair' => $tanggalcair,
                 'piutang' => $this->toDecimal($detail['piutang'] ?? 0),
                 'potongan' => $this->toDecimal($detail['potongan'] ?? 0),
                 'lainlain' => $this->toDecimal($detail['lainlain'] ?? 0),

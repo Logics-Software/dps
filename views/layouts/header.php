@@ -34,12 +34,6 @@ if (!function_exists('icon')) {
     <link rel="icon" type="image/png" sizes="64x64" href="<?= htmlspecialchars($baseUrl) ?>/assets/images/logo-64.png">
     <link rel="apple-touch-icon" sizes="128x128" href="<?= htmlspecialchars($baseUrl) ?>/assets/images/logo-128.png">
     
-    <!-- Font Preloading for Chrome/Edge - Prioritize bold for brand text -->
-    <link rel="preload" href="<?= htmlspecialchars(rtrim($baseUrl, '/') . '/assets/fonts/inter/inter-bold.woff2') ?>" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?= htmlspecialchars(rtrim($baseUrl, '/') . '/assets/fonts/inter/inter-semibold.woff2') ?>" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?= htmlspecialchars(rtrim($baseUrl, '/') . '/assets/fonts/inter/inter-medium.woff2') ?>" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?= htmlspecialchars(rtrim($baseUrl, '/') . '/assets/fonts/inter/inter-regular.woff2') ?>" as="font" type="font/woff2" crossorigin>
-    
     <link href="<?= htmlspecialchars($baseUrl) ?>/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="<?= htmlspecialchars($baseUrl) ?>/assets/css/style.css" rel="stylesheet">
     <?php if (!empty($additionalStyles)):
@@ -80,11 +74,7 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                     <!-- Navigation Menu -->
                     <nav class="header-nav-menu" id="headerNavMenu">
                         <a href="/dashboard" class="nav-link <?= ($_SERVER['REQUEST_URI'] ?? '') === '/dashboard' ? 'active' : '' ?>">Dashboard</a>
-                        
-                        <?php if (Auth::check() && Auth::isSales()): ?>
-                        <a href="/visits" class="nav-link <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/visits') !== false ? 'active' : '' ?>">Kunjungan</a>
-                        <?php endif; ?>
-                        
+                                                
                         <?php if (Auth::isManajemen()): ?>
                         <div class="nav-dropdown">
                             <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
@@ -139,6 +129,10 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                         </div>
                         <?php endif; ?>
 
+                        <?php if (Auth::check() && Auth::isSales()): ?>
+                        <a href="/visits" class="nav-link <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/visits') !== false ? 'active' : '' ?>">Kunjungan</a>
+                        <?php endif; ?>
+
                         <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator', 'sales'])): ?>
                         <div class="nav-dropdown">
                             <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
@@ -164,13 +158,13 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                                 </svg>
                             </button>
                             <div class="nav-dropdown-menu">
-                                <a href="/laporan/daftar-barang" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-barang') !== false ? 'active' : '' ?>">Laporan Daftar Barang</a>
-                                <a href="/laporan/daftar-stok" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-stok') !== false ? 'active' : '' ?>">Laporan Daftar Stok</a>
-                                <a href="/laporan/daftar-harga" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-harga') !== false ? 'active' : '' ?>">Laporan Daftar Harga Barang</a>
-                                <a href="#" class="nav-dropdown-item">Laporan Order Penjualan</a>
-                                <a href="#" class="nav-dropdown-item">Laporan Faktur Penjualan</a>
-                                <a href="#" class="nav-dropdown-item">Laporan Inkaso</a>
-                                <a href="#" class="nav-dropdown-item">Laporan Omset Penjualan</a>
+                                <a href="/laporan/daftar-barang" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-barang') !== false ? 'active' : '' ?>">Daftar Barang</a>
+                                <a href="/laporan/daftar-stok" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-stok') !== false ? 'active' : '' ?>">Daftar Stok</a>
+                                <a href="/laporan/daftar-harga" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-harga') !== false ? 'active' : '' ?>">Daftar Harga Barang</a>
+                                <a href="#" class="nav-dropdown-item">Order Penjualan</a>
+                                <a href="#" class="nav-dropdown-item">Faktur Penjualan</a>
+                                <a href="#" class="nav-dropdown-item">Inkaso</a>
+                                <a href="#" class="nav-dropdown-item">Omset Penjualan</a>
                             </div>
                         </div>
                         <?php endif; ?>                        
@@ -183,12 +177,12 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                         $unreadCount = 0;
                         if (Auth::check()) {
                             try {
-                                // Ensure Message model is loaded (not core Message)
-                                require_once __DIR__ . '/../../models/Message.php';
-                                $messageModel = new Message();
+                                // Use MessageModel to avoid conflict with core Message class
+                                require_once __DIR__ . '/../../models/MessageModel.php';
+                                $messageModel = new MessageModel();
                                 $unreadCount = $messageModel->getUnreadCount($currentUser['id']);
                             } catch (Exception $e) {
-                                // Silently fail if Message model not available
+                                // Silently fail if MessageModel not available
                             }
                         }
                         ?>

@@ -94,10 +94,22 @@ class PenerimaanController extends Controller {
 			$details = [];
 			if (isset($_POST['details']) && is_array($_POST['details'])) {
 				foreach ($_POST['details'] as $detail) {
+					$tanggalcair = $detail['tanggalcair'] ?? null;
+					// Convert empty string to null for database compatibility
+					if ($tanggalcair === '' || $tanggalcair === null) {
+						$tanggalcair = null;
+					}
+					
+					$nogiro = $detail['nogiro'] ?? null;
+					// Convert empty string to null for database compatibility
+					if ($nogiro === '') {
+						$nogiro = null;
+					}
+					
 					$details[] = [
 						'nopenjualan' => $detail['nopenjualan'] ?? '',
-						'nogiro' => $detail['nogiro'] ?? null,
-						'tanggalcair' => $detail['tanggalcair'] ?? null,
+						'nogiro' => $nogiro,
+						'tanggalcair' => $tanggalcair,
 						'piutang' => (float)($detail['piutang'] ?? 0),
 						'potongan' => (float)($detail['potongan'] ?? 0),
 						'lainlain' => (float)($detail['lainlain'] ?? 0),
@@ -190,10 +202,22 @@ class PenerimaanController extends Controller {
 			$details = [];
 			if (isset($_POST['details']) && is_array($_POST['details'])) {
 				foreach ($_POST['details'] as $detail) {
+					$tanggalcair = $detail['tanggalcair'] ?? null;
+					// Convert empty string to null for database compatibility
+					if ($tanggalcair === '' || $tanggalcair === null) {
+						$tanggalcair = null;
+					}
+					
+					$nogiro = $detail['nogiro'] ?? null;
+					// Convert empty string to null for database compatibility
+					if ($nogiro === '') {
+						$nogiro = null;
+					}
+					
 					$details[] = [
 						'nopenjualan' => $detail['nopenjualan'] ?? '',
-						'nogiro' => $detail['nogiro'] ?? null,
-						'tanggalcair' => $detail['tanggalcair'] ?? null,
+						'nogiro' => $nogiro,
+						'tanggalcair' => $tanggalcair,
 						'piutang' => (float)($detail['piutang'] ?? 0),
 						'potongan' => (float)($detail['potongan'] ?? 0),
 						'lainlain' => (float)($detail['lainlain'] ?? 0),

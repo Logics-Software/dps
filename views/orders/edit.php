@@ -5,6 +5,7 @@ $baseUrl = rtrim($config['base_url'], '/');
 if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
     $baseUrl = '/';
 }
+$uploadUrl = $config['upload_url'] ?? '/uploads/';
 
 $additionalStyles = array_merge($additionalStyles ?? [], [
     $baseUrl . '/assets/css/choices.min.css'
@@ -38,7 +39,7 @@ require __DIR__ . '/../layouts/header.php';
                     </div>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="" id="orderForm">
+                    <form method="POST" action="" id="orderForm" enctype="multipart/form-data">
                         <div class="row g-3 mb-3">
                             <div class="col-6 col-md-3 col-lg-2">
                                 <label class="form-label">Tanggal Order</label>
@@ -169,6 +170,53 @@ require __DIR__ . '/../layouts/header.php';
                             </div>
                             <input type="hidden" name="nilaiorder" id="grandTotalHidden" value="0">
                         </div>
+
+                        <div class="card mt-3">
+                            <div class="card-header-table">
+                                <h4 class="mb-0">Lampiran Order</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <input type="file" name="order_files[]" class="form-control" id="orderFilesInput" multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar">
+                                    <small class="form-text text-muted">Format yang diizinkan: JPG, PNG, GIF, PDF, DOC, DOCX, XLS, XLSX, TXT, ZIP, RAR. Maksimal 5 file, setiap file maksimal 5MB.</small>
+                                    <div id="fileList" class="mt-2"></div>
+                                </div>
+                                
+                                <?php if (!empty($orderFiles ?? [])): ?>
+                                <div class="mt-3">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Nama File</th>
+                                                    <th>Ukuran</th>
+                                                    <th>Diupload Oleh</th>
+                                                    <th>Tanggal Upload</th>
+                                                    <th class="text-center">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($orderFiles as $file): ?>
+                                                <tr>
+                                                    <td><?= htmlspecialchars($file['original_filename']) ?></td>
+                                                    <td><?= number_format((float)($file['file_size'] ?? 0) / 1024, 2, ',', '.') ?> KB</td>
+                                                    <td><?= htmlspecialchars($file['uploaded_by_name'] ?? '-') ?></td>
+                                                    <td><?= date('d/m/Y H:i', strtotime($file['created_at'])) ?></td>
+                                                    <td class="text-center">
+                                                        <a href="<?= htmlspecialchars($baseUrl) ?><?= htmlspecialchars($file['file_path']) ?>" target="_blank" class="btn btn-sm btn-primary">
+                                                            <?= icon('download', 'me-1 mb-1', 14) ?> Download
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
                         <div class="mt-3 d-flex justify-content-between align-items-center">
                             <div>
                                 <a href="/orders" class="btn btn-secondary"><?= icon('cancel', 'me-1 mb-1', 18) ?> Batal</a>
@@ -1551,6 +1599,60 @@ function initOrderEditForm() {
         );
     });
 }
+
+// File upload handling
+const orderFilesInput = document.getElementById('orderFilesInput');
+const fileList = document.getElementById('fileList');
+const maxFiles = 5;
+const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function updateFileList() {
+    if (!orderFilesInput || !fileList) return;
+    
+    const files = Array.from(orderFilesInput.files);
+    fileList.innerHTML = '';
+    
+    if (files.length === 0) {
+        return;
+    }
+    
+    if (files.length > maxFiles) {
+        fileList.innerHTML = `<div class="alert alert-danger">Maksimal ${maxFiles} file yang dapat diupload</div>`;
+        orderFilesInput.value = '';
+        return;
+    }
+    
+    const ul = document.createElement('ul');
+    ul.className = 'list-group list-group-flush';
+    
+    files.forEach((file, index) => {
+        if (file.size > maxFileSize) {
+            fileList.innerHTML = `<div class="alert alert-danger">File "${file.name}" terlalu besar (maksimal 5MB)</div>`;
+            orderFilesInput.value = '';
+            return;
+        }
+        
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.innerHTML = `
+            <span>${file.name}</span>
+            <span class="badge bg-secondary">${formatFileSize(file.size)}</span>
+        `;
+        ul.appendChild(li);
+    });
+    
+    fileList.appendChild(ul);
+}
+
+orderFilesInput?.addEventListener('change', updateFileList);
 
 if (document.readyState === 'complete') {
     initOrderEditForm();

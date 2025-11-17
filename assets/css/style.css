@@ -1741,6 +1741,46 @@ table thead th.th-sortable.sorted-desc a::after {
   filter: grayscale(100%) brightness(1.2) contrast(0.9);
 }
 
+/* CSS untuk tinggi tombol selectAllBtn dan clearAllBtn sama dengan form-select - Baris 1896-1900 */
+#selectAllBtn,
+#clearAllBtn {
+  height: calc(1.5rem + 0.75rem + 10px);
+}
+
+/* CSS untuk icon toggle pesan - Baris 1908-1925 */
+#searchToggleBtn,
+#userSearchToggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #6c757d;
+  background-color: #6c757d;
+  color: #fff;
+  transition: all 0.2s ease-in-out;
+}
+
+#searchToggleBtn:hover,
+#userSearchToggleBtn:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+  color: #fff;
+}
+
+#searchToggleBtn:focus,
+#userSearchToggleBtn:focus {
+  background-color: #5a6268;
+  border-color: #545b62;
+  color: #fff;
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+#searchToggleBtn .icon-inline,
+#userSearchToggleBtn .icon-inline {
+  display: inline-block;
+  vertical-align: middle;
+}
+
 /* Mobile-specific table sizing (configurable) */
 @media (max-width: 575.98px) {
   .table,
@@ -1771,6 +1811,11 @@ table thead th.th-sortable.sorted-desc a::after {
   }
   .table-header-mobile-roomy {
     --table-header-padding-y-mobile: 1rem;
+  }
+
+  #selectAllBtn,
+  #clearAllBtn {
+    height: calc(1.5rem + 0.75rem + 8px);
   }
 }
 
@@ -1873,4 +1918,23 @@ body.mapbox-fullscreen-open {
 .location-feedback {
   font-size: 0.875rem;
   line-height: 1.4;
+}
+
+/* ========================================
+   CHECKBOX PENERIMA MESSAGE
+   ======================================== */
+/* CSS untuk checkbox square pada card penerima di halaman create message */
+.user-selection-item .form-check-input[type="checkbox"] {
+  border-radius: 0 !important;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  min-width: 1.25rem !important;
+  min-height: 1.25rem !important;
+  border: 1px solid #0b0e1a;
+}
+
+/* CSS untuk border card penerima yang selected - Baris 1890-1893 */
+.user-selection-item.border-primary {
+  border-color: #0b0e1a !important;
+  border-width: 2px !important;
 }

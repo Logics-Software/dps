@@ -99,7 +99,7 @@ require __DIR__ . '/../layouts/header.php';
                             <div class="col-md-6 mb-3">
                                 <label for="picture" class="form-label">Foto Profil</label>
                                 <input type="file" class="form-control" id="picture" name="picture" accept="image/*">
-                                <small class="text-muted">Format: JPG, PNG, GIF (Max 2MB)</small>
+                                <small class="text-muted">Format: JPG, PNG, GIF (Max 5MB)</small>
                             </div>
                         </div>
                         

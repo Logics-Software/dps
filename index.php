@@ -8,6 +8,18 @@ ini_set('display_errors', 1);
 
 // Autoload classes
 spl_autoload_register(function ($class) {
+    // Special handling for Message class to avoid conflict
+    // Always load core Message first, never load models/Message.php
+    if ($class === 'Message') {
+        $corePath = __DIR__ . '/core/' . $class . '.php';
+        if (file_exists($corePath) && !class_exists('Message', false)) {
+            require $corePath;
+        }
+        // Never load models/Message.php to avoid conflict
+        // Use MessageModel for database operations instead
+        return;
+    }
+    
     $paths = [
         __DIR__ . '/core/' . $class . '.php',
         __DIR__ . '/models/' . $class . '.php',
@@ -16,6 +28,10 @@ spl_autoload_register(function ($class) {
     ];
     
     foreach ($paths as $path) {
+        // Skip models/Message.php to prevent conflict
+        if (strpos($path, '/models/Message.php') !== false) {
+            continue;
+        }
         if (file_exists($path)) {
             require $path;
             return;
@@ -193,18 +209,18 @@ $router->get('/laporan/daftar-barang', 'LaporanController', 'daftarBarang');
 $router->get('/laporan/daftar-stok', 'LaporanController', 'daftarStok');
 $router->get('/laporan/daftar-harga', 'LaporanController', 'daftarHarga');
 
-// Message routes
-$router->get('/messages', 'MessageController', 'index');
-$router->get('/messages/sent', 'MessageController', 'sent');
-$router->get('/messages/create', 'MessageController', 'create');
-$router->post('/messages/store', 'MessageController', 'store');
+// Message routes - specific routes first, then generic ones
 $router->get('/messages/show/{id}', 'MessageController', 'show');
 $router->get('/messages/delete/{id}', 'MessageController', 'delete');
+$router->get('/messages/sent', 'MessageController', 'sent');
+$router->get('/messages/create', 'MessageController', 'create');
 $router->get('/messages/search', 'MessageController', 'search');
 $router->get('/messages/searchUsers', 'MessageController', 'searchUsers');
 $router->get('/messages/getUnreadCount', 'MessageController', 'getUnreadCount');
 $router->get('/messages/markAllAsRead', 'MessageController', 'markAllAsRead');
 $router->get('/messages/markAsRead', 'MessageController', 'markAsRead');
+$router->post('/messages/store', 'MessageController', 'store');
+$router->get('/messages', 'MessageController', 'index');
 
 // Dispatch
 $router->dispatch();

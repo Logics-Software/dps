@@ -16,191 +16,195 @@ $additionalScripts = array_merge($additionalScripts ?? [], [
 require __DIR__ . '/../layouts/header.php';
 ?>
 
-<div class="row mb-3">
-    <div class="col-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="/penerimaan">Transaksi Inkaso</a></li>
-                <li class="breadcrumb-item active">Buat Inkaso</li>
-            </ol>
-        </nav>
+<div class="container">
+    <div class="breadcrumb-item">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/penerimaan">Transaksi Inkaso</a></li>
+                    <li class="breadcrumb-item active">Buat Inkaso</li>
+                </ol>
+            </nav>
+        </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-white d-flex flex-column flex-md-row align-items-md-center justify-content-md-between">
-                <h4 class="mb-0">Inkaso Baru <?= icon('arrow-right', 'me-0 mb-1', 14)?> <?= htmlspecialchars($nopenerimaan ?? '') ?></h4>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="/penerimaan/create" id="penerimaanForm">
-                    <input type="hidden" name="nopenerimaan" value="<?= htmlspecialchars($nopenerimaan ?? '') ?>">
-                    <div class="row g-3 mb-3">
-                        <div class="col-12 col-md-6 col-lg-2">
-                            <label class="form-label" for="statusPkpSelect">Status PKP <span class="text-danger">*</span></label>
-                            <select name="statuspkp" id="statusPkpSelect" class="form-select">
-                                <option value="pkp" selected>PKP</option>
-                                <option value="nonpkp">Non PKP</option>
-                            </select>
-                        </div>
-                        <div class="col-12 col-md-6 col-lg-2">
-                            <label class="form-label">Jenis Penerimaan <span class="text-danger">*</span></label>
-                            <select name="jenispenerimaan" class="form-select" required>
-                                <option value="tunai" selected>Tunai</option>
-                                <option value="transfer">Transfer</option>
-                                <option value="giro">Giro</option>
-                            </select>
-                        </div>
-                        <div class="col-12 col-md-6 col-lg-8">
-                            <label class="form-label">Customer</label>
-                            <?php
-                            $normalizedStatusPkp = strtolower($statuspkp ?? 'pkp');
-                            $availableCustomers = $customersByStatus[$normalizedStatusPkp] ?? $customers;
-                            if ($selectedCustomer && !array_filter($availableCustomers, static function ($item) use ($selectedCustomer) {
-                                return ($item['kodecustomer'] ?? '') === $selectedCustomer;
-                            })) {
-                                foreach ($customers as $fallbackCustomer) {
-                                    if (($fallbackCustomer['kodecustomer'] ?? '') === $selectedCustomer) {
-                                        $availableCustomers[] = $fallbackCustomer;
-                                        break;
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <h4 class="mb-0">Inkaso Baru <?= icon('caret-right', 'me-0 mb-1', 14)?> <?= htmlspecialchars($nopenerimaan ?? '') ?></h4>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/penerimaan/create" id="penerimaanForm">
+                        <input type="hidden" name="nopenerimaan" value="<?= htmlspecialchars($nopenerimaan ?? '') ?>">
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-6 col-lg-2">
+                                <label class="form-label" for="statusPkpSelect">Jenis Customer <span class="text-danger">*</span></label>
+                                <select name="statuspkp" id="statusPkpSelect" class="form-select">
+                                    <option value="pkp" selected>PKP</option>
+                                    <option value="nonpkp">Non PKP</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-2">
+                                <label class="form-label">Jenis Penerimaan <span class="text-danger">*</span></label>
+                                <select name="jenispenerimaan" class="form-select" required>
+                                    <option value="tunai" selected>Tunai</option>
+                                    <option value="transfer">Transfer</option>
+                                    <option value="giro">Giro</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-8">
+                                <label class="form-label">Customer</label>
+                                <?php
+                                $normalizedStatusPkp = strtolower($statuspkp ?? 'pkp');
+                                $availableCustomers = $customersByStatus[$normalizedStatusPkp] ?? $customers;
+                                if ($selectedCustomer && !array_filter($availableCustomers, static function ($item) use ($selectedCustomer) {
+                                    return ($item['kodecustomer'] ?? '') === $selectedCustomer;
+                                })) {
+                                    foreach ($customers as $fallbackCustomer) {
+                                        if (($fallbackCustomer['kodecustomer'] ?? '') === $selectedCustomer) {
+                                            $availableCustomers[] = $fallbackCustomer;
+                                            break;
+                                        }
                                     }
                                 }
-                            }
-                            ?>
-                            <select name="kodecustomer" id="kodecustomer" class="form-select js-choice-customer" data-selected="<?= htmlspecialchars($selectedCustomer ?? '') ?>">
-                                <option value="">Pilih Customer</option>
-                                <?php foreach ($availableCustomers as $customer): ?>
-                                    <?php
-                                    $alamat = trim($customer['alamatcustomer'] ?? '');
-                                    $optionLabel = $customer['namacustomer'];
-                                    if ($alamat !== '') {
-                                        $optionLabel .= ' - ' . $alamat;
-                                    }
-                                    $optionLabel .= ' (' . $customer['kodecustomer'] . ')';
-                                    ?>
-                                    <option value="<?= htmlspecialchars($customer['kodecustomer']) ?>" <?= ($selectedCustomer === $customer['kodecustomer']) ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($optionLabel) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                                ?>
+                                <select name="kodecustomer" id="kodecustomer" class="form-select js-choice-customer" data-selected="<?= htmlspecialchars($selectedCustomer ?? '') ?>">
+                                    <option value="">Pilih Customer</option>
+                                    <?php foreach ($availableCustomers as $customer): ?>
+                                        <?php
+                                        $alamat = trim($customer['alamatcustomer'] ?? '');
+                                        $optionLabel = $customer['namacustomer'];
+                                        if ($alamat !== '') {
+                                            $optionLabel .= ' - ' . $alamat;
+                                        }
+                                        $optionLabel .= ' (' . $customer['kodecustomer'] . ')';
+                                        ?>
+                                        <option value="<?= htmlspecialchars($customer['kodecustomer']) ?>" <?= ($selectedCustomer === $customer['kodecustomer']) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($optionLabel) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <input type="hidden" name="kodesales" value="<?= htmlspecialchars(Auth::user()['kodesales'] ?? '') ?>">
                         </div>
-                        <input type="hidden" name="kodesales" value="<?= htmlspecialchars(Auth::user()['kodesales'] ?? '') ?>">
-                    </div>
 
-                    <div class="table-responsive penerimaan-detail-wrapper">
-                        <table class="table table-bordered align-middle penerimaan-detail-table" id="detailTable">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="detail-col-penjualan">No Penjualan</th>
-                                    <th class="detail-col-giro">No Giro</th>
-                                    <th class="detail-col-tanggal">Tanggal Cair</th>
-                                    <th class="detail-col-piutang text-end">Piutang</th>
-                                    <th class="detail-col-potongan text-end">Potongan</th>
-                                    <th class="detail-col-lain text-end">Lain-lain</th>
-                                    <th class="detail-col-netto text-end">Netto</th>
-                                    <th class="detail-col-action text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="detailTableBody"></tbody>
-                        </table>
-                        <div id="detailEmptyState" class="text-center text-muted py-3">
-                            Belum ada detail penerimaan ditambahkan
+                        <div class="table-responsive penerimaan-detail-wrapper">
+                            <table class="table table-bordered align-middle penerimaan-detail-table" id="detailTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="detail-col-penjualan">No Penjualan</th>
+                                        <th class="detail-col-giro">No Giro</th>
+                                        <th class="detail-col-tanggal">Tanggal Cair</th>
+                                        <th class="detail-col-piutang text-end">Piutang</th>
+                                        <th class="detail-col-potongan text-end">Potongan</th>
+                                        <th class="detail-col-lain text-end">Lain-lain</th>
+                                        <th class="detail-col-netto text-end">Netto</th>
+                                        <th class="detail-col-action text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailTableBody"></tbody>
+                            </table>
+                            <div id="detailEmptyState" class="text-center text-muted py-3">
+                                Belum ada detail penerimaan ditambahkan
+                            </div>
                         </div>
-                    </div>
-                    <div class="d-flex flex-wrap align-items-center justify-content-between mt-3 gap-2">
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="addDetailBtn">Tambah Detail</button>
-                        <div class="text-end flex-grow-1 flex-md-grow-0">
-                            <div class="row g-2">
-                                <div class="col-6 col-md-3">
-                                    <small class="text-muted d-block">Total Piutang</small>
-                                    <strong id="totalPiutangDisplay">0</strong>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <small class="text-muted d-block">Total Potongan</small>
-                                    <strong id="totalPotonganDisplay">0</strong>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <small class="text-muted d-block">Total Lain-lain</small>
-                                    <strong id="totalLainlainDisplay">0</strong>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <small class="text-muted d-block">Total Netto</small>
-                                    <strong id="totalNettoDisplay">0</strong>
+                        <div class="d-flex flex-wrap align-items-center justify-content-between mt-3 gap-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="addDetailBtn">Tambah Detail</button>
+                            <div class="text-end flex-grow-1 flex-md-grow-0">
+                                <div class="row g-2">
+                                    <div class="col-6 col-md-3">
+                                        <small class="text-muted d-block">Total Piutang</small>
+                                        <strong id="totalPiutangDisplay">0</strong>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <small class="text-muted d-block">Total Potongan</small>
+                                        <strong id="totalPotonganDisplay">0</strong>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <small class="text-muted d-block">Total Lain-lain</small>
+                                        <strong id="totalLainlainDisplay">0</strong>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <small class="text-muted d-block">Total Netto</small>
+                                        <strong id="totalNettoDisplay">0</strong>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <input type="hidden" name="totalpiutang" id="totalpiutang">
-                    <input type="hidden" name="totalpotongan" id="totalpotongan">
-                    <input type="hidden" name="totallainlain" id="totallainlain">
-                    <input type="hidden" name="totalnetto" id="totalnetto">
+                        <input type="hidden" name="totalpiutang" id="totalpiutang">
+                        <input type="hidden" name="totalpotongan" id="totalpotongan">
+                        <input type="hidden" name="totallainlain" id="totallainlain">
+                        <input type="hidden" name="totalnetto" id="totalnetto">
 
-                    <div class="mt-3 d-flex justify-content-end gap-2">
-                        <a href="/penerimaan" class="btn btn-secondary">Batal</a>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
-                    </div>
-                </form>
+                        <div class="mt-3 d-flex justify-content-end gap-2">
+                            <a href="/penerimaan" class="btn btn-secondary">Batal</a>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal Detail Penerimaan -->
-<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form id="detailForm">
-                <div class="modal-header modal-header-muted">
-                    <h5 class="modal-title" id="detailModalLabel">Tambah Data Penjualan</h5>
-                    <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">No Penjualan <span class="text-danger">*</span></label>
-                        <select class="form-select js-choice-penjualan" id="modalPenjualan" required>
-                            <option value="">Pilih Penjualan</option>
-                        </select>
+    <!-- Modal Detail Penerimaan -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="detailForm">
+                    <div class="modal-header modal-header-muted">
+                        <h5 class="modal-title" id="detailModalLabel">Tambah Data Penjualan</h5>
+                        <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="row g-3" id="giroFields" style="display: none;">
-                        <div class="col-md-6">
-                            <label class="form-label">No Giro</label>
-                            <input type="text" class="form-control" id="modalNoGiro" placeholder="No Giro">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">No Penjualan <span class="text-danger">*</span></label>
+                            <select class="form-select js-choice-penjualan" id="modalPenjualan" required>
+                                <option value="">Pilih Penjualan</option>
+                            </select>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Tanggal Cair</label>
-                            <input type="date" class="form-control" id="modalTanggalCair">
+                        <div class="row g-3" id="giroFields" style="display: none;">
+                            <div class="col-md-6">
+                                <label class="form-label">No Giro</label>
+                                <input type="text" class="form-control" id="modalNoGiro" placeholder="No Giro">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Tanggal Cair</label>
+                                <input type="date" class="form-control" id="modalTanggalCair">
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-end mt-2">
+                            <div class="col-md-4">
+                                <label class="form-label">Piutang</label>
+                                <input type="text" class="form-control" id="modalPiutang" inputmode="numeric" value="0" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Potongan</label>
+                                <input type="text" class="form-control" id="modalPotongan" inputmode="numeric" value="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Lain-lain</label>
+                                <input type="text" class="form-control" id="modalLainlain" inputmode="numeric" value="0">
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label">Netto</label>
+                            <input type="text" class="form-control fw-bold" id="modalNetto" value="0" readonly>
                         </div>
                     </div>
-                    <div class="row g-3 align-items-end mt-2">
-                        <div class="col-md-4">
-                            <label class="form-label">Piutang</label>
-                            <input type="text" class="form-control" id="modalPiutang" inputmode="numeric" value="0" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Potongan</label>
-                            <input type="text" class="form-control" id="modalPotongan" inputmode="numeric" value="0">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Lain-lain</label>
-                            <input type="text" class="form-control" id="modalLainlain" inputmode="numeric" value="0">
+                    <div class="modal-footer modal-footer-muted justify-content-between align-items-center">
+                        <div></div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary" id="detailModalSubmitBtn">Simpan</button>
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <label class="form-label">Netto</label>
-                        <input type="text" class="form-control fw-bold" id="modalNetto" value="0" readonly>
-                    </div>
-                </div>
-                <div class="modal-footer modal-footer-muted justify-content-between align-items-center">
-                    <div></div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary" id="detailModalSubmitBtn">Simpan</button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>

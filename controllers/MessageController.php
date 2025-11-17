@@ -1,14 +1,11 @@
 <?php
-require_once __DIR__ . '/../models/Message.php';
-require_once __DIR__ . '/../models/User.php';
-
 class MessageController extends Controller {
 	private $messageModel;
 	private $userModel;
 
 	public function __construct() {
 		parent::__construct();
-		$this->messageModel = new Message();
+		$this->messageModel = new MessageModel();
 		$this->userModel = new User();
 	}
 
@@ -21,25 +18,28 @@ class MessageController extends Controller {
 		$userId = Auth::user()['id'];
 		$page = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
 		$search = trim($_GET['search'] ?? '');
-		$perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 20;
-		$perPage = in_array($perPage, [10, 20, 30, 50, 100]) ? $perPage : 20;
+		$perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
+		$perPage = in_array($perPage, [10, 25, 50, 100, 200, 500, 1000]) ? $perPage : 10;
 
 		// Get paginated messages
 		$result = $this->messageModel->getPaginatedInboxMessages($userId, $page, $perPage, $search);
 		$unreadCount = $this->messageModel->getUnreadCount($userId);
 
+		// Ensure messages is always an array
+		$messages = is_array($result['data'] ?? null) ? $result['data'] : [];
+
 		$this->view('messages/index', [
 			'title' => 'Pesan Masuk',
-			'messages' => $result['data'],
+			'messages' => $messages,
 			'unread_count' => $unreadCount,
 			'search' => $search,
 			'pagination' => [
-				'current_page' => $result['page'],
-				'total_pages' => $result['total_pages'],
-				'total_items' => $result['total'],
-				'per_page' => $result['per_page'],
-				'has_next' => $result['has_next'],
-				'has_prev' => $result['has_prev']
+				'current_page' => $result['page'] ?? 1,
+				'total_pages' => $result['total_pages'] ?? 1,
+				'total_items' => $result['total'] ?? 0,
+				'per_page' => $result['per_page'] ?? $perPage,
+				'has_next' => $result['has_next'] ?? false,
+				'has_prev' => $result['has_prev'] ?? false
 			]
 		]);
 	}
@@ -53,23 +53,26 @@ class MessageController extends Controller {
 		$userId = Auth::user()['id'];
 		$page = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
 		$search = trim($_GET['search'] ?? '');
-		$perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 20;
-		$perPage = in_array($perPage, [10, 20, 30, 50, 100]) ? $perPage : 20;
+		$perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
+		$perPage = in_array($perPage, [10, 25, 50, 100, 200, 500, 1000]) ? $perPage : 10;
 
 		// Get paginated sent messages
 		$result = $this->messageModel->getPaginatedSentMessages($userId, $page, $perPage, $search);
 
+		// Ensure messages is always an array
+		$messages = is_array($result['data'] ?? null) ? $result['data'] : [];
+
 		$this->view('messages/sent', [
 			'title' => 'Pesan Terkirim',
-			'messages' => $result['data'],
+			'messages' => $messages,
 			'search' => $search,
 			'pagination' => [
-				'current_page' => $result['page'],
-				'total_pages' => $result['total_pages'],
-				'total_items' => $result['total'],
-				'per_page' => $result['per_page'],
-				'has_next' => $result['has_next'],
-				'has_prev' => $result['has_prev']
+				'current_page' => $result['page'] ?? 1,
+				'total_pages' => $result['total_pages'] ?? 1,
+				'total_items' => $result['total'] ?? 0,
+				'per_page' => $result['per_page'] ?? $perPage,
+				'has_next' => $result['has_next'] ?? false,
+				'has_prev' => $result['has_prev'] ?? false
 			]
 		]);
 	}
@@ -119,13 +122,17 @@ class MessageController extends Controller {
 
 		// Validation
 		if (empty($_POST['subject']) || empty($_POST['content']) || empty($_POST['recipients'])) {
-			Message::error('Subjek, isi pesan, dan penerima wajib diisi');
+			Session::flash('error', 'Subjek, isi pesan, dan penerima wajib diisi');
 			$this->redirect('/messages/create');
 			return;
 		}
 
+		$conn = $this->db->getConnection();
+		$transactionStarted = false;
+
 		try {
-			$this->db->getConnection()->beginTransaction();
+			$conn->beginTransaction();
+			$transactionStarted = true;
 			
 			// Prepare message data
 			$messageData = [
@@ -145,8 +152,10 @@ class MessageController extends Controller {
 			}
 
 			if (empty($recipientIds)) {
-				$this->db->getConnection()->rollBack();
-				Message::error('Pilih minimal satu penerima');
+				if ($transactionStarted && $conn->inTransaction()) {
+					$conn->rollBack();
+				}
+				Session::flash('error', 'Pilih minimal satu penerima');
 				$this->redirect('/messages/create');
 				return;
 			}
@@ -160,17 +169,27 @@ class MessageController extends Controller {
 					$this->handleAttachments($messageId, $_FILES['attachments']);
 				}
 				
-				$this->db->getConnection()->commit();
-				Message::success('Pesan berhasil dikirim');
+				if ($transactionStarted && $conn->inTransaction()) {
+					$conn->commit();
+				}
+				Session::flash('success', 'Pesan berhasil dikirim');
 				$this->redirect('/messages?sent=true');
 			} else {
-				$this->db->getConnection()->rollBack();
-				Message::error('Gagal mengirim pesan');
+				if ($transactionStarted && $conn->inTransaction()) {
+					$conn->rollBack();
+				}
+				Session::flash('error', 'Gagal mengirim pesan');
 				$this->redirect('/messages/create');
 			}
 		} catch (Exception $e) {
-			$this->db->getConnection()->rollBack();
-			Message::error('Terjadi kesalahan: ' . $e->getMessage());
+			if ($transactionStarted && $conn->inTransaction()) {
+				try {
+					$conn->rollBack();
+				} catch (PDOException $rollbackException) {
+					// Ignore rollback errors
+				}
+			}
+			Session::flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
 			$this->redirect('/messages/create');
 		}
 	}
@@ -178,42 +197,80 @@ class MessageController extends Controller {
 	/**
 	 * Show specific message
 	 */
-	public function show($id = null) {
+	public function show($id) {
+		// Debug: Ensure controller is called
+		if (empty($id)) {
+			die("ERROR: Controller show() called but ID is empty. REQUEST_URI: " . ($_SERVER['REQUEST_URI'] ?? 'N/A'));
+		}
+
 		Auth::requireAuth();
 
-		$messageId = $id ?? ($_GET['id'] ?? null);
-		if (!$messageId) {
-			$this->redirect('/messages');
-			return;
-		}
+		$messageId = (int)$id;
 		$userId = Auth::user()['id'];
+		
+		// Get message by ID
+		$message = $this->messageModel->findById($messageId);
 
-		// Get message with recipients
-		$message = $this->messageModel->getMessageWithRecipients($messageId, $userId);
+		// If not found, try direct query as fallback
+		if (!$message) {
+			$message = $this->db->fetchOne("SELECT * FROM messages WHERE id = ?", [$messageId]);
+			if ($message) {
+				// Get sender info
+				$sender = $this->db->fetchOne("SELECT namalengkap, email, picture FROM users WHERE id = ?", [$message['sender_id'] ?? 0]);
+				$message['sender_name'] = $sender['namalengkap'] ?? 'Unknown';
+				$message['sender_email'] = $sender['email'] ?? '-';
+				$message['sender_picture'] = $sender['picture'] ?? null;
+			}
+		}
 
 		if (!$message) {
+			Session::flash('error', 'Pesan tidak ditemukan');
 			$this->redirect('/messages');
 			return;
 		}
 
+		// Ensure message has required fields
+		if (!isset($message['id'])) {
+			$message['id'] = $messageId;
+		}
+		if (!isset($message['content'])) {
+			$message['content'] = '';
+		}
+		if (!isset($message['subject'])) {
+			$message['subject'] = '(No Subject)';
+		}
+
+		// Get recipients
+		$recipients = $this->messageModel->getRecipients($messageId);
+		$message['recipients'] = is_array($recipients) ? $recipients : [];
+
 		// Get attachments
-		$message['attachments'] = $this->messageModel->getAttachments($messageId);
+		$attachments = $this->messageModel->getAttachments($messageId);
+		$message['attachments'] = is_array($attachments) ? $attachments : [];
 
 		// Check if user is recipient and mark as read if needed
 		$isRecipient = false;
 		foreach ($message['recipients'] as $recipient) {
-			if ($recipient['recipient_id'] == $userId) {
+			if (($recipient['recipient_id'] ?? 0) == $userId) {
 				$isRecipient = true;
-				if (!$recipient['is_read']) {
+				if (!($recipient['is_read'] ?? 0)) {
 					$this->messageModel->markAsRead($messageId, $userId);
 				}
 				break;
 			}
 		}
 
+		// Debug: Verify data before passing
+		if (empty($message) || !is_array($message)) {
+			die("ERROR: Message is empty before passing to view. ID: {$messageId}, Message: " . print_r($message, true));
+		}
+
+		// Pass data to view
+		// Use $messageData to avoid conflict with $message in alerts.php
 		$this->view('messages/show', [
 			'title' => 'Detail Pesan',
-			'message' => $message,
+			'messageData' => $message,
+			'message' => $message, // Keep for backward compatibility
 			'is_recipient' => $isRecipient
 		]);
 	}
@@ -253,8 +310,8 @@ class MessageController extends Controller {
 		$userId = Auth::user()['id'];
 		$searchTerm = trim($_GET['q'] ?? '');
 		$page = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
-		$perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 20;
-		$perPage = in_array($perPage, [10, 20, 30, 50, 100]) ? $perPage : 20;
+		$perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
+		$perPage = in_array($perPage, [10, 25, 50, 100, 200, 500, 1000]) ? $perPage : 10;
 
 		if (empty($searchTerm)) {
 			$this->redirect('/messages');
@@ -397,4 +454,3 @@ class MessageController extends Controller {
 		}
 	}
 }
-
