@@ -148,13 +148,85 @@ require __DIR__ . '/../layouts/header.php';
 	</div>
 </div>
 
-<!-- Quill JS Editor -->
-<link href="<?= BASE_URL ?>assets/css/quill.snow.css" rel="stylesheet">
-<script src="<?= BASE_URL ?>assets/js/quill.js"></script>
+<!-- Quill JS Editor - Using CDN for better reliability -->
+<!-- Quill CSS from CDN -->
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet" crossorigin="anonymous">
+<!-- Fallback to local if CDN fails -->
+<link href="<?= htmlspecialchars(defined('BASE_URL') ? BASE_URL : '/') ?>assets/css/quill.snow.css" rel="stylesheet" onerror="this.onerror=null; this.href='https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css';">
 
+<script>
+// Load Quill from CDN with fallback to local
+(function() {
+	var quillLoaded = false;
+	
+	// Try CDN first (more reliable)
+	var quillScript = document.createElement('script');
+	quillScript.src = 'https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js';
+	quillScript.crossOrigin = 'anonymous';
+	quillScript.async = false;
+	
+	quillScript.onload = function() {
+		quillLoaded = true;
+		console.log('Quill loaded successfully from CDN');
+	};
+	
+	quillScript.onerror = function() {
+		console.warn('Failed to load Quill from CDN, trying local file...');
+		// Fallback to local file
+		var localScript = document.createElement('script');
+		var baseUrl = <?= json_encode(defined('BASE_URL') ? BASE_URL : '/', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+		localScript.src = baseUrl + 'assets/js/quill.js';
+		localScript.async = false;
+		
+		localScript.onload = function() {
+			quillLoaded = true;
+			console.log('Quill loaded successfully from local file');
+		};
+		
+		localScript.onerror = function() {
+			console.error('Failed to load Quill from both CDN and local file');
+			var errorDiv = document.createElement('div');
+			errorDiv.className = 'alert alert-danger';
+			errorDiv.innerHTML = '<strong>Error:</strong> Editor tidak dapat dimuat. Silakan refresh halaman atau hubungi administrator.';
+			var editorContainer = document.getElementById('quill-editor');
+			if (editorContainer && editorContainer.parentElement) {
+				editorContainer.parentElement.insertBefore(errorDiv, editorContainer);
+			}
+		};
+		
+		document.head.appendChild(localScript);
+	};
+	
+	document.head.appendChild(quillScript);
+})();
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+	// Wait a bit for Quill to load if it's still loading
+	var quillCheckAttempts = 0;
+	var maxAttempts = 10;
+	
+	function initQuill() {
+		// Check if Quill is loaded
+		if (typeof Quill === 'undefined') {
+			quillCheckAttempts++;
+			if (quillCheckAttempts < maxAttempts) {
+				setTimeout(initQuill, 100);
+				return;
+			}
+			
+			console.error('Quill library is not loaded after ' + maxAttempts + ' attempts. File path: <?= htmlspecialchars($quillJs) ?>');
+			var errorDiv = document.createElement('div');
+			errorDiv.className = 'alert alert-danger';
+			errorDiv.innerHTML = '<strong>Error:</strong> Editor tidak dapat dimuat. Silakan refresh halaman atau hubungi administrator.<br><small>Path: <?= htmlspecialchars($quillJs) ?></small>';
+			var editorContainer = document.getElementById('quill-editor');
+			if (editorContainer && editorContainer.parentElement) {
+				editorContainer.parentElement.insertBefore(errorDiv, editorContainer);
+			}
+			return;
+		}
+	
 	// Initialize Quill Editor
 	const quill = new Quill('#quill-editor', {
 		theme: 'snow',
@@ -220,6 +292,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	}, 500);
 	<?php endif; ?>
+	} // End of initQuill function
+	
+	// Start initialization
+	initQuill();
 	
 	const userSearch = document.getElementById('userSearch');
 	const roleFilter = document.getElementById('roleFilter');
@@ -290,23 +366,39 @@ document.addEventListener('DOMContentLoaded', function() {
 		
 		const url = `/messages/searchUsers?${params.toString()}`;
 		
-		fetch(url)
+		// Show loading state
+		usersList.innerHTML = '<div class="p-3 text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div><span class="ms-2">Memuat daftar pengguna...</span></div>';
+		
+		fetch(url, {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json'
+			},
+			credentials: 'same-origin'
+		})
 			.then(response => {
 				if (!response.ok) {
-					throw new Error('HTTP error! status: ' + response.status);
+					return response.text().then(text => {
+						throw new Error('HTTP ' + response.status + ': ' + (text || 'Unknown error'));
+					});
 				}
-				return response.json();
+				return response.json().catch(err => {
+					throw new Error('Invalid JSON response: ' + err.message);
+				});
 			})
 			.then(data => {
-				if (data.success) {
-					allUsers = data.users;
-					displayUsers(data.users);
+				if (data && data.success) {
+					allUsers = Array.isArray(data.users) ? data.users : [];
+					displayUsers(allUsers);
 				} else {
-					usersList.innerHTML = '<div class="p-3 text-center text-danger">Error: ' + data.message + '</div>';
+					const errorMsg = (data && data.message) ? data.message : 'Gagal memuat daftar pengguna';
+					usersList.innerHTML = '<div class="p-3 text-center text-danger">Error: ' + errorMsg + '</div>';
 				}
 			})
 			.catch(error => {
-				usersList.innerHTML = '<div class="p-3 text-center text-danger">Error loading users: ' + error.message + '</div>';
+				console.error('Error loading users:', error);
+				usersList.innerHTML = '<div class="p-3 text-center text-danger">Error memuat daftar pengguna: ' + error.message + '<br><small>Silakan refresh halaman atau coba lagi nanti.</small></div>';
 			});
 	}
 	

@@ -400,18 +400,35 @@ class MessageController extends Controller {
 	 * Search users for recipient selection (AJAX)
 	 */
 	public function searchUsers() {
-		Auth::requireAuth();
-
 		try {
+			Auth::requireAuth();
+
+			$user = Auth::user();
+			if (!$user || !isset($user['id'])) {
+				$this->json(['success' => false, 'message' => 'User tidak ditemukan'], 401);
+				return;
+			}
+
 			$search = trim($_GET['search'] ?? '');
 			$role = trim($_GET['role'] ?? '');
-			$currentUserId = Auth::user()['id'];
+			$currentUserId = (int)$user['id'];
 			
 			$users = $this->messageModel->searchUsers($search, $role, $currentUserId);
 			
+			// Ensure users is always an array
+			if (!is_array($users)) {
+				$users = [];
+			}
+			
 			$this->json(['success' => true, 'users' => $users]);
 		} catch (Exception $e) {
-			$this->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+			error_log('MessageController::searchUsers() Error: ' . $e->getMessage());
+			error_log('Stack trace: ' . $e->getTraceAsString());
+			$this->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+		} catch (Error $e) {
+			error_log('MessageController::searchUsers() Fatal Error: ' . $e->getMessage());
+			error_log('Stack trace: ' . $e->getTraceAsString());
+			$this->json(['success' => false, 'message' => 'Fatal Error: ' . $e->getMessage()], 500);
 		}
 	}
 

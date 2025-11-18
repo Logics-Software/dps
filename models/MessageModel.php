@@ -220,31 +220,49 @@ class MessageModel {
 	}
 
 	public function searchUsers($search = '', $role = '', $excludeUserId = null) {
-		$sql = "SELECT id, namalengkap, username, email, role, picture, status FROM users WHERE status = 'aktif'";
-		$params = [];
-		
-		// Exclude current user if provided
-		if ($excludeUserId) {
-			$sql .= " AND id != ?";
-			$params[] = $excludeUserId;
+		try {
+			$sql = "SELECT id, namalengkap, username, email, role, picture, status FROM users WHERE status = 'aktif'";
+			$params = [];
+			
+			// Exclude current user if provided
+			if ($excludeUserId) {
+				$sql .= " AND id != ?";
+				$params[] = (int)$excludeUserId;
+			}
+			
+			if (!empty($search)) {
+				$sql .= " AND (namalengkap LIKE ? OR username LIKE ? OR email LIKE ?)";
+				$searchPattern = "%{$search}%";
+				$params[] = $searchPattern;
+				$params[] = $searchPattern;
+				$params[] = $searchPattern;
+			}
+			
+			if (!empty($role)) {
+				$sql .= " AND role = ?";
+				$params[] = $role;
+			}
+			
+			$sql .= " ORDER BY namalengkap ASC LIMIT 50";
+			
+			$result = $this->db->fetchAll($sql, $params);
+			
+			// Ensure result is always an array
+			if (!is_array($result)) {
+				error_log('MessageModel::searchUsers() - fetchAll returned non-array: ' . gettype($result));
+				return [];
+			}
+			
+			return $result;
+		} catch (Exception $e) {
+			error_log('MessageModel::searchUsers() Error: ' . $e->getMessage());
+			error_log('Stack trace: ' . $e->getTraceAsString());
+			return [];
+		} catch (Error $e) {
+			error_log('MessageModel::searchUsers() Fatal Error: ' . $e->getMessage());
+			error_log('Stack trace: ' . $e->getTraceAsString());
+			return [];
 		}
-		
-		if (!empty($search)) {
-			$sql .= " AND (namalengkap LIKE ? OR username LIKE ? OR email LIKE ?)";
-			$searchPattern = "%{$search}%";
-			$params[] = $searchPattern;
-			$params[] = $searchPattern;
-			$params[] = $searchPattern;
-		}
-		
-		if (!empty($role)) {
-			$sql .= " AND role = ?";
-			$params[] = $role;
-		}
-		
-		$sql .= " ORDER BY namalengkap ASC LIMIT 50";
-		
-		return $this->db->fetchAll($sql, $params);
 	}
 
 	public function saveAttachment($messageId, $filename, $filepath, $mimetype, $filesize) {
