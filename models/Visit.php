@@ -51,7 +51,7 @@ class Visit {
     }
 
     public function findById($visitId) {
-        $sql = "SELECT v.*, mc.namacustomer, mc.alamatcustomer, mc.kotacustomer, mc.latitude, mc.longitude
+        $sql = "SELECT v.*, mc.namacustomer, mc.kodecustomer as master_kodecustomer, mc.alamatcustomer, mc.kotacustomer, mc.latitude, mc.longitude
                 FROM visits v
                 LEFT JOIN mastercustomer mc ON v.customer_id = mc.id
                 WHERE v.visit_id = ?";

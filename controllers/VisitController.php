@@ -347,6 +347,38 @@ class VisitController extends Controller {
         return $options;
     }
 
+    public function getVisitDetail($visitId) {
+        Auth::requireRole(['sales']);
+        $currentUser = Auth::user();
+
+        $visit = $this->visitModel->findById($visitId);
+        if (!$visit || $visit['user_id'] != $currentUser['id']) {
+            http_response_code(404);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Kunjungan tidak ditemukan']);
+            return;
+        }
+
+        // Prepare response data
+        $data = [
+            'visit_id' => $visit['visit_id'],
+            'namacustomer' => $visit['namacustomer'] ?? '-',
+            'kodecustomer' => !empty($visit['master_kodecustomer']) ? $visit['master_kodecustomer'] : ($visit['kodecustomer'] ?? '-'),
+            'status_kunjungan' => $visit['status_kunjungan'] ?? '-',
+            'check_in_time' => $visit['check_in_time'] ?? null,
+            'check_out_time' => $visit['check_out_time'] ?? null,
+            'check_in_lat' => $visit['check_in_lat'] ?? null,
+            'check_in_long' => $visit['check_in_long'] ?? null,
+            'check_out_lat' => $visit['check_out_lat'] ?? null,
+            'check_out_long' => $visit['check_out_long'] ?? null,
+            'catatan' => $visit['catatan'] ?? '',
+            'jarak_dari_kantor' => $visit['jarak_dari_kantor'] ?? null
+        ];
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
     public function getVisitFiles($visitId) {
         Auth::requireRole(['sales']);
         $currentUser = Auth::user();

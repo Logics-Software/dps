@@ -36,10 +36,6 @@ require __DIR__ . '/../layouts/header.php';
 <div class="alert alert-danger">Data kunjungan tidak ditemukan.</div>
 <?php else: ?>
 
-<form method="POST" action="/visits/checkout/<?= $visit['visit_id'] ?>" id="visitCheckoutForm" enctype="multipart/form-data">
-    <input type="hidden" name="check_out_lat" id="checkOutLat">
-    <input type="hidden" name="check_out_long" id="checkOutLong">
-
 <div class="row">
     <div class="col-lg-7">
         <div class="card mb-4">
@@ -67,7 +63,7 @@ require __DIR__ . '/../layouts/header.php';
                 <hr>
 
                 <h6 class="fw-semibold mb-3">Aktivitas Kunjungan</h6>
-                <form action="/visits/<?= $visit['visit_id'] ?>/activities" method="POST" class="row g-2 align-items-end mb-3">
+                <form action="/visits/<?= $visit['visit_id'] ?>/activities" method="POST" id="activityForm" class="row g-2 align-items-end mb-3">
                     <div class="col-md-4">
                         <label class="form-label">Jenis Aktivitas</label>
                         <select name="activity_type" class="form-select" required>
@@ -145,6 +141,9 @@ require __DIR__ . '/../layouts/header.php';
     </div>
 
     <div class="col-lg-5">
+        <form method="POST" action="/visits/checkout/<?= $visit['visit_id'] ?>" id="visitCheckoutForm" enctype="multipart/form-data">
+            <input type="hidden" name="check_out_lat" id="checkOutLat">
+            <input type="hidden" name="check_out_long" id="checkOutLong">
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">Selesaikan Kunjungan</h5>
@@ -154,8 +153,6 @@ require __DIR__ . '/../layouts/header.php';
                         <label class="form-label">Catatan Akhir</label>
                         <textarea name="catatan" id="catatan" rows="4" class="form-control" placeholder="Ringkasan hasil kunjungan"><?= htmlspecialchars($visit['catatan'] ?? '') ?></textarea>
                     </div>
-                    <!-- Hidden file input inside form as backup -->
-                    <input type="file" name="visit_files[]" id="visitFilesBackup" class="d-none" multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx">
                     <div class="mb-3">
                         <div class="small text-muted mb-1">Koordinat Check-out</div>
                         <div class="d-flex gap-2">
@@ -186,9 +183,9 @@ require __DIR__ . '/../layouts/header.php';
                     <button type="submit" class="btn btn-success" id="btnSubmitCheckout" disabled>Selesaikan Kunjungan</button>
                 </div>
             </div>
+        </form>
     </div>
 </div>
-</form>
 
 <?php endif; ?>
 </div>
@@ -295,23 +292,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('visitFiles');
-    const fileInputBackup = document.getElementById('visitFilesBackup');
     const filePreview = document.getElementById('filePreview');
     const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
     
-    // Sync files from external input to backup input inside form
-    if (fileInput && fileInputBackup) {
+    if (fileInput) {
         fileInput.addEventListener('change', function(e) {
-            // Copy files to backup input inside form
-            if (e.target.files && e.target.files.length > 0) {
-                // Create new FileList-like object
-                const dataTransfer = new DataTransfer();
-                Array.from(e.target.files).forEach(file => {
-                    dataTransfer.items.add(file);
-                });
-                fileInputBackup.files = dataTransfer.files;
-            }
-            
             filePreview.innerHTML = '';
             const files = Array.from(e.target.files);
             

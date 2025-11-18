@@ -166,10 +166,16 @@ require __DIR__ . '/../layouts/header.php';
                                     <a href="/visits/checkout/<?= $visit['visit_id'] ?>" class="btn btn-sm btn-warning">Check-out</a>
                                     <?php else: ?>
                                     <?php
+                                    // Ensure visit_id exists
+                                    $visitId = $visit['visit_id'] ?? null;
+                                    if (!$visitId) {
+                                        continue; // Skip if no visit_id
+                                    }
+                                    
                                     $detailPayload = [
-                                        'visit_id' => $visit['visit_id'],
+                                        'visit_id' => $visitId,
                                         'namacustomer' => $visit['namacustomer'] ?? '-',
-                                        'kodecustomer' => $visit['kodecustomer'] ?? ($visit['master_kodecustomer'] ?? '-'),
+                                        'kodecustomer' => !empty($visit['master_kodecustomer']) ? $visit['master_kodecustomer'] : ($visit['kodecustomer'] ?? '-'),
                                         'status_kunjungan' => $visit['status_kunjungan'] ?? '-',
                                         'check_in_time' => $visit['check_in_time'] ?? null,
                                         'check_out_time' => $visit['check_out_time'] ?? null,
@@ -180,9 +186,9 @@ require __DIR__ . '/../layouts/header.php';
                                         'catatan' => $visit['catatan'] ?? '',
                                         'jarak_dari_kantor' => $visit['jarak_dari_kantor'] ?? null
                                     ];
-                                    $detailJson = htmlspecialchars(json_encode($detailPayload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8');
+                                    $detailJson = htmlspecialchars(json_encode($detailPayload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
                                     ?>
-                                    <button type="button" class="btn btn-sm btn-outline-primary btn-visit-detail" data-visit="<?= $detailJson ?>">
+                                    <button type="button" class="btn btn-sm btn-outline-primary btn-visit-detail" data-visit-id="<?= htmlspecialchars($visitId) ?>" data-visit="<?= $detailJson ?>">
                                         Detail
                                     </button>
                                     <?php endif; ?>
@@ -352,7 +358,7 @@ $jsCode = <<<'JAVASCRIPT'
         if (Number.isNaN(parsedLat) || Number.isNaN(parsedLng)) {
             return '-';
         }
-        return `Lat \${parsedLat.toFixed(6)}, Lng \${parsedLng.toFixed(6)}`;
+        return 'Lat ' + parsedLat.toFixed(6) + ', Lng ' + parsedLng.toFixed(6);
     }
 
     function formatDistance(value) {
@@ -363,44 +369,102 @@ $jsCode = <<<'JAVASCRIPT'
         if (Number.isNaN(parsed)) {
             return value;
         }
-        return `\${parsed.toFixed(2)} km`;
+        return parsed.toFixed(2) + ' km';
     }
 
     function updateDetail(selector, text, fallback = '-') {
-        const el = modalEl.querySelector(`[data-detail="\${selector}"]`);
+        const el = modalEl.querySelector('[data-detail="' + selector + '"]');
         if (!el) {
             return;
         }
         el.textContent = text && text !== '' ? text : fallback;
     }
 
+    function loadVisitDetail(visitId) {
+        // Show loading state
+        updateDetail('customer', 'Memuat...', '-');
+        updateDetail('kode', 'Memuat...', '-');
+        updateDetail('status', 'Memuat...', '-');
+        updateDetail('checkin-time', 'Memuat...', '-');
+        updateDetail('checkout-time', 'Memuat...', '-');
+        updateDetail('distance', 'Memuat...', '-');
+        updateDetail('checkin-location', 'Memuat...', '-');
+        updateDetail('checkout-location', 'Memuat...', '-');
+        updateDetail('notes', 'Memuat...', 'Tidak ada catatan.');
+
+        const url = '/visits/' + encodeURIComponent(visitId) + '/detail';
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+            .then(function(response) {
+                if (!response.ok) {
+                    return response.text().then(function(text) {
+                        throw new Error('HTTP error! status: ' + response.status);
+                    });
+                }
+                return response.json();
+            })
+            .then(function(payload) {
+                if (payload.error) {
+                    updateDetail('customer', 'Error: ' + payload.error, '-');
+                    return;
+                }
+
+                // Update all detail fields
+                updateDetail('customer', payload.namacustomer, '-');
+                updateDetail('kode', payload.kodecustomer, '-');
+                updateDetail('status', payload.status_kunjungan, '-');
+                updateDetail('checkin-time', formatDateTime(payload.check_in_time));
+                updateDetail('checkout-time', formatDateTime(payload.check_out_time));
+                updateDetail('distance', formatDistance(payload.jarak_dari_kantor));
+                updateDetail('checkin-location', formatCoordinate(payload.check_in_lat, payload.check_in_long));
+                updateDetail('checkout-location', formatCoordinate(payload.check_out_lat, payload.check_out_long));
+                updateDetail('notes', payload.catatan || 'Tidak ada catatan.');
+
+                // Load files
+                if (payload.visit_id) {
+                    loadVisitFiles(payload.visit_id);
+                }
+            })
+            .catch(function(error) {
+                console.error('Error loading visit detail:', error);
+                updateDetail('customer', 'Error memuat data', '-');
+                updateDetail('kode', 'Error memuat data', '-');
+                updateDetail('status', 'Error memuat data', '-');
+            });
+    }
+
     document.querySelectorAll('.btn-visit-detail').forEach(function(button) {
         button.addEventListener('click', function() {
-            const payloadRaw = this.getAttribute('data-visit');
-            if (!payloadRaw) {
+            // Get visit_id from data attribute or try to parse from data-visit
+            let visitId = this.getAttribute('data-visit-id');
+            
+            // If not found, try to parse from data-visit JSON
+            if (!visitId) {
+                const payloadRaw = this.getAttribute('data-visit');
+                if (payloadRaw) {
+                    try {
+                        const payload = JSON.parse(payloadRaw);
+                        visitId = payload.visit_id;
+                    } catch (error) {
+                        console.error('Gagal mengurai data kunjungan', error);
+                    }
+                }
+            }
+
+            if (!visitId) {
+                console.error('visit_id tidak ditemukan');
                 return;
             }
-            let payload;
-            try {
-                payload = JSON.parse(payloadRaw);
-            } catch (error) {
-                console.error('Gagal mengurai data kunjungan', error);
-                return;
-            }
 
-            updateDetail('customer', payload.namacustomer, '-');
-            updateDetail('kode', payload.kodecustomer, '-');
-            updateDetail('status', payload.status_kunjungan, '-');
-            updateDetail('checkin-time', formatDateTime(payload.check_in_time));
-            updateDetail('checkout-time', formatDateTime(payload.check_out_time));
-            updateDetail('distance', formatDistance(payload.jarak_dari_kantor));
-            updateDetail('checkin-location', formatCoordinate(payload.check_in_lat, payload.check_in_long));
-            updateDetail('checkout-location', formatCoordinate(payload.check_out_lat, payload.check_out_long));
-            updateDetail('notes', payload.catatan || 'Tidak ada catatan.');
-
-            // Load files
-            loadVisitFiles(payload.visit_id);
-
+            // Load detail from API
+            loadVisitDetail(visitId);
             modal.show();
         });
     });
@@ -428,15 +492,12 @@ $jsCode = <<<'JAVASCRIPT'
                 return response.json();
             })
             .then(function(data) {
-                console.log('Files data:', data);
-                
                 if (data.error) {
                     container.innerHTML = '<div class="col-12 text-center text-muted py-3">' + data.error + '</div>';
                     return;
                 }
 
                 const files = data.files || [];
-                console.log('Files count:', files.length);
                 
                 if (files.length === 0) {
                     container.innerHTML = '<div class="col-12 text-center text-muted py-3">Tidak ada file yang diupload</div>';
@@ -449,11 +510,6 @@ $jsCode = <<<'JAVASCRIPT'
                 }
                 // Normalize baseUrl to avoid double slashes
                 fileBaseUrl = fileBaseUrl.replace(/\/$/, '');
-                
-                // Debug: log fileBaseUrl to ensure it's correct
-                if (fileBaseUrl) {
-                    console.log('File base URL:', fileBaseUrl);
-                }
                 
                 // Ensure filename is valid
                 function sanitizeFilename(filename) {

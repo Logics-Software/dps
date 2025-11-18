@@ -145,6 +145,7 @@ $router->get('/visits/checkout/{id}', 'VisitController', 'checkout');
 $router->post('/visits/checkout/{id}', 'VisitController', 'checkout');
 $router->get('/visits/nearest-customers', 'VisitController', 'nearestCustomers');
 $router->post('/visits/customer/{id}/coordinates', 'VisitController', 'updateCustomerCoordinates');
+$router->get('/visits/{id}/detail', 'VisitController', 'getVisitDetail');
 $router->get('/visits/{id}/files', 'VisitController', 'getVisitFiles');
 $router->post('/visits/{id}/activities', 'VisitController', 'createActivity');
 
