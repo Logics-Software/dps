@@ -216,6 +216,8 @@ $router->get('/messages/sent', 'MessageController', 'sent');
 $router->get('/messages/create', 'MessageController', 'create');
 $router->get('/messages/search', 'MessageController', 'search');
 $router->get('/messages/searchUsers', 'MessageController', 'searchUsers');
+$router->get('/messages/getReplyData', 'MessageController', 'getReplyData');
+$router->get('/messages/getForwardData', 'MessageController', 'getForwardData');
 $router->get('/messages/getUnreadCount', 'MessageController', 'getUnreadCount');
 $router->get('/messages/markAllAsRead', 'MessageController', 'markAllAsRead');
 $router->get('/messages/markAsRead', 'MessageController', 'markAsRead');

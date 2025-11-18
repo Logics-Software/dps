@@ -397,6 +397,110 @@ class MessageController extends Controller {
 	}
 
 	/**
+	 * Get message data for reply (AJAX)
+	 */
+	public function getReplyData() {
+		try {
+			Auth::requireAuth();
+			$user = Auth::user();
+			if (!$user || !isset($user['id'])) {
+				$this->json(['success' => false, 'message' => 'User tidak ditemukan'], 401);
+				return;
+			}
+			
+			$replyId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+			if (!$replyId) {
+				$this->json(['success' => false, 'message' => 'ID tidak valid']);
+				return;
+			}
+			
+			$replyData = $this->messageModel->getMessageForReply($replyId, $user['id']);
+			if (!$replyData) {
+				$this->json(['success' => false, 'message' => 'Pesan tidak ditemukan']);
+				return;
+			}
+			
+			// Sanitize data
+			$cleanStr = function($str) {
+				if (empty($str) && $str !== '0') return '';
+				$str = (string)$str;
+				$str = str_replace(["\r\n", "\r", "\n", "\t"], ' ', $str);
+				$str = preg_replace('/[\x00-\x1F\x7F]/', '', $str);
+				$str = preg_replace('/\s+/', ' ', $str);
+				return trim($str);
+			};
+			
+			$sanitized = [
+				'sender_id' => (int)($replyData['reply_sender']['id'] ?? 0),
+				'subject' => $cleanStr($replyData['subject'] ?? '')
+			];
+			
+			$this->json(['success' => true, 'data' => $sanitized]);
+		} catch (Exception $e) {
+			error_log('MessageController::getReplyData() Error: ' . $e->getMessage());
+			$this->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+		}
+	}
+	
+	/**
+	 * Get message data for forward (AJAX)
+	 */
+	public function getForwardData() {
+		try {
+			Auth::requireAuth();
+			$user = Auth::user();
+			if (!$user || !isset($user['id'])) {
+				$this->json(['success' => false, 'message' => 'User tidak ditemukan'], 401);
+				return;
+			}
+			
+			$forwardId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+			if (!$forwardId) {
+				$this->json(['success' => false, 'message' => 'ID tidak valid']);
+				return;
+			}
+			
+			$forwardData = $this->messageModel->getMessageForForward($forwardId, $user['id']);
+			if (!$forwardData) {
+				$this->json(['success' => false, 'message' => 'Pesan tidak ditemukan']);
+				return;
+			}
+			
+			// Sanitize data
+			$cleanStr = function($str) {
+				if (empty($str) && $str !== '0') return '';
+				$str = (string)$str;
+				$str = str_replace(["\r\n", "\r", "\n", "\t"], ' ', $str);
+				$str = preg_replace('/[\x00-\x1F\x7F]/', '', $str);
+				$str = preg_replace('/\s+/', ' ', $str);
+				return trim($str);
+			};
+			
+			$content = $forwardData['content'] ?? '';
+			if (!empty($content)) {
+				$content = (string)$content;
+				$content = str_replace(["\r\n", "\r", "\n", "\t"], ' ', $content);
+				$content = preg_replace('/[\x00-\x1F\x7F]/', '', $content);
+				$content = preg_replace('/\s+/', ' ', $content);
+				$content = trim($content);
+			}
+			
+			$sanitized = [
+				'sender_name' => $cleanStr($forwardData['forward_sender']['name'] ?? ''),
+				'sender_email' => $cleanStr($forwardData['forward_sender']['email'] ?? ''),
+				'content' => $content,
+				'subject' => $cleanStr($forwardData['subject'] ?? ''),
+				'date' => $cleanStr(date('d F Y, H:i', strtotime($forwardData['created_at'] ?? 'now')))
+			];
+			
+			$this->json(['success' => true, 'data' => $sanitized]);
+		} catch (Exception $e) {
+			error_log('MessageController::getForwardData() Error: ' . $e->getMessage());
+			$this->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+		}
+	}
+	
+	/**
 	 * Search users for recipient selection (AJAX)
 	 */
 	public function searchUsers() {
@@ -420,7 +524,24 @@ class MessageController extends Controller {
 				$users = [];
 			}
 			
-			$this->json(['success' => true, 'users' => $users]);
+			// Additional sanitization before JSON encoding
+			$sanitizedUsers = [];
+			foreach ($users as $user) {
+				$cleanUser = [];
+				foreach ($user as $key => $value) {
+					if (is_string($value)) {
+						// Final sanitization - remove any remaining line breaks
+						$value = str_replace(["\r\n", "\r", "\n", "\t"], ' ', $value);
+						$value = preg_replace('/[\x00-\x1F\x7F]/', '', $value);
+						$value = preg_replace('/\s+/', ' ', $value);
+						$value = trim($value);
+					}
+					$cleanUser[$key] = $value;
+				}
+				$sanitizedUsers[] = $cleanUser;
+			}
+			
+			$this->json(['success' => true, 'users' => $sanitizedUsers]);
 		} catch (Exception $e) {
 			error_log('MessageController::searchUsers() Error: ' . $e->getMessage());
 			error_log('Stack trace: ' . $e->getTraceAsString());
