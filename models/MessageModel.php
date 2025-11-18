@@ -253,24 +253,7 @@ class MessageModel {
 				return [];
 			}
 			
-			// Sanitize all string fields to remove line breaks and control characters
-			$sanitized = [];
-			foreach ($result as $user) {
-				$cleanUser = [];
-				foreach ($user as $key => $value) {
-					if (is_string($value)) {
-						// Remove all line breaks and control characters
-						$value = str_replace(["\r\n", "\r", "\n", "\t"], ' ', $value);
-						$value = preg_replace('/[\x00-\x1F\x7F]/', '', $value);
-						$value = preg_replace('/\s+/', ' ', $value);
-						$value = trim($value);
-					}
-					$cleanUser[$key] = $value;
-				}
-				$sanitized[] = $cleanUser;
-			}
-			
-			return $sanitized;
+			return $result;
 		} catch (Exception $e) {
 			error_log('MessageModel::searchUsers() Error: ' . $e->getMessage());
 			error_log('Stack trace: ' . $e->getTraceAsString());

@@ -1,26 +1,6 @@
 <?php
 $title = 'Tulis Pesan';
 require __DIR__ . '/../layouts/header.php';
-
-// Prepare simple config data
-$config = require __DIR__ . '/../../config/app.php';
-$baseUrl = defined('BASE_URL') ? BASE_URL : '/';
-$baseUrl = str_replace(["\r", "\n", "\t"], '', trim($baseUrl));
-if (empty($baseUrl)) {
-	$baseUrl = '/';
-}
-
-// Get IDs from URL - no complex data needed
-$replyId = isset($_GET['reply']) ? (int)$_GET['reply'] : 0;
-$forwardId = isset($_GET['forward']) ? (int)$_GET['forward'] : 0;
-
-// Get subject for input field (simple string, no complex data)
-$subjectValue = '';
-if ($replyId && isset($reply_data) && $reply_data && isset($reply_data['subject'])) {
-	$subjectValue = 'Reply: ' . htmlspecialchars($reply_data['subject'], ENT_QUOTES, 'UTF-8');
-} elseif ($forwardId && isset($forward_data) && $forward_data && isset($forward_data['subject'])) {
-	$subjectValue = 'Forward: ' . htmlspecialchars($forward_data['subject'], ENT_QUOTES, 'UTF-8');
-}
 ?>
 
 <div class="container">
@@ -40,7 +20,7 @@ if ($replyId && isset($reply_data) && $reply_data && isset($reply_data['subject'
 		<div class="card-header">
 			<div class="d-flex align-items-center">
 				<h4 class="mb-0 me-auto">Pesan Baru</h4>
-			</div>
+			 </div>
 		</div>
 
 		<div class="card-body">
@@ -51,7 +31,13 @@ if ($replyId && isset($reply_data) && $reply_data && isset($reply_data['subject'
 							<label for="subject" class="form-label">Subjek <span class="text-danger">*</span></label>
 							<input type="text" class="form-control" id="subject" name="subject" 
 									placeholder="Subjek" 
-									value="<?= $subjectValue ?>" 
+									value="<?php 
+										if (isset($reply_data) && $reply_data) {
+											echo 'Reply: ' . htmlspecialchars($reply_data['subject']);
+										} elseif (isset($forward_data) && $forward_data) {
+											echo 'Forward: ' . htmlspecialchars($forward_data['subject']);
+										}
+									?>" 
 									required>
 						</div>
 						
@@ -162,71 +148,52 @@ if ($replyId && isset($reply_data) && $reply_data && isset($reply_data['subject'
 	</div>
 </div>
 
-<!-- Quill JS Editor - Using CDN -->
+<!-- Quill JS Editor - Using CDN for better reliability -->
+<!-- Quill CSS from CDN -->
 <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet" crossorigin="anonymous">
-
-<!-- Store only IDs and simple config in data attributes -->
-<?php
-$replyId = isset($_GET['reply']) ? (int)$_GET['reply'] : 0;
-$forwardId = isset($_GET['forward']) ? (int)$_GET['forward'] : 0;
-
-// Ensure baseUrl and uploadUrl are safe
-$safeBaseUrl = htmlspecialchars(str_replace(["\r", "\n", "\t", "\"", "'"], '', $baseUrl), ENT_QUOTES, 'UTF-8');
-$uploadUrlValue = str_replace(["\r", "\n", "\t", "\"", "'"], '', $config['upload_url'] ?? '/uploads/');
-$safeUploadUrl = htmlspecialchars($uploadUrlValue, ENT_QUOTES, 'UTF-8');
-?>
-<div id="app-config" 
-	data-base-url="<?= $safeBaseUrl ?>"
-	data-upload-url="<?= $safeUploadUrl ?>"
-	data-reply-id="<?= $replyId ?>"
-	data-forward-id="<?= $forwardId ?>"
-	style="display:none;"></div>
+<!-- Fallback to local if CDN fails -->
+<link href="<?= htmlspecialchars(defined('BASE_URL') ? BASE_URL : '/') ?>assets/css/quill.snow.css" rel="stylesheet" onerror="this.onerror=null; this.href='https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css';">
 
 <script>
-// Load simple configuration from data attributes
+// Load Quill from CDN with fallback to local
 (function() {
-	var configEl = document.getElementById('app-config');
-	if (!configEl) {
-		console.error('Config element not found');
-		return;
-	}
+	var quillLoaded = false;
 	
-	window.CONFIG = {
-		baseUrl: configEl.getAttribute('data-base-url') || '/',
-		uploadUrl: configEl.getAttribute('data-upload-url') || '/uploads/',
-		replyId: parseInt(configEl.getAttribute('data-reply-id') || '0') || 0,
-		forwardId: parseInt(configEl.getAttribute('data-forward-id') || '0') || 0,
-		forwardData: null,
-		replyData: null
-	};
-})();
-</script>
-<script>
-
-// Load Quill from CDN with fallback
-(function() {
+	// Try CDN first (more reliable)
 	var quillScript = document.createElement('script');
 	quillScript.src = 'https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js';
 	quillScript.crossOrigin = 'anonymous';
 	quillScript.async = false;
 	
+	quillScript.onload = function() {
+		quillLoaded = true;
+		console.log('Quill loaded successfully from CDN');
+	};
+	
 	quillScript.onerror = function() {
-		var baseUrl = (window.CONFIG && window.CONFIG.baseUrl) ? window.CONFIG.baseUrl : '/';
+		console.warn('Failed to load Quill from CDN, trying local file...');
+		// Fallback to local file
 		var localScript = document.createElement('script');
+		var baseUrl = <?= json_encode(defined('BASE_URL') ? BASE_URL : '/', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 		localScript.src = baseUrl + 'assets/js/quill.js';
 		localScript.async = false;
+		
+		localScript.onload = function() {
+			quillLoaded = true;
+			console.log('Quill loaded successfully from local file');
+		};
+		
 		localScript.onerror = function() {
+			console.error('Failed to load Quill from both CDN and local file');
 			var errorDiv = document.createElement('div');
 			errorDiv.className = 'alert alert-danger';
-			var strong = document.createElement('strong');
-			strong.textContent = 'Error:';
-			errorDiv.appendChild(strong);
-			errorDiv.appendChild(document.createTextNode(' Editor tidak dapat dimuat. Silakan refresh halaman.'));
+			errorDiv.innerHTML = '<strong>Error:</strong> Editor tidak dapat dimuat. Silakan refresh halaman atau hubungi administrator.';
 			var editorContainer = document.getElementById('quill-editor');
 			if (editorContainer && editorContainer.parentElement) {
 				editorContainer.parentElement.insertBefore(errorDiv, editorContainer);
 			}
 		};
+		
 		document.head.appendChild(localScript);
 	};
 	
@@ -236,446 +203,142 @@ $safeUploadUrl = htmlspecialchars($uploadUrlValue, ENT_QUOTES, 'UTF-8');
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-	var quill = null;
-	var selectedUsers = [];
-	var allUsers = [];
+	// Wait a bit for Quill to load if it's still loading
+	var quillCheckAttempts = 0;
+	var maxAttempts = 10;
 	
-	// Initialize Quill
 	function initQuill() {
+		// Check if Quill is loaded
 		if (typeof Quill === 'undefined') {
-			setTimeout(initQuill, 100);
-			return;
-		}
-		
-		quill = new Quill('#quill-editor', {
-			theme: 'snow',
-			modules: {
-				toolbar: [
-					[{ 'header': [1, 2, 3, false] }],
-					['bold', 'italic', 'underline', 'strike'],
-					[{ 'color': [] }, { 'background': [] }],
-					[{ 'list': 'ordered'}, { 'list': 'bullet' }],
-					[{ 'indent': '-1'}, { 'indent': '+1' }],
-					[{ 'align': [] }],
-					['link', 'image'],
-					['clean']
-				]
-			},
-			placeholder: 'Tulis pesan Anda di sini...'
-		});
-		
-		window.quill = quill;
-		
-		quill.on('text-change', function() {
-			document.getElementById('content').value = quill.root.innerHTML;
-		});
-		
-		// Load forward data via AJAX if needed
-		if (window.CONFIG && window.CONFIG.forwardId > 0) {
-			fetch('/messages/getForwardData?id=' + window.CONFIG.forwardId)
-				.then(function(response) { return response.json(); })
-				.then(function(result) {
-					if (result.success && result.data) {
-						window.CONFIG.forwardData = result.data;
-						loadForwardData(result.data);
-					}
-				})
-				.catch(function(error) {
-					console.error('Error loading forward data:', error);
-				});
-		}
-		
-		// Load reply data via AJAX if needed
-		if (window.CONFIG && window.CONFIG.replyId > 0) {
-			fetch('/messages/getReplyData?id=' + window.CONFIG.replyId)
-				.then(function(response) { return response.json(); })
-				.then(function(result) {
-					if (result.success && result.data) {
-						window.CONFIG.replyData = result.data;
-						// Auto-select sender for reply
-						setTimeout(function() {
-							var senderId = parseInt(result.data.sender_id || 0) || 0;
-							if (senderId > 0) {
-								var card = document.querySelector('[data-user-id="' + senderId + '"]');
-								if (card) {
-									var cb = card.querySelector('input[type="checkbox"]');
-									if (cb && !cb.checked) {
-										cb.checked = true;
-										toggleUser(senderId);
-									}
-								}
-							}
-						}, 1000);
-					}
-				})
-				.catch(function(error) {
-					console.error('Error loading reply data:', error);
-				});
-		}
-		
-		// Function to load forward data into editor
-		function loadForwardData(fd) {
-			if (!fd || !quill) return;
-			setTimeout(function() {
-			var headerDiv = document.createElement('div');
-			headerDiv.style.marginBottom = '10px';
-			
-			var strong1 = document.createElement('strong');
-			strong1.textContent = 'Diteruskan dari:';
-			headerDiv.appendChild(strong1);
-			headerDiv.appendChild(document.createTextNode(' ' + escapeHtml(fd.sender_name || '') + ' (' + escapeHtml(fd.sender_email || '') + ')'));
-			headerDiv.appendChild(document.createElement('br'));
-			
-			var strong2 = document.createElement('strong');
-			strong2.textContent = 'Tanggal:';
-			headerDiv.appendChild(strong2);
-			headerDiv.appendChild(document.createTextNode(' ' + escapeHtml(fd.date || '')));
-			headerDiv.appendChild(document.createElement('br'));
-			
-			var strong3 = document.createElement('strong');
-			strong3.textContent = 'Subjek:';
-			headerDiv.appendChild(strong3);
-			headerDiv.appendChild(document.createTextNode(' ' + escapeHtml(fd.subject || '')));
-				
-				var contentDiv = document.createElement('div');
-				contentDiv.style.cssText = 'border-top: 1px solid #ddd; padding-top: 10px;';
-				// Use textContent for safety, but if content is HTML, we need to parse it
-				if (fd.content) {
-					var tempDiv = document.createElement('div');
-					tempDiv.innerHTML = fd.content;
-					while (tempDiv.firstChild) {
-						contentDiv.appendChild(tempDiv.firstChild);
-					}
-				}
-				
-				var wrapperDiv = document.createElement('div');
-				wrapperDiv.style.cssText = 'border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; background-color: #f9f9f9;';
-				wrapperDiv.appendChild(headerDiv);
-				wrapperDiv.appendChild(contentDiv);
-				
-				try {
-					var delta = quill.clipboard.convert(wrapperDiv.outerHTML);
-					quill.setContents(delta);
-					document.getElementById('content').value = wrapperDiv.outerHTML;
-				} catch (e) {
-					quill.root.innerHTML = wrapperDiv.outerHTML;
-					document.getElementById('content').value = wrapperDiv.outerHTML;
-				}
-			}, 500);
-		}
-	}
-	
-	function escapeHtml(text) {
-		if (!text) return '';
-		var div = document.createElement('div');
-		div.textContent = text;
-		return div.innerHTML;
-	}
-	
-	initQuill();
-	
-	// User selection elements
-	var userSearch = document.getElementById('userSearch');
-	var roleFilter = document.getElementById('roleFilter');
-	var usersList = document.getElementById('usersList');
-	var selectedRecipientsList = document.getElementById('selectedRecipientsList');
-	var selectedRecipientsInput = document.getElementById('selectedRecipients');
-	var selectAllBtn = document.getElementById('selectAllBtn');
-	var clearAllBtn = document.getElementById('clearAllBtn');
-	
-	// Load users
-	function loadUsers() {
-		var search = userSearch.value;
-		var role = roleFilter.value;
-		var params = new URLSearchParams();
-		if (search) params.append('search', search);
-		if (role) params.append('role', role);
-		
-		usersList.innerHTML = '';
-		var loadingDiv = document.createElement('div');
-		loadingDiv.className = 'p-3 text-center';
-		var spinner = document.createElement('div');
-		spinner.className = 'spinner-border spinner-border-sm';
-		loadingDiv.appendChild(spinner);
-		var loadingText = document.createElement('span');
-		loadingText.className = 'ms-2';
-		loadingText.textContent = 'Memuat...';
-		loadingDiv.appendChild(loadingText);
-		usersList.appendChild(loadingDiv);
-		
-		fetch('/messages/searchUsers?' + params.toString())
-			.then(function(response) {
-				return response.json();
-			})
-		.then(function(data) {
-			if (data.success) {
-				// Sanitize all user data to remove any line breaks
-				var sanitizedUsers = [];
-				if (Array.isArray(data.users)) {
-					data.users.forEach(function(user) {
-						var cleanUser = {};
-						for (var key in user) {
-							if (user.hasOwnProperty(key)) {
-								var val = user[key];
-								if (typeof val === 'string') {
-									val = val.replace(/\r\n/g, ' ').replace(/\n/g, ' ').replace(/\r/g, ' ');
-								}
-								cleanUser[key] = val;
-							}
-						}
-						sanitizedUsers.push(cleanUser);
-					});
-				}
-				allUsers = sanitizedUsers;
-				displayUsers(allUsers);
-			} else {
-				var errorMsg = (data.message || 'Gagal memuat').replace(/\r\n/g, ' ').replace(/\n/g, ' ').replace(/\r/g, ' ');
-				usersList.innerHTML = '';
-				var errorDiv = document.createElement('div');
-				errorDiv.className = 'p-3 text-center text-danger';
-				errorDiv.textContent = 'Error: ' + errorMsg;
-				usersList.appendChild(errorDiv);
+			quillCheckAttempts++;
+			if (quillCheckAttempts < maxAttempts) {
+				setTimeout(initQuill, 100);
+				return;
 			}
-		})
-		.catch(function(error) {
-			usersList.innerHTML = '';
+			
+			console.error('Quill library is not loaded after ' + maxAttempts + ' attempts. File path: <?= htmlspecialchars($quillJs) ?>');
 			var errorDiv = document.createElement('div');
-			errorDiv.className = 'p-3 text-center text-danger';
-			errorDiv.textContent = 'Error memuat daftar pengguna';
-			usersList.appendChild(errorDiv);
-		});
-	}
-	
-	// Display users
-	function displayUsers(users) {
-		usersList.innerHTML = '';
-		if (users.length === 0) {
-			var emptyDiv = document.createElement('div');
-			emptyDiv.className = 'p-3 text-center text-muted';
-			emptyDiv.textContent = 'Tidak ada pengguna';
-			usersList.appendChild(emptyDiv);
+			errorDiv.className = 'alert alert-danger';
+			errorDiv.innerHTML = '<strong>Error:</strong> Editor tidak dapat dimuat. Silakan refresh halaman atau hubungi administrator.<br><small>Path: <?= htmlspecialchars($quillJs) ?></small>';
+			var editorContainer = document.getElementById('quill-editor');
+			if (editorContainer && editorContainer.parentElement) {
+				editorContainer.parentElement.insertBefore(errorDiv, editorContainer);
+			}
 			return;
 		}
-		
-		var row = document.createElement('div');
-		row.className = 'row g-2';
-		
-		users.forEach(function(user) {
-			var userId = parseInt(user.id || 0) || 0;
-			var isSelected = selectedUsers.some(function(su) { return parseInt(su.id || 0) === userId; });
-			var col = document.createElement('div');
-			col.className = 'col-xxl-2 col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-2';
-			
-			var card = document.createElement('div');
-			card.className = 'card user-selection-item position-relative' + (isSelected ? ' border-primary' : '');
-			card.setAttribute('data-user-id', userId);
-			card.style.cursor = 'pointer';
-			
-			var checkboxDiv = document.createElement('div');
-			checkboxDiv.className = 'position-absolute';
-			checkboxDiv.style.cssText = 'top: 0; left: 0.25rem; z-index: 10;';
-			var formCheckDiv = document.createElement('div');
-			formCheckDiv.className = 'form-check';
-			var checkbox = document.createElement('input');
-			checkbox.type = 'checkbox';
-			checkbox.className = 'form-check-input';
-			if (isSelected) {
-				checkbox.checked = true;
-			}
-			checkbox.setAttribute('onchange', 'toggleUser(' + userId + ')');
-			formCheckDiv.appendChild(checkbox);
-			checkboxDiv.appendChild(formCheckDiv);
-			
-			var cardBody = document.createElement('div');
-			cardBody.className = 'card-body d-flex align-items-center';
-			cardBody.style.cssText = 'padding: 0.75rem; min-height: 60px;';
-			
-			// Sanitize user data to ensure no line breaks
-			var safePicture = (user.picture || '').replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '').replace(/\t/g, '');
-			var safeNamalengkap = (user.namalengkap || '').replace(/\r\n/g, ' ').replace(/\n/g, ' ').replace(/\r/g, ' ').replace(/\t/g, ' ');
-			var safeUsername = (user.username || '').replace(/\r\n/g, ' ').replace(/\n/g, ' ').replace(/\r/g, ' ').replace(/\t/g, ' ');
-			var safeEmail = (user.email || '').replace(/\r\n/g, ' ').replace(/\n/g, ' ').replace(/\r/g, ' ').replace(/\t/g, ' ');
-			var safeRole = (user.role || '').replace(/\r\n/g, ' ').replace(/\n/g, ' ').replace(/\r/g, ' ').replace(/\t/g, ' ');
-			
-			var avatarEl = null;
-			if (safePicture) {
-				var baseUrl = (window.CONFIG && window.CONFIG.baseUrl) ? window.CONFIG.baseUrl : '/';
-				var uploadUrl = (window.CONFIG && window.CONFIG.uploadUrl) ? window.CONFIG.uploadUrl : '/uploads/';
-				var picUrl = baseUrl + uploadUrl + safePicture;
-				avatarEl = document.createElement('img');
-				avatarEl.src = picUrl;
-				avatarEl.alt = safeNamalengkap || '';
-				avatarEl.className = 'rounded-circle me-2';
-				avatarEl.style.cssText = 'width: 32px; height: 32px; object-fit: cover;';
-			} else {
-				var initial = (safeNamalengkap && safeNamalengkap.length > 0) ? safeNamalengkap.charAt(0).toUpperCase() : 'U';
-				avatarEl = document.createElement('div');
-				avatarEl.className = 'bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2';
-				avatarEl.style.cssText = 'width: 32px; height: 32px;';
-				avatarEl.textContent = initial;
-			}
-			
-			var infoDiv = document.createElement('div');
-			infoDiv.className = 'flex-grow-1 ms-2';
-			infoDiv.style.cssText = 'min-width: 0; overflow: hidden;';
-			
-			var nameDiv = document.createElement('div');
-			nameDiv.className = 'fw-bold text-truncate';
-			nameDiv.style.fontSize = '0.875rem';
-			nameDiv.textContent = safeNamalengkap || 'N/A';
-			infoDiv.appendChild(nameDiv);
-			
-			var usernameDiv = document.createElement('div');
-			usernameDiv.className = 'text-muted text-truncate';
-			usernameDiv.style.fontSize = '0.75rem';
-			usernameDiv.textContent = safeUsername || 'N/A';
-			infoDiv.appendChild(usernameDiv);
-			
-			var emailDiv = document.createElement('div');
-			emailDiv.className = 'text-muted text-truncate';
-			emailDiv.style.fontSize = '0.7rem';
-			emailDiv.textContent = safeEmail || 'N/A';
-			infoDiv.appendChild(emailDiv);
-			
-			var roleBadge = document.createElement('span');
-			roleBadge.className = 'badge bg-secondary';
-			roleBadge.style.fontSize = '0.65rem';
-			roleBadge.textContent = safeRole || 'N/A';
-			infoDiv.appendChild(roleBadge);
-			
-			if (avatarEl) {
-				cardBody.appendChild(avatarEl);
-			}
-			cardBody.appendChild(infoDiv);
-			card.appendChild(checkboxDiv);
-			card.appendChild(cardBody);
-			col.appendChild(card);
-			row.appendChild(col);
-			
-			card.addEventListener('click', function(e) {
-				if (e.target.type !== 'checkbox') {
-					var cb = card.querySelector('input[type="checkbox"]');
-					if (cb) {
-						cb.checked = !cb.checked;
-						toggleUser(userId);
-					}
-				}
-			});
-		});
-		
-		usersList.appendChild(row);
-		updateBulkSelectButtons();
-	}
 	
-	// Toggle user
-	window.toggleUser = function(userId) {
-		userId = parseInt(userId || 0) || 0;
-		var user = allUsers.find(function(u) { return parseInt(u.id || 0) === userId; });
-		if (!user) return;
-		
-		var userIntId = parseInt(user.id || 0) || 0;
-		var index = selectedUsers.findIndex(function(u) { return parseInt(u.id || 0) === userIntId; });
-		if (index >= 0) {
-			selectedUsers.splice(index, 1);
-		} else {
-			selectedUsers.push(user);
-		}
-		
-		updateSelectedRecipients();
-		displayUsers(allUsers);
-	};
-	
-	// Update selected recipients
-	function updateSelectedRecipients() {
-		selectedRecipientsList.innerHTML = '';
-		if (selectedUsers.length === 0) {
-			var emptySpan = document.createElement('span');
-			emptySpan.className = 'text-muted';
-			emptySpan.textContent = 'Belum ada penerima yang dipilih';
-			selectedRecipientsList.appendChild(emptySpan);
-			selectedRecipientsInput.value = '';
-		} else {
-			selectedUsers.forEach(function(user) {
-				var safeName = (user.namalengkap || user.username || 'User').replace(/\r\n/g, ' ').replace(/\n/g, ' ').replace(/\r/g, ' ').replace(/\t/g, ' ');
-				var userId = parseInt(user.id || 0) || 0;
-				
-				var badge = document.createElement('span');
-				badge.className = 'badge bg-primary me-1 mb-1';
-				
-				var nameText = document.createTextNode(escapeHtml(safeName) + ' ');
-				badge.appendChild(nameText);
-				
-				var removeSpan = document.createElement('span');
-				removeSpan.style.cursor = 'pointer';
-				removeSpan.textContent = '×';
-				removeSpan.onclick = function() { removeUser(userId); };
-				badge.appendChild(removeSpan);
-				
-				selectedRecipientsList.appendChild(badge);
-			});
-			selectedRecipientsInput.value = selectedUsers.map(function(u) { return u.id; }).join(',');
-		}
-	}
-	
-	// Remove user
-	window.removeUser = function(userId) {
-		userId = parseInt(userId || 0) || 0;
-		selectedUsers = selectedUsers.filter(function(u) { return parseInt(u.id || 0) !== userId; });
-		updateSelectedRecipients();
-		displayUsers(allUsers);
-	};
-	
-	// Update bulk buttons
-	function updateBulkSelectButtons() {
-		var displayed = getCurrentDisplayedUsers();
-		var selectedCount = displayed.filter(function(u) {
-			return selectedUsers.some(function(su) { return su.id == u.id; });
-		}).length;
-		
-		selectAllBtn.disabled = (selectedCount === displayed.length && displayed.length > 0);
-		clearAllBtn.disabled = (selectedUsers.length === 0);
-	}
-	
-	function getCurrentDisplayedUsers() {
-		var filtered = allUsers;
-		var search = userSearch.value.toLowerCase();
-		var role = roleFilter.value;
-		
-		if (search) {
-			filtered = filtered.filter(function(user) {
-				return (user.namalengkap || '').toLowerCase().includes(search) ||
-					(user.username || '').toLowerCase().includes(search) ||
-					(user.email || '').toLowerCase().includes(search);
-			});
-		}
-		
-		if (role) {
-			filtered = filtered.filter(function(user) { return user.role === role; });
-		}
-		
-		return filtered;
-	}
-	
-	// Event listeners
-	var searchTimeout;
-	userSearch.addEventListener('input', function() {
-		clearTimeout(searchTimeout);
-		searchTimeout = setTimeout(loadUsers, 300);
+	// Initialize Quill Editor
+	const quill = new Quill('#quill-editor', {
+		theme: 'snow',
+		modules: {
+			toolbar: [
+				[{ 'header': [1, 2, 3, false] }],
+				['bold', 'italic', 'underline', 'strike'],
+				[{ 'color': [] }, { 'background': [] }],
+				[{ 'list': 'ordered'}, { 'list': 'bullet' }],
+				[{ 'indent': '-1'}, { 'indent': '+1' }],
+				[{ 'align': [] }],
+				['link', 'image'],
+				['clean']
+			]
+		},
+		placeholder: 'Tulis pesan Anda di sini...'
 	});
 	
-	roleFilter.addEventListener('change', loadUsers);
+	// Make quill globally available
+	window.quill = quill;
 	
-		selectAllBtn.addEventListener('click', function() {
-			var displayed = getCurrentDisplayedUsers();
-			displayed.forEach(function(user) {
-				var userId = parseInt(user.id || 0) || 0;
-				if (!selectedUsers.some(function(su) { return parseInt(su.id || 0) === userId; })) {
-					selectedUsers.push(user);
+	// Update hidden textarea when content changes
+	quill.on('text-change', function() {
+		document.getElementById('content').value = quill.root.innerHTML;
+	});
+	
+	// Auto-fill content for forward
+	<?php if (isset($forward_data) && $forward_data): ?>
+	const forwardSenderName = <?= json_encode($forward_data['forward_sender']['name'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+	const forwardSenderEmail = <?= json_encode($forward_data['forward_sender']['email'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+	const forwardContent = <?= json_encode($forward_data['content'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+	const forwardSubject = <?= json_encode($forward_data['subject'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+	const forwardDate = <?= json_encode(date('d F Y, H:i', strtotime($forward_data['created_at'] ?? 'now')), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+	
+	setTimeout(() => {
+		const forwardMessage = `
+			<div style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; background-color: #f9f9f9;">
+				<div style="margin-bottom: 10px;">
+					<strong>Diteruskan dari:</strong> ${forwardSenderName} (${forwardSenderEmail})<br>
+					<strong>Tanggal:</strong> ${forwardDate}<br>
+					<strong>Subjek:</strong> ${forwardSubject}
+				</div>
+				<div style="border-top: 1px solid #ddd; padding-top: 10px;">
+					${forwardContent}
+				</div>
+			</div>
+		`;
+		
+		if (window.quill) {
+			try {
+				const delta = window.quill.clipboard.convert(forwardMessage);
+				window.quill.setContents(delta);
+				document.getElementById('content').value = forwardMessage;
+			} catch (error) {
+				try {
+					window.quill.clipboard.dangerouslyPasteHTML(forwardMessage);
+					document.getElementById('content').value = forwardMessage;
+				} catch (error2) {
+					window.quill.root.innerHTML = forwardMessage;
+					document.getElementById('content').value = forwardMessage;
 				}
-			});
-			updateSelectedRecipients();
-			displayUsers(allUsers);
+			}
+		}
+	}, 500);
+	<?php endif; ?>
+	} // End of initQuill function
+	
+	// Start initialization
+	initQuill();
+	
+	const userSearch = document.getElementById('userSearch');
+	const roleFilter = document.getElementById('roleFilter');
+	const usersList = document.getElementById('usersList');
+	const selectedRecipientsList = document.getElementById('selectedRecipientsList');
+	const selectedRecipientsInput = document.getElementById('selectedRecipients');
+	
+	let selectedUsers = [];
+	let allUsers = [];
+	
+	// Load users on page load
+	loadUsers();
+	
+	// Search functionality
+	userSearch.addEventListener('input', function() {
+		debounceSearch();
+		setTimeout(() => {
+			updateBulkSelectButtons();
+		}, 400);
+	});
+	
+	// Filter functionality
+	roleFilter.addEventListener('change', function() {
+		debounceSearch();
+		setTimeout(() => {
+			updateBulkSelectButtons();
+		}, 400);
+	});
+	
+	// Bulk select functionality
+	const selectAllBtn = document.getElementById('selectAllBtn');
+	const clearAllBtn = document.getElementById('clearAllBtn');
+	
+	selectAllBtn.addEventListener('click', function() {
+		const displayedUsers = getCurrentDisplayedUsers();
+		displayedUsers.forEach(user => {
+			if (!selectedUsers.some(selected => selected.id == user.id)) {
+				selectedUsers.push(user);
+			}
 		});
+		updateSelectedRecipients();
+		displayUsers(allUsers);
+	});
 	
 	clearAllBtn.addEventListener('click', function() {
 		selectedUsers = [];
@@ -683,7 +346,230 @@ document.addEventListener('DOMContentLoaded', function() {
 		displayUsers(allUsers);
 	});
 	
-	// Reply data is now loaded via AJAX above
+	// Debounce search
+	let searchTimeout;
+	function debounceSearch() {
+		clearTimeout(searchTimeout);
+		searchTimeout = setTimeout(() => {
+			loadUsers();
+		}, 300);
+	}
+	
+	// Load users from API
+	function loadUsers() {
+		const search = userSearch.value;
+		const role = roleFilter.value;
+		
+		const params = new URLSearchParams();
+		if (search) params.append('search', search);
+		if (role) params.append('role', role);
+		
+		const url = `/messages/searchUsers?${params.toString()}`;
+		
+		// Show loading state
+		usersList.innerHTML = '<div class="p-3 text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div><span class="ms-2">Memuat daftar pengguna...</span></div>';
+		
+		fetch(url, {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json'
+			},
+			credentials: 'same-origin'
+		})
+			.then(response => {
+				if (!response.ok) {
+					return response.text().then(text => {
+						throw new Error('HTTP ' + response.status + ': ' + (text || 'Unknown error'));
+					});
+				}
+				return response.json().catch(err => {
+					throw new Error('Invalid JSON response: ' + err.message);
+				});
+			})
+			.then(data => {
+				if (data && data.success) {
+					allUsers = Array.isArray(data.users) ? data.users : [];
+					displayUsers(allUsers);
+				} else {
+					const errorMsg = (data && data.message) ? data.message : 'Gagal memuat daftar pengguna';
+					usersList.innerHTML = '<div class="p-3 text-center text-danger">Error: ' + errorMsg + '</div>';
+				}
+			})
+			.catch(error => {
+				console.error('Error loading users:', error);
+				usersList.innerHTML = '<div class="p-3 text-center text-danger">Error memuat daftar pengguna: ' + error.message + '<br><small>Silakan refresh halaman atau coba lagi nanti.</small></div>';
+			});
+	}
+	
+	// Get currently displayed users
+	function getCurrentDisplayedUsers() {
+		let filteredUsers = allUsers;
+		const search = userSearch.value.toLowerCase();
+		const role = roleFilter.value;
+		
+		if (search) {
+			filteredUsers = filteredUsers.filter(user => 
+				user.namalengkap.toLowerCase().includes(search) ||
+				user.username.toLowerCase().includes(search) ||
+				user.email.toLowerCase().includes(search)
+			);
+		}
+		
+		if (role) {
+			filteredUsers = filteredUsers.filter(user => user.role === role);
+		}
+		
+		return filteredUsers;
+	}
+	
+	// Update bulk select button states
+	function updateBulkSelectButtons() {
+		const displayedUsers = getCurrentDisplayedUsers();
+		const selectedCount = displayedUsers.filter(user => 
+			selectedUsers.some(selected => selected.id == user.id)
+		).length;
+		
+		if (selectedCount === displayedUsers.length && displayedUsers.length > 0) {
+			selectAllBtn.disabled = true;
+		} else {
+			selectAllBtn.disabled = false;
+		}
+		
+		if (selectedUsers.length === 0) {
+			clearAllBtn.disabled = true;
+		} else {
+			clearAllBtn.disabled = false;
+		}
+	}
+	
+	// Display users in the list
+	function displayUsers(users) {
+		if (users.length === 0) {
+			usersList.innerHTML = '<div class="p-3 text-center text-muted">Tidak ada pengguna yang ditemukan</div>';
+			return;
+		}
+		
+		const usersHtml = users.map(user => {
+			const isSelected = selectedUsers.some(selected => selected.id == user.id);
+			const config = <?= json_encode(require __DIR__ . '/../../config/app.php', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+			const uploadUrl = config.upload_url || '/uploads/';
+			const baseUrl = <?= json_encode(BASE_URL, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+			const avatarInitial = user.namalengkap.charAt(0).toUpperCase();
+			let userPicture = '';
+			if (user.picture) {
+				userPicture = `<img src="${baseUrl}${uploadUrl}${user.picture}" alt="${user.namalengkap}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
+			} else {
+				userPicture = `<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">${avatarInitial}</div>`;
+			}
+			
+			return `
+				<div class="col-xxl-2 col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-2">
+					<div class="card user-selection-item position-relative ${isSelected ? 'border-primary' : ''}" data-user-id="${user.id}" style="cursor: pointer;">
+						<div class="position-absolute" style="top: 0; left: 0.25rem; z-index: 10;">
+							<div class="form-check">
+								<input type="checkbox" class="form-check-input" style="border-radius: 0;" ${isSelected ? 'checked' : ''} onchange="toggleUser(${user.id})">
+							</div>
+						</div>
+						<div class="card-body d-flex align-items-center" style="padding: 0.75rem; min-height: 60px;">
+							${userPicture}
+							<div class="flex-grow-1 ms-2" style="min-width: 0; overflow: hidden;">
+								<div class="fw-bold text-truncate" style="font-size: 0.875rem;" title="${user.namalengkap}">${user.namalengkap}</div>
+								<div class="text-muted text-truncate" style="font-size: 0.75rem;" title="${user.username}">${user.username}</div>
+								<div class="text-muted text-truncate" style="font-size: 0.7rem;" title="${user.email}">${user.email}</div>
+								<span class="badge bg-secondary" style="font-size: 0.65rem;">${user.role}</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			`;
+		}).join('');
+		
+		usersList.innerHTML = `<div class="row g-2">${usersHtml}</div>`;
+		
+		setTimeout(() => {
+			addCardClickHandlers();
+		}, 100);
+		
+		updateBulkSelectButtons();
+	}
+	
+	// Toggle user selection
+	window.toggleUser = function(userId) {
+		const user = allUsers.find(u => u.id == userId);
+		if (!user) return;
+		
+		const existingIndex = selectedUsers.findIndex(u => u.id == user.id);
+		if (existingIndex >= 0) {
+			selectedUsers.splice(existingIndex, 1);
+		} else {
+			selectedUsers.push(user);
+		}
+		
+		updateSelectedRecipients();
+		displayUsers(allUsers);
+		updateBulkSelectButtons();
+	};
+	
+	// Add click functionality to user cards
+	function addCardClickHandlers() {
+		const userCards = document.querySelectorAll('.user-selection-item');
+		userCards.forEach(card => {
+			card.removeEventListener('click', handleCardClick);
+			card.addEventListener('click', handleCardClick);
+		});
+	}
+	
+	function handleCardClick(e) {
+		if (e.target.type === 'checkbox') {
+			return;
+		}
+		const userId = parseInt(this.dataset.userId);
+		const checkbox = this.querySelector('input[type="checkbox"]');
+		if (checkbox) {
+			checkbox.checked = !checkbox.checked;
+			toggleUser(userId);
+		}
+	}
+	
+	// Update selected recipients display
+	function updateSelectedRecipients() {
+		if (selectedUsers.length === 0) {
+			selectedRecipientsList.innerHTML = '<span class="text-muted">Belum ada penerima yang dipilih</span>';
+			selectedRecipientsInput.value = '';
+		} else {
+			const recipientsHtml = selectedUsers.map(user => 
+				`<span class="badge bg-primary me-1 mb-1">${user.namalengkap} <span onclick="removeUser(${user.id})" style="cursor: pointer;">×</span></span>`
+			).join('');
+			selectedRecipientsList.innerHTML = recipientsHtml;
+			selectedRecipientsInput.value = selectedUsers.map(u => u.id).join(',');
+		}
+	}
+	
+	// Remove user from selection
+	window.removeUser = function(userId) {
+		selectedUsers = selectedUsers.filter(u => u.id != userId);
+		updateSelectedRecipients();
+		displayUsers(allUsers);
+		updateBulkSelectButtons();
+	};
+	
+	// Auto-select recipient for reply
+	<?php if (isset($reply_data) && $reply_data): ?>
+	const replySenderId = <?= $reply_data['reply_sender']['id'] ?>;
+	setTimeout(() => {
+		if (replySenderId) {
+			const userCard = document.querySelector(`[data-user-id="${replySenderId}"]`);
+			if (userCard) {
+				const checkbox = userCard.querySelector('input[type="checkbox"]');
+				if (checkbox && !checkbox.checked) {
+					checkbox.checked = true;
+					toggleUser(replySenderId);
+				}
+			}
+		}
+	}, 1000);
+	<?php endif; ?>
 	
 	// Form submission
 	document.getElementById('messageForm').addEventListener('submit', function(e) {
@@ -694,28 +580,31 @@ document.addEventListener('DOMContentLoaded', function() {
 			return;
 		}
 		
-		var formData = new FormData(this);
-		var content = '';
-		if (quill && quill.root) {
-			content = quill.root.innerHTML;
-		} else {
-			content = document.getElementById('content').value;
-		}
-		formData.set('content', content);
+		const formData = new FormData(this);
 		
-		formData.delete('recipients[]');
-		selectedUsers.forEach(function(user) {
-			var userId = parseInt(user.id || 0) || 0;
-			if (userId > 0) {
-				formData.append('recipients[]', userId);
+		// Update content with Quill HTML
+		let quillContent = '';
+		try {
+			if (window.quill && window.quill.root) {
+				quillContent = window.quill.root.innerHTML;
+			} else {
+				quillContent = document.getElementById('content').value;
 			}
+		} catch (error) {
+			quillContent = document.getElementById('content').value;
+		}
+		formData.set('content', quillContent);
+		
+		// Add recipients to form data
+		formData.delete('recipients[]');
+		selectedUsers.forEach(user => {
+			formData.append('recipients[]', user.id);
 		});
 		
-		var submitBtn = this.querySelector('button[type="submit"]');
-		var originalText = '';
+		const submitBtn = this.querySelector('button[type="submit"]');
 		if (submitBtn) {
-			originalText = submitBtn.textContent || submitBtn.innerText || '';
-			submitBtn.textContent = 'Mengirim...';
+			const originalText = submitBtn.innerHTML;
+			submitBtn.innerHTML = 'Mengirim...';
 			submitBtn.disabled = true;
 		}
 		
@@ -723,25 +612,25 @@ document.addEventListener('DOMContentLoaded', function() {
 			method: 'POST',
 			body: formData
 		})
-		.then(function(response) {
+		.then(response => {
 			if (response.redirected) {
 				window.location.href = response.url;
+			} else {
+				return response.text();
 			}
 		})
-		.catch(function(error) {
+		.catch(error => {
 			alert('Terjadi kesalahan saat mengirim pesan');
 		})
-		.finally(function() {
+		.finally(() => {
 			if (submitBtn) {
-				submitBtn.textContent = originalText;
+				submitBtn.innerHTML = originalText;
 				submitBtn.disabled = false;
 			}
 		});
 	});
-	
-	// Initial load
-	loadUsers();
 });
 </script>
 
 <?php require __DIR__ . '/../layouts/footer.php'; ?>
+
