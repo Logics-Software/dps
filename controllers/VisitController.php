@@ -17,8 +17,8 @@ class VisitController extends Controller {
 
         $currentUser = Auth::user();
         $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-        $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 20;
-        $perPage = in_array($perPage, [10, 20, 40, 50, 100]) ? $perPage : 20;
+        $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
+        $perPage = in_array($perPage, [10, 20, 50, 100, 200, 500, 1000]) ? $perPage : 10;
         $status = $_GET['status'] ?? '';
         $search = $_GET['search'] ?? '';
 

@@ -5,7 +5,11 @@
         $baseUrl = '/';
     }
     ?>
-    <script src="<?= htmlspecialchars($baseUrl) ?>/assets/js/bootstrap.bundle.min.js"></script>
+    <?php
+    // Cache busting - use file modification time as version
+    $jsVersion = file_exists(__DIR__ . '/../../assets/js/bootstrap.bundle.min.js') ? filemtime(__DIR__ . '/../../assets/js/bootstrap.bundle.min.js') : time();
+    ?>
+    <script src="<?= htmlspecialchars($baseUrl) ?>/assets/js/bootstrap.bundle.min.js?v=<?= $jsVersion ?>"></script>
     <?php
     if (!empty($additionalScripts)) {
         $scripts = is_array($additionalScripts) ? $additionalScripts : [$additionalScripts];

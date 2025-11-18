@@ -27,15 +27,21 @@ if (!function_exists('icon')) {
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title><?= $title ?? 'DPS Online' ?> - DPS Online</title>
     <link rel="icon" type="image/svg+xml" href="<?= htmlspecialchars($baseUrl) ?>/assets/images/logo.png">
     <link rel="icon" type="image/png" sizes="32x32" href="<?= htmlspecialchars($baseUrl) ?>/assets/images/logo-32.png">
     <link rel="icon" type="image/png" sizes="64x64" href="<?= htmlspecialchars($baseUrl) ?>/assets/images/logo-64.png">
     <link rel="apple-touch-icon" sizes="128x128" href="<?= htmlspecialchars($baseUrl) ?>/assets/images/logo-128.png">
     
-    <link href="<?= htmlspecialchars($baseUrl) ?>/assets/css/bootstrap.min.css" rel="stylesheet">
-    <link href="<?= htmlspecialchars($baseUrl) ?>/assets/css/style.css" rel="stylesheet">
+    <?php
+    // Cache busting - use file modification time as version
+    $cssVersion = file_exists(__DIR__ . '/../../assets/css/style.css') ? filemtime(__DIR__ . '/../../assets/css/style.css') : time();
+    $bootstrapVersion = file_exists(__DIR__ . '/../../assets/css/bootstrap.min.css') ? filemtime(__DIR__ . '/../../assets/css/bootstrap.min.css') : time();
+    ?>
+    <link href="<?= htmlspecialchars($baseUrl) ?>/assets/css/bootstrap.min.css?v=<?= $bootstrapVersion ?>" rel="stylesheet" type="text/css">
+    <link href="<?= htmlspecialchars($baseUrl) ?>/assets/css/style.css?v=<?= $cssVersion ?>" rel="stylesheet" type="text/css">
     <?php if (!empty($additionalStyles)):
         $styles = is_array($additionalStyles) ? $additionalStyles : [$additionalStyles];
         foreach ($styles as $styleHref):

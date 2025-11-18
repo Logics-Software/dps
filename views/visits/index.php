@@ -12,231 +12,232 @@ require __DIR__ . '/../layouts/header.php';
 ?>
 
 <div class="container">
-    <div class="row mb-3">
-    <div class="col-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                <li class="breadcrumb-item active">Kunjungan</li>
-            </ol>
-        </nav>
-    </div>
-</div>
-
-<?php if (!empty($activeVisit)): ?>
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="alert alert-info d-flex justify-content-between align-items-start">
-            <div>
-                <h5 class="fw-bold mb-1">Kunjungan Sedang Berjalan</h5>
-                <p class="mb-1">Customer: <strong><?= htmlspecialchars($activeVisit['namacustomer'] ?? '-') ?></strong></p>
-                <p class="mb-1">Mulai: <?= date('d/m/Y H:i', strtotime($activeVisit['check_in_time'])) ?></p>
-                <p class="mb-0">Status: <span class="badge bg-warning text-dark">Sedang Berjalan</span></p>
-            </div>
-            <div>
-                <a href="/visits/checkout/<?= $activeVisit['visit_id'] ?>" class="btn btn-outline-primary">Selesaikan Sekarang</a>
-            </div>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
-
-<div class="card">
-    <div class="card-header bg-white">
-        <div class="d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">Kunjungan</h4>
-            <?php if (!empty($activeVisit)): ?>
-            <a href="/visits/checkout/<?= $activeVisit['visit_id'] ?>" class="btn btn-warning">
-                <?= icon('share-from-square', 'mb-1 me-2', 16) ?> Lanjutkan Check-out
-            </a>
-            <?php else: ?>
-            <a href="/visits/check-in" class="btn btn-primary">
-                <?= icon('paper-plane', 'mb-1 me-2', 16) ?> Check-in Baru
-            </a>
-            <?php endif; ?>
+    <div class="breadcrumb-item">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Kunjungan</li>
+                </ol>
+            </nav>
         </div>
     </div>
 
-    <div class="card-body">
-        <!-- <div class="row search-filter-card"> -->
-            <form class="row search-filter-card g-2" method="GET" action="/visits">
-                <div class="col-12 col-md-4 col-lg-4">
-                    <input type="text" class="form-control" name="search" placeholder="Cari customer, kode atau kota" value="<?= htmlspecialchars($search) ?>">
+    <?php if (!empty($activeVisit)): ?>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="fw-bold mb-1">Kunjungan Sedang Berjalan</h5>
+                    <p class="mb-1">Customer: <strong><?= htmlspecialchars($activeVisit['namacustomer'] ?? '-') ?></strong></p>
+                    <p class="mb-1">Mulai: <?= date('d/m/Y H:i', strtotime($activeVisit['check_in_time'])) ?></p>
+                    <p class="mb-0">Status: <span class="badge bg-warning text-dark">Sedang Berjalan</span></p>
                 </div>
-                <div class="col-12 col-md-3 col-lg-3">
-                    <select name="status" class="form-select">
-                        <option value="">Semua Status</option>
-                        <?php foreach ($statusOptions as $option): ?>
-                        <option value="<?= $option ?>" <?= $statusFilter === $option ? 'selected' : '' ?>><?= $option ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                <div>
+                    <a href="/visits/checkout/<?= $activeVisit['visit_id'] ?>" class="btn btn-outline-primary">Selesaikan Sekarang</a>
                 </div>
-                <div class="col-12 col-md-5 col-lg-5">
-                    <div class="row g-2">
-                        <div class="col-4 col-md-4">
-                            <select name="per_page" class="form-select" onchange="this.form.submit()">
-                                <?php foreach ([10, 20, 40, 50, 100] as $option): ?>
-                                <option value="<?= $option ?>" <?= $perPage == $option ? 'selected' : '' ?>><?= $option ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-4 col-md-4">
-                            <button type="submit" class="btn btn-secondary w-100">Terapkan</button>
-                        </div>
-                        <div class="col-4 col-md-4">
-                            <a href="/visits" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0 me-auto">Kunjungan</h4>
+                <?php if (!empty($activeVisit)): ?>
+                <a href="/visits/checkout/<?= $activeVisit['visit_id'] ?>" class="btn btn-warning">
+                    <?= icon('share-from-square', 'mb-1 me-2', 16) ?> Lanjutkan Check-out
+                </a>
+                <?php else: ?>
+                <a href="/visits/check-in" class="btn btn-primary">
+                    <?= icon('paper-plane', 'mb-1 me-2', 16) ?> Check-in Baru
+                </a>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- <div class="row search-filter-card"> -->
+                <form class="row search-filter-card g-2 mb-3" method="GET" action="/visits">
+                    <div class="col-7 col-md-4 col-lg-4">
+                        <input type="text" class="form-control" name="search" placeholder="Cari customer, kode atau kota" value="<?= htmlspecialchars($search) ?>">
+                    </div>
+                    <div class="col-5 col-md-3 col-lg-3">
+                        <select name="status" class="form-select">
+                            <option value="">Semua Status</option>
+                            <?php foreach ($statusOptions as $option): ?>
+                            <option value="<?= $option ?>" <?= $statusFilter === $option ? 'selected' : '' ?>><?= $option ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-5 col-lg-5">
+                        <div class="row g-2">
+                            <div class="col-4 col-md-4">
+                                <select name="per_page" class="form-select" onchange="this.form.submit()">
+                                    <?php foreach ([10, 20, 50, 100, 200, 500, 1000] as $option): ?>
+                                    <option value="<?= $option ?>" <?= $perPage == $option ? 'selected' : '' ?>><?= $option ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-4 col-md-4">
+                                <button type="submit" class="btn btn-filter btn-secondary w-100">Terapkan</button>
+                            </div>
+                            <div class="col-4 col-md-4">
+                                <a href="/visits" class="btn btn-filter btn-outline-secondary w-100">Reset</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </form>
-        <!-- </div> -->
+                </form>
+            <!-- </div> -->
 
-        <div class="table-responsive">
-            <table class="table table-striped align-middle">
-                <thead>
-                    <tr>
-                        <th>Waktu Masuk</th>
-                        <th>Customer</th>
-                        <th>Status</th>
-                        <th>Catatan</th>
-                        <th>Durasi</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($visits)): ?>
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">Belum ada catatan kunjungan.</td>
-                    </tr>
-                    <?php else: ?>
-                    <?php foreach ($visits as $visit): ?>
-                    <tr>
-                        <td>
-                            <div class="fw-semibold"><?= date('d/m/Y H:i', strtotime($visit['check_in_time'])) ?></div>
-                            <?php if (!empty($visit['check_out_time'])): ?>
-                            <div class="small text-muted">Keluar: <?= date('d/m/Y H:i', strtotime($visit['check_out_time'])) ?></div>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <div class="fw-semibold"><?= htmlspecialchars($visit['namacustomer'] ?? '-') ?></div>
-                            <!-- <div class="small text-muted">Kode: <?= htmlspecialchars($visit['kodecustomer']) ?></div> -->
-                            <div class="small text-muted">Kota: <?= htmlspecialchars($visit['kotacustomer'] ?? '-') ?></div>
-                        </td>
-                        <td>
-                            <?php
-                            $badgeClass = 'bg-secondary';
-                            switch ($visit['status_kunjungan']) {
-                                case 'Sedang Berjalan':
-                                    $badgeClass = 'bg-warning text-dark';
-                                    break;
-                                case 'Selesai':
-                                    $badgeClass = 'bg-success';
-                                    break;
-                                case 'Dibatalkan':
-                                    $badgeClass = 'bg-danger';
-                                    break;
-                                case 'Direncanakan':
-                                    $badgeClass = 'bg-info text-dark';
-                                    break;
-                            }
-                            ?>
-                            <span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($visit['status_kunjungan']) ?></span>
-                            <?php if (!empty($visit['jarak_dari_kantor'])): ?>
-                            <div class="small text-muted mt-1">Jarak: <?= number_format($visit['jarak_dari_kantor'], 2) ?> km</div>
-                            <?php endif; ?>
-                        </td>
-                        <td class="table-text-wrap-220">
-                            <small><?= nl2br(htmlspecialchars($visit['catatan'] ?? '-')) ?></small>
-                        </td>
-                        <td>
-                            <?php if (!empty($visit['check_out_time'])): ?>
-                                <?php
-                                $duration = strtotime($visit['check_out_time']) - strtotime($visit['check_in_time']);
-                                $hours = floor($duration / 3600);
-                                $minutes = floor(($duration % 3600) / 60);
-                                ?>
-                                <div><?= $hours ?> jam <?= $minutes ?> menit</div>
-                            <?php else: ?>
-                                <span class="text-muted">Sedang berjalan</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <div class="d-flex flex-column gap-2">
-                                <?php if ($visit['status_kunjungan'] === 'Sedang Berjalan'): ?>
-                                <a href="/visits/checkout/<?= $visit['visit_id'] ?>" class="btn btn-sm btn-warning">Check-out</a>
-                                <?php else: ?>
-                                <?php
-                                $detailPayload = [
-                                    'visit_id' => $visit['visit_id'],
-                                    'namacustomer' => $visit['namacustomer'] ?? '-',
-                                    'kodecustomer' => $visit['kodecustomer'] ?? ($visit['master_kodecustomer'] ?? '-'),
-                                    'status_kunjungan' => $visit['status_kunjungan'] ?? '-',
-                                    'check_in_time' => $visit['check_in_time'] ?? null,
-                                    'check_out_time' => $visit['check_out_time'] ?? null,
-                                    'check_in_lat' => $visit['check_in_lat'] ?? null,
-                                    'check_in_long' => $visit['check_in_long'] ?? null,
-                                    'check_out_lat' => $visit['check_out_lat'] ?? null,
-                                    'check_out_long' => $visit['check_out_long'] ?? null,
-                                    'catatan' => $visit['catatan'] ?? '',
-                                    'jarak_dari_kantor' => $visit['jarak_dari_kantor'] ?? null
-                                ];
-                                $detailJson = htmlspecialchars(json_encode($detailPayload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8');
-                                ?>
-                                <button type="button" class="btn btn-sm btn-outline-primary btn-visit-detail" data-visit="<?= $detailJson ?>">
-                                    Detail
-                                </button>
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Waktu Masuk</th>
+                            <th>Customer</th>
+                            <th>Status</th>
+                            <th>Catatan</th>
+                            <th>Durasi</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($visits)): ?>
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">Belum ada catatan kunjungan.</td>
+                        </tr>
+                        <?php else: ?>
+                        <?php foreach ($visits as $visit): ?>
+                        <tr>
+                            <td>
+                                <div class="fw-semibold"><?= date('d/m/Y H:i', strtotime($visit['check_in_time'])) ?></div>
+                                <?php if (!empty($visit['check_out_time'])): ?>
+                                <div class="small text-muted">Keluar: <?= date('d/m/Y H:i', strtotime($visit['check_out_time'])) ?></div>
                                 <?php endif; ?>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold"><?= htmlspecialchars($visit['namacustomer'] ?? '-') ?></div>
+                                <!-- <div class="small text-muted">Kode: <?= htmlspecialchars($visit['kodecustomer']) ?></div> -->
+                                <div class="small text-muted">Kota: <?= htmlspecialchars($visit['kotacustomer'] ?? '-') ?></div>
+                            </td>
+                            <td>
+                                <?php
+                                $badgeClass = 'bg-secondary';
+                                switch ($visit['status_kunjungan']) {
+                                    case 'Sedang Berjalan':
+                                        $badgeClass = 'bg-warning text-dark';
+                                        break;
+                                    case 'Selesai':
+                                        $badgeClass = 'bg-success';
+                                        break;
+                                    case 'Dibatalkan':
+                                        $badgeClass = 'bg-danger';
+                                        break;
+                                    case 'Direncanakan':
+                                        $badgeClass = 'bg-info text-dark';
+                                        break;
+                                }
+                                ?>
+                                <span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($visit['status_kunjungan']) ?></span>
+                                <?php if (!empty($visit['jarak_dari_kantor'])): ?>
+                                <div class="small text-muted mt-1">Jarak: <?= number_format($visit['jarak_dari_kantor'], 2) ?> km</div>
+                                <?php endif; ?>
+                            </td>
+                            <td class="table-text-wrap-220">
+                                <small><?= nl2br(htmlspecialchars($visit['catatan'] ?? '-')) ?></small>
+                            </td>
+                            <td>
+                                <?php if (!empty($visit['check_out_time'])): ?>
+                                    <?php
+                                    $duration = strtotime($visit['check_out_time']) - strtotime($visit['check_in_time']);
+                                    $hours = floor($duration / 3600);
+                                    $minutes = floor(($duration % 3600) / 60);
+                                    ?>
+                                    <div><?= $hours ?> jam <?= $minutes ?> menit</div>
+                                <?php else: ?>
+                                    <span class="text-muted">Sedang berjalan</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-2">
+                                    <?php if ($visit['status_kunjungan'] === 'Sedang Berjalan'): ?>
+                                    <a href="/visits/checkout/<?= $visit['visit_id'] ?>" class="btn btn-sm btn-warning">Check-out</a>
+                                    <?php else: ?>
+                                    <?php
+                                    $detailPayload = [
+                                        'visit_id' => $visit['visit_id'],
+                                        'namacustomer' => $visit['namacustomer'] ?? '-',
+                                        'kodecustomer' => $visit['kodecustomer'] ?? ($visit['master_kodecustomer'] ?? '-'),
+                                        'status_kunjungan' => $visit['status_kunjungan'] ?? '-',
+                                        'check_in_time' => $visit['check_in_time'] ?? null,
+                                        'check_out_time' => $visit['check_out_time'] ?? null,
+                                        'check_in_lat' => $visit['check_in_lat'] ?? null,
+                                        'check_in_long' => $visit['check_in_long'] ?? null,
+                                        'check_out_lat' => $visit['check_out_lat'] ?? null,
+                                        'check_out_long' => $visit['check_out_long'] ?? null,
+                                        'catatan' => $visit['catatan'] ?? '',
+                                        'jarak_dari_kantor' => $visit['jarak_dari_kantor'] ?? null
+                                    ];
+                                    $detailJson = htmlspecialchars(json_encode($detailPayload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8');
+                                    ?>
+                                    <button type="button" class="btn btn-sm btn-outline-primary btn-visit-detail" data-visit="<?= $detailJson ?>">
+                                        Detail
+                                    </button>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
 
-        <?php if ($totalPages > 1): ?>
-        <nav>
-            <ul class="pagination justify-content-center">
-                <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-                    <a class="page-link" href="?page=<?= $page - 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($statusFilter) ?>">Previous</a>
-                </li>
-                <?php
-                $maxLinks = 3;
-                $half = (int)floor($maxLinks / 2);
-                $start = max(1, $page - $half);
-                $end = min($totalPages, $start + $maxLinks - 1);
-                if ($end - $start + 1 < $maxLinks) {
-                    $start = max(1, $end - $maxLinks + 1);
-                }
-                $buildLink = function ($p) use ($perPage, $search, $statusFilter) {
-                    return '?page=' . $p
-                        . '&per_page=' . $perPage
-                        . '&search=' . urlencode($search)
-                        . '&status=' . urlencode($statusFilter);
-                };
-                if ($start > 1) {
-                    echo '<li class="page-item"><a class="page-link" href="' . $buildLink(1) . '">1</a></li>';
-                    if ($start > 2) {
-                        echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+            <?php if ($totalPages > 1): ?>
+            <nav>
+                <ul class="pagination justify-content-center">
+                    <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                        <a class="page-link" href="?page=<?= $page - 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($statusFilter) ?>">Previous</a>
+                    </li>
+                    <?php
+                    $maxLinks = 3;
+                    $half = (int)floor($maxLinks / 2);
+                    $start = max(1, $page - $half);
+                    $end = min($totalPages, $start + $maxLinks - 1);
+                    if ($end - $start + 1 < $maxLinks) {
+                        $start = max(1, $end - $maxLinks + 1);
                     }
-                }
-                for ($i = $start; $i <= $end; $i++) {
-                    echo '<li class="page-item ' . ($page == $i ? 'active' : '') . '"><a class="page-link" href="' . $buildLink($i) . '">' . $i . '</a></li>';
-                }
-                if ($end < $totalPages) {
-                    if ($end < $totalPages - 1) {
-                        echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                    $buildLink = function ($p) use ($perPage, $search, $statusFilter) {
+                        return '?page=' . $p
+                            . '&per_page=' . $perPage
+                            . '&search=' . urlencode($search)
+                            . '&status=' . urlencode($statusFilter);
+                    };
+                    if ($start > 1) {
+                        echo '<li class="page-item"><a class="page-link" href="' . $buildLink(1) . '">1</a></li>';
+                        if ($start > 2) {
+                            echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                        }
                     }
-                    echo '<li class="page-item"><a class="page-link" href="' . $buildLink($totalPages) . '">' . $totalPages . '</a></li>';
-                }
-                ?>
-                <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
-                    <a class="page-link" href="?page=<?= $page + 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($statusFilter) ?>">Next</a>
-                </li>
-            </ul>
-        </nav>
-        <?php endif; ?>
+                    for ($i = $start; $i <= $end; $i++) {
+                        echo '<li class="page-item ' . ($page == $i ? 'active' : '') . '"><a class="page-link" href="' . $buildLink($i) . '">' . $i . '</a></li>';
+                    }
+                    if ($end < $totalPages) {
+                        if ($end < $totalPages - 1) {
+                            echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                        }
+                        echo '<li class="page-item"><a class="page-link" href="' . $buildLink($totalPages) . '">' . $totalPages . '</a></li>';
+                    }
+                    ?>
+                    <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
+                        <a class="page-link" href="?page=<?= $page + 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($statusFilter) ?>">Next</a>
+                    </li>
+                </ul>
+            </nav>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 
