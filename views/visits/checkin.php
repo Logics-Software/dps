@@ -20,109 +20,111 @@ $hasMapbox = !empty($mapboxToken);
 require __DIR__ . '/../layouts/header.php';
 ?>
 
+
 <div class="container">
-    <div class="row mb-3">
-    <div class="col-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="/visits">Kunjungan</a></li>
-                <li class="breadcrumb-item active">Check-in</li>
-            </ol>
-        </nav>
-    </div>
-</div>
-
-<div class="row mb-3">
-    <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div>
-            <h2 class="mb-0">Check-in</h2>
-        </div>
-        <div>
-            <a href="/visits" class="btn btn-secondary"><?= icon('back', 'mb-1 me-2', 16) ?> Kembali</a>
+    <div class="breadcrumb-item">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/visits">Kunjungan</a></li>
+                    <li class="breadcrumb-item active">Check-in</li>
+                </ol>
+            </nav>
         </div>
     </div>
-</div>
 
-<?php if (!empty($activeVisit)): ?>
-<div class="alert alert-warning">
-    <strong>Perhatian!</strong> Anda masih memiliki kunjungan yang berjalan. Selesaikan terlebih dahulu sebelum melakukan check-in baru.
-    <a href="/visits" class="btn btn-sm btn-outline-primary ms-2">Lihat Kunjungan</a>
-</div>
-<?php else: ?>
-
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="POST" action="/visits/check-in" id="visitCheckinForm">
-            <input type="hidden" name="customer_id" id="selectedCustomerId">
-            <input type="hidden" name="check_in_lat" id="checkInLat">
-            <input type="hidden" name="check_in_long" id="checkInLong">
-
-            <div class="row g-3">
-                <div class="col-lg-4">
-                    <div class="card border-primary h-100">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">Lokasi Anda</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="small text-muted" id="currentLocationStatus">
-                                <?= $hasMapbox
-                                    ? 'Tekan tombol "Gunakan Lokasi Saya" untuk mengambil koordinat GPS.'
-                                    : 'Mapbox access token belum tersedia. Tambahkan MAPBOX_ACCESS_TOKEN untuk mengaktifkan peta.'
-                                ?>
-                            </p>
-                            <div class="d-grid gap-2">
-                                <button type="button" class="btn btn-outline-primary" id="btnUseLocation" <?= $hasMapbox ? '' : 'disabled' ?>>Gunakan Lokasi Saya</button>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text">Lat</span>
-                                    <input type="text" class="form-control" id="displayLat" placeholder="-6.2" readonly>
-                                </div>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text">Lng</span>
-                                    <input type="text" class="form-control" id="displayLng" placeholder="106.8" readonly>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-8">
-                    <div class="card border-success h-100">
-                        <div class="card-header bg-success text-white d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
-                            <h5 class="mb-0">Customer</h5>
-                            <div class="d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto justify-content-md-end">
-                                <input type="search" class="form-control form-control-sm flex-grow-1 search-input-wide" id="customerSearchInput" placeholder="Cari nama atau kode customer">
-                                <button type="button" class="btn btn-light btn-sm" id="btnRefreshNearby">Segarkan</button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="mapbox-wrapper mapbox-height-280">
-                                <div id="mapboxCheckin" class="mapbox-canvas-260"></div>
-                            </div>
-                            <div class="mt-3">
-                                <h6 class="fw-semibold">Daftar Customer</h6>
-                                <div class="list-group scrollable-list-260" id="customerResults">
-                                    <div class="list-group-item text-muted small">Mulai dengan mengambil lokasi Anda...</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <div class="row">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <h2 class="mb-0 me-auto">Check-in</h2>
+                    <a href="/visits" class="btn btn-secondary"><?= icon('back', 'mb-1 me-2', 16) ?> Kembali</a>
                 </div>
             </div>
 
-            <div class="row mt-4">
-                <div class="col-12">
-                    <label for="catatan" class="form-label">Catatan Kunjungan (Opsional)</label>
-                    <textarea name="catatan" id="catatan" class="form-control" rows="3" placeholder="Tuliskan tujuan kunjungan atau informasi tambahan"></textarea>
-                </div>
+            <?php if (!empty($activeVisit)): ?>
+            <div class="alert alert-warning">
+                <strong>Perhatian!</strong> Anda masih memiliki kunjungan yang berjalan. Selesaikan terlebih dahulu sebelum melakukan check-in baru.
+                <a href="/visits" class="btn btn-sm btn-outline-primary ms-2">Lihat Kunjungan</a>
             </div>
+            <?php else: ?>
 
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <div class="text-muted small">
-                    <span id="selectedCustomerInfo">Belum ada customer dipilih.</span>
+            <div class="card-body">
+                <div class="row">
+                    <form method="POST" action="/visits/check-in" id="visitCheckinForm">
+                        <input type="hidden" name="customer_id" id="selectedCustomerId">
+                        <input type="hidden" name="check_in_lat" id="checkInLat">
+                        <input type="hidden" name="check_in_long" id="checkInLong">
+
+                        <div class="row g-3">
+                            <div class="col-lg-4">
+                                <div class="card border-primary h-100">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0">Lokasi Anda</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="small text-muted" id="currentLocationStatus">
+                                            <?= $hasMapbox
+                                                ? 'Tekan tombol "Gunakan Lokasi Saya" untuk mengambil koordinat GPS.'
+                                                : 'Mapbox access token belum tersedia. Tambahkan MAPBOX_ACCESS_TOKEN untuk mengaktifkan peta.'
+                                            ?>
+                                        </p>
+                                        <div class="d-grid gap-2">
+                                            <button type="button" class="btn btn-outline-primary" id="btnUseLocation" <?= $hasMapbox ? '' : 'disabled' ?>>Gunakan Lokasi Saya</button>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text">Lat</span>
+                                                <input type="text" class="form-control" id="displayLat" placeholder="-6.2" readonly>
+                                            </div>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text">Lng</span>
+                                                <input type="text" class="form-control" id="displayLng" placeholder="106.8" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-8">
+                                <div class="card border-success h-100">
+                                    <div class="card-header bg-success text-white d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+                                        <h5 class="mb-0">Customer</h5>
+                                        <div class="d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto justify-content-md-end">
+                                            <input type="search" class="form-control form-control-sm flex-grow-1 search-input-wide" id="customerSearchInput" placeholder="Cari nama atau kode customer">
+                                            <button type="button" class="btn btn-light btn-sm" id="btnRefreshNearby">Segarkan</button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mapbox-wrapper mapbox-height-280">
+                                            <div id="mapboxCheckin" class="mapbox-canvas-260"></div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <h6 class="fw-semibold">Daftar Customer</h6>
+                                            <div class="list-group scrollable-list-260" id="customerResults">
+                                                <div class="list-group-item text-muted small">Mulai dengan mengambil lokasi Anda...</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <label for="catatan" class="form-label">Catatan Kunjungan (Opsional)</label>
+                                <textarea name="catatan" id="catatan" class="form-control" rows="3" placeholder="Tuliskan tujuan kunjungan atau informasi tambahan"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="text-muted small">
+                                <span id="selectedCustomerInfo">Belum ada customer dipilih.</span>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="btnSubmitCheckin" disabled>Mulai Check-in</button>
+                        </div>
+                    </form>
                 </div>
-                <button type="submit" class="btn btn-primary" id="btnSubmitCheckin" disabled>Mulai Check-in</button>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
