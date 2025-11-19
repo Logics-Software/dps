@@ -328,61 +328,127 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 
 <script>
+// File preview functions - make them globally accessible
+let fileInput, filePreview;
+const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function removeFileFromList(fileIndex) {
+    if (!fileInput) return;
+    
+    const files = Array.from(fileInput.files);
+    if (fileIndex < 0 || fileIndex >= files.length) return;
+    
+    // Create new FileList without the removed file
+    const dataTransfer = new DataTransfer();
+    files.forEach((file, index) => {
+        if (index !== fileIndex) {
+            dataTransfer.items.add(file);
+        }
+    });
+    
+    // Update the input's files
+    fileInput.files = dataTransfer.files;
+    
+    // Refresh the file preview
+    updateFilePreview();
+}
+
+function updateFilePreview() {
+    if (!fileInput || !filePreview) return;
+    
+    filePreview.innerHTML = '';
+    const files = Array.from(fileInput.files);
+    
+    if (files.length === 0) {
+        return;
+    }
+    
+    const validFiles = [];
+    const errors = [];
+    
+    files.forEach((file, index) => {
+        // Check file size
+        if (file.size > maxFileSize) {
+            errors.push(`File "${file.name}" terlalu besar (maksimal 5MB)`);
+            return;
+        }
+        
+        // Check file type
+        const extension = file.name.split('.').pop().toLowerCase();
+        const allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx'];
+        if (!allowedTypes.includes(extension)) {
+            errors.push(`File "${file.name}" tidak diizinkan (hanya: ${allowedTypes.join(', ')})`);
+            return;
+        }
+        
+        validFiles.push({file: file, index: index});
+    });
+    
+    // Show errors
+    if (errors.length > 0) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger';
+        errorDiv.innerHTML = '<strong>Error:</strong><ul class="mb-0 mt-2"><li>' + errors.join('</li><li>') + '</li></ul>';
+        filePreview.appendChild(errorDiv);
+    }
+    
+    // Show preview for valid files
+    if (validFiles.length > 0) {
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'list-group';
+        
+        validFiles.forEach(({file, index}) => {
+            const listItem = document.createElement('div');
+            listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+            listItem.innerHTML = `
+                <div class="d-flex align-items-center flex-grow-1">
+                    <span class="me-2">${file.name}</span>
+                    <span class="badge bg-secondary">${formatFileSize(file.size)}</span>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger ms-2 remove-file-btn" data-file-index="${index}" data-file-name="${file.name}">
+                    <img src="<?= htmlspecialchars($baseUrl) ?>/assets/icons/trash-can.svg" alt="trash-can" width="14" height="14" class="icon-inline me-1 mb-1"> Hapus
+                </button>
+            `;
+            previewDiv.appendChild(listItem);
+        });
+        
+        filePreview.appendChild(previewDiv);
+        
+        // Add event listeners to remove buttons
+        const removeButtons = filePreview.querySelectorAll('.remove-file-btn');
+        removeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const fileIndex = parseInt(this.getAttribute('data-file-index'));
+                const fileName = this.getAttribute('data-file-name');
+                
+                showConfirmModal({
+                    title: 'Konfirmasi Hapus',
+                    message: `Apakah Anda yakin ingin menghapus file <strong>${fileName}</strong> dari daftar upload?`,
+                    buttonText: 'Hapus',
+                    buttonClass: 'btn-danger',
+                    onConfirm: function() {
+                        removeFileFromList(fileIndex);
+                    }
+                });
+            });
+        });
+    }
+}
+    
 document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('visitFiles');
-    const filePreview = document.getElementById('filePreview');
-    const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+    fileInput = document.getElementById('visitFiles');
+    filePreview = document.getElementById('filePreview');
     
     if (fileInput) {
-        fileInput.addEventListener('change', function(e) {
-            filePreview.innerHTML = '';
-            const files = Array.from(e.target.files);
-            
-            if (files.length === 0) {
-                return;
-            }
-            
-            const validFiles = [];
-            const errors = [];
-            
-            files.forEach((file, index) => {
-                // Check file size
-                if (file.size > maxFileSize) {
-                    errors.push(`File "${file.name}" terlalu besar (maksimal 5MB)`);
-                    return;
-                }
-                
-                // Check file type
-                const extension = file.name.split('.').pop().toLowerCase();
-                const allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx'];
-                if (!allowedTypes.includes(extension)) {
-                    errors.push(`File "${file.name}" tidak diizinkan (hanya: ${allowedTypes.join(', ')})`);
-                    return;
-                }
-                
-                validFiles.push(file);
-            });
-            
-            // Show errors
-            if (errors.length > 0) {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'alert alert-danger';
-                errorDiv.innerHTML = '<strong>Error:</strong><ul class="mb-0 mt-2"><li>' + errors.join('</li><li>') + '</li></ul>';
-                filePreview.appendChild(errorDiv);
-            }
-            
-            // Show preview for valid files
-            if (validFiles.length > 0) {
-                const previewDiv = document.createElement('div');
-                previewDiv.className = 'alert alert-info';
-                previewDiv.innerHTML = '<strong>File yang akan diupload:</strong><ul class="mb-0 mt-2">' + 
-                    validFiles.map(file => {
-                        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
-                        return `<li>${file.name} (${sizeMB} MB)</li>`;
-                    }).join('') + '</ul>';
-                filePreview.appendChild(previewDiv);
-            }
-        });
+        fileInput.addEventListener('change', updateFilePreview);
     }
 });
 </script>
@@ -408,8 +474,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const canvasCapture = document.getElementById('canvasCapture');
     const cameraPlaceholder = document.getElementById('cameraPlaceholder');
     const cameraError = document.getElementById('cameraError');
-    const fileInput = document.getElementById('visitFiles');
-    const filePreview = document.getElementById('filePreview');
+    // Use global fileInput and filePreview variables (already initialized in previous script)
+    if (!fileInput) fileInput = document.getElementById('visitFiles');
+    if (!filePreview) filePreview = document.getElementById('filePreview');
     
     let stream = null;
     let capturedImage = null;
@@ -455,9 +522,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     fileInput.files = dataTransfer.files;
                     
-                    // Trigger change event to update preview
-                    const changeEvent = new Event('change', { bubbles: true });
-                    fileInput.dispatchEvent(changeEvent);
+                    // Update preview manually
+                    if (typeof updateFilePreview === 'function') {
+                        updateFilePreview();
+                    } else {
+                        // Trigger change event to update preview
+                        const changeEvent = new Event('change', { bubbles: true });
+                        fileInput.dispatchEvent(changeEvent);
+                    }
                     
                     // Reset mobile input
                     fileInputMobile.value = '';
@@ -664,9 +736,14 @@ document.addEventListener('DOMContentLoaded', function() {
         dataTransfer.items.add(file);
         fileInput.files = dataTransfer.files;
         
-        // Trigger change event to update preview
-        const changeEvent = new Event('change', { bubbles: true });
-        fileInput.dispatchEvent(changeEvent);
+        // Update preview manually
+        if (typeof updateFilePreview === 'function') {
+            updateFilePreview();
+        } else {
+            // Trigger change event to update preview
+            const changeEvent = new Event('change', { bubbles: true });
+            fileInput.dispatchEvent(changeEvent);
+        }
         
         // Close modal
         const modal = bootstrap.Modal.getInstance(cameraModal);

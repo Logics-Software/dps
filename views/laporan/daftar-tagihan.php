@@ -139,7 +139,7 @@ require __DIR__ . '/../layouts/header.php';
                             <thead class="table-light">
                                 <tr>
                                     <th>No.</th>
-                                    <th class="th-sortable sticky-col <?= ($sortBy ?? 'tanggalpenjualan') === 'nopenjualan' ? (($sortOrder ?? 'DESC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
+                                    <th class="th-sortable sticky-col sticky-col-faktur <?= ($sortBy ?? 'tanggalpenjualan') === 'nopenjualan' ? (($sortOrder ?? 'DESC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
                                         <a href="<?= getSortUrlTagihan('nopenjualan', $sortBy ?? 'tanggalpenjualan', $sortOrder ?? 'DESC', $search ?? '', $perPage ?? 10, $kodecustomer ?? '', $statusJatuhTempo ?? 'semua') ?>" class="text-decoration-none text-dark">
                                             No.Faktur
                                         </a>

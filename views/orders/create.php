@@ -1602,6 +1602,27 @@ function formatFileSize(bytes) {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
+function removeFileFromList(fileIndex) {
+    if (!orderFilesInput) return;
+    
+    const files = Array.from(orderFilesInput.files);
+    if (fileIndex < 0 || fileIndex >= files.length) return;
+    
+    // Create new FileList without the removed file
+    const dataTransfer = new DataTransfer();
+    files.forEach((file, index) => {
+        if (index !== fileIndex) {
+            dataTransfer.items.add(file);
+        }
+    });
+    
+    // Update the input's files
+    orderFilesInput.files = dataTransfer.files;
+    
+    // Refresh the file list display
+    updateFileList();
+}
+
 function updateFileList() {
     if (!orderFilesInput || !fileList) return;
     
@@ -1622,22 +1643,46 @@ function updateFileList() {
     ul.className = 'list-group list-group-flush';
     
     files.forEach((file, index) => {
-                if (file.size > maxFileSize) {
-                    fileList.innerHTML = `<div class="alert alert-danger">File "${file.name}" terlalu besar (maksimal 5MB)</div>`;
-                    orderFilesInput.value = '';
-                    return;
-                }
+        if (file.size > maxFileSize) {
+            fileList.innerHTML = `<div class="alert alert-danger">File "${file.name}" terlalu besar (maksimal 5MB)</div>`;
+            orderFilesInput.value = '';
+            return;
+        }
         
         const li = document.createElement('li');
         li.className = 'list-group-item d-flex justify-content-between align-items-center';
         li.innerHTML = `
-            <span>${file.name}</span>
-            <span class="badge bg-secondary">${formatFileSize(file.size)}</span>
+            <div class="d-flex align-items-center flex-grow-1">
+                <span class="me-2">${file.name}</span>
+                <span class="badge bg-secondary">${formatFileSize(file.size)}</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-danger ms-2 remove-file-btn" data-file-index="${index}" data-file-name="${file.name}">
+                <img src="<?= htmlspecialchars($baseUrl) ?>/assets/icons/trash-can.svg" alt="trash-can" width="14" height="14" class="icon-inline me-1 mb-1"> Hapus
+            </button>
         `;
         ul.appendChild(li);
     });
     
     fileList.appendChild(ul);
+    
+    // Add event listeners to remove buttons
+    const removeButtons = fileList.querySelectorAll('.remove-file-btn');
+    removeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const fileIndex = parseInt(this.getAttribute('data-file-index'));
+            const fileName = this.getAttribute('data-file-name');
+            
+            showConfirmModal({
+                title: 'Konfirmasi Hapus',
+                message: `Apakah Anda yakin ingin menghapus file <strong>${fileName}</strong> dari daftar upload?`,
+                buttonText: 'Hapus',
+                buttonClass: 'btn-danger',
+                onConfirm: function() {
+                    removeFileFromList(fileIndex);
+                }
+            });
+        });
+    });
 }
 
 orderFilesInput?.addEventListener('change', updateFileList);

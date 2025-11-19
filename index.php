@@ -115,6 +115,7 @@ $router->get('/orders/view/{noorder}', 'OrderController', 'show');
 $router->get('/orders/edit/{noorder}', 'OrderController', 'edit');
 $router->post('/orders/edit/{noorder}', 'OrderController', 'edit');
 $router->get('/orders/delete/{noorder}', 'OrderController', 'delete');
+$router->post('/orders/delete-file', 'OrderController', 'deleteFile');
 
 // Penjualan routes
 $router->get('/penjualan', 'PenjualanController', 'index');

@@ -208,7 +208,7 @@ require __DIR__ . '/../layouts/header.php';
                                             </thead>
                                             <tbody>
                                                 <?php foreach ($orderFiles as $file): ?>
-                                                <tr>
+                                                <tr id="file-row-<?= $file['id'] ?>">
                                                     <td><?= htmlspecialchars($file['original_filename']) ?></td>
                                                     <td><?= number_format((float)($file['file_size'] ?? 0) / 1024, 2, ',', '.') ?> KB</td>
                                                     <td><?= htmlspecialchars($file['uploaded_by_name'] ?? '-') ?></td>
@@ -217,6 +217,9 @@ require __DIR__ . '/../layouts/header.php';
                                                         <a href="<?= htmlspecialchars($baseUrl) ?><?= htmlspecialchars($file['file_path']) ?>" target="_blank" class="btn btn-sm btn-primary">
                                                             <?= icon('download', 'me-1 mb-1', 14) ?> Download
                                                         </a>
+                                                        <button type="button" class="btn btn-sm btn-danger ms-1 delete-file-btn" data-file-id="<?= $file['id'] ?>" data-file-name="<?= htmlspecialchars($file['original_filename']) ?>">
+                                                            <?= icon('trash-can', 'me-1 mb-1', 14) ?> Hapus
+                                                        </button>
                                                     </td>
                                                 </tr>
                                                 <?php endforeach; ?>
@@ -1908,6 +1911,95 @@ document.addEventListener('DOMContentLoaded', function() {
         if (btnCloseCamera) btnCloseCamera.addEventListener('click', closeHandler);
         if (btnCancelCamera) btnCancelCamera.addEventListener('click', closeHandler);
     }
+});
+
+// Delete file functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteFileButtons = document.querySelectorAll('.delete-file-btn');
+    
+    deleteFileButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const fileId = this.getAttribute('data-file-id');
+            const fileName = this.getAttribute('data-file-name');
+            const buttonElement = this;
+            
+            showConfirmModal({
+                title: 'Konfirmasi Hapus',
+                message: `Apakah Anda yakin ingin menghapus file <strong>${fileName}</strong>?`,
+                buttonText: 'Hapus',
+                buttonClass: 'btn-danger',
+                onConfirm: function() {
+                    // Disable button during request
+                    buttonElement.disabled = true;
+                    const originalText = buttonElement.innerHTML;
+                    buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Menghapus...';
+                    
+                    // Create form data
+                    const formData = new FormData();
+                    formData.append('file_id', fileId);
+                    
+                    // Send delete request
+                    fetch('/orders/delete-file', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Remove the row from table
+                            const row = document.getElementById(`file-row-${fileId}`);
+                            if (row) {
+                                row.style.transition = 'opacity 0.3s';
+                                row.style.opacity = '0';
+                                setTimeout(() => {
+                                    row.remove();
+                                    
+                                    // Check if table is empty
+                                    const tbody = row.closest('tbody');
+                                    if (tbody && tbody.children.length === 0) {
+                                        const tableContainer = tbody.closest('.table-responsive');
+                                        if (tableContainer) {
+                                            tableContainer.closest('.mt-3').remove();
+                                        }
+                                    }
+                                }, 300);
+                            }
+                            
+                            // Show success message
+                            if (typeof showNotification === 'function') {
+                                showNotification('success', data.message || 'File berhasil dihapus');
+                            } else {
+                                alert(data.message || 'File berhasil dihapus');
+                            }
+                        } else {
+                            // Show error message
+                            if (typeof showNotification === 'function') {
+                                showNotification('error', data.message || 'Gagal menghapus file');
+                            } else {
+                                alert(data.message || 'Gagal menghapus file');
+                            }
+                            
+                            // Re-enable button
+                            buttonElement.disabled = false;
+                            buttonElement.innerHTML = originalText;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (typeof showNotification === 'function') {
+                            showNotification('error', 'Terjadi kesalahan saat menghapus file');
+                        } else {
+                            alert('Terjadi kesalahan saat menghapus file');
+                        }
+                        
+                        // Re-enable button
+                        buttonElement.disabled = false;
+                        buttonElement.innerHTML = originalText;
+                    });
+                }
+            });
+        });
+    });
 });
 
 if (document.readyState === 'complete') {

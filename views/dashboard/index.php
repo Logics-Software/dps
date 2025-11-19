@@ -166,8 +166,8 @@ require __DIR__ . '/../layouts/header.php';
                                 </tbody>
                             </table>
                         </div>
-                        <div class="text-center mt-3">
-                            <a href="/laporan/daftar-harga" class="btn btn-dark">
+                        <div class="text-end mt-3">
+                            <a href="/laporan/daftar-harga" class="btn btn-secondary">
                                 Lebih lanjut <?= icon('ellipsis-horizontal', 'me-2', 18) ?>
                             </a>
                         </div>
@@ -214,8 +214,8 @@ require __DIR__ . '/../layouts/header.php';
                                 </tbody>
                             </table>
                         </div>
-                        <div class="text-center mt-3">
-                            <a href="/laporan/daftar-tagihan" class="btn btn-dark">
+                        <div class="text-end mt-3">
+                            <a href="/laporan/daftar-tagihan" class="btn btn-secondary">
                                 Lebih lanjut <?= icon('ellipsis-horizontal', 'me-2', 18) ?>
                             </a>
                         </div>
@@ -313,8 +313,8 @@ require __DIR__ . '/../layouts/header.php';
                                 </tbody>
                             </table>
                         </div>
-                        <div class="text-center mt-3">
-                            <a href="/laporan/daftar-harga" class="btn btn-dark">
+                        <div class="text-end mt-3">
+                            <a href="/laporan/daftar-harga" class="btn btn-secondary">
                                 Lebih lanjut <?= icon('ellipsis-horizontal', 'me-2', 18) ?>
                             </a>
                         </div>
@@ -361,8 +361,8 @@ require __DIR__ . '/../layouts/header.php';
                                 </tbody>
                             </table>
                         </div>
-                        <div class="text-center mt-3">
-                            <a href="/laporan/daftar-tagihan" class="btn btn-dark">
+                        <div class="text-end mt-3">
+                            <a href="/laporan/daftar-tagihan" class="btn btn-secondary">
                                 Lebih lanjut <?= icon('ellipsis-horizontal', 'me-2', 18) ?>
                             </a>
                         </div>
@@ -490,8 +490,8 @@ require __DIR__ . '/../layouts/header.php';
                                 </tbody>
                             </table>
                         </div>
-                        <div class="text-center mt-3">
-                            <a href="/laporan/daftar-harga" class="btn btn-dark">
+                        <div class="text-end mt-3">
+                            <a href="/laporan/daftar-harga" class="btn btn-secondary">
                                 Lebih lanjut<?= icon('ellipsis-horizontal', 'me-2', 18) ?>
                             </a>
                         </div>
@@ -538,8 +538,8 @@ require __DIR__ . '/../layouts/header.php';
                                 </tbody>
                             </table>
                         </div>
-                        <div class="text-center mt-3">
-                            <a href="/laporan/daftar-tagihan" class="btn btn-dark">
+                        <div class="text-end mt-3">
+                            <a href="/laporan/daftar-tagihan" class="btn btn-secondary">
                                 Lebih lanjut <?= icon('ellipsis-horizontal', 'me-2', 18) ?>
                             </a>
                         </div>

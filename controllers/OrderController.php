@@ -706,6 +706,43 @@ class OrderController extends Controller {
 
 		return $errors;
 	}
+
+	public function deleteFile() {
+		Auth::requireRole(['admin', 'manajemen', 'operator', 'sales']);
+
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			$this->json(['success' => false, 'message' => 'Method not allowed'], 405);
+		}
+
+		$fileId = $_POST['file_id'] ?? null;
+		if (empty($fileId)) {
+			$this->json(['success' => false, 'message' => 'File ID tidak ditemukan'], 400);
+		}
+
+		$file = $this->orderFileModel->findById($fileId);
+		if (!$file) {
+			$this->json(['success' => false, 'message' => 'File tidak ditemukan'], 404);
+		}
+
+		// Check if user has access to this order
+		$order = $this->headerModel->findByNoorder($file['noorder']);
+		if (!$order) {
+			$this->json(['success' => false, 'message' => 'Order tidak ditemukan'], 404);
+		}
+
+		$user = Auth::user();
+		if (($user['role'] ?? '') === 'sales' && ($user['kodesales'] ?? '') !== $order['kodesales']) {
+			$this->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke file ini'], 403);
+		}
+
+		try {
+			$this->orderFileModel->delete($fileId);
+			$this->json(['success' => true, 'message' => 'File berhasil dihapus']);
+		} catch (Exception $e) {
+			error_log("Error deleting file: " . $e->getMessage());
+			$this->json(['success' => false, 'message' => 'Gagal menghapus file: ' . $e->getMessage()], 500);
+		}
+	}
 }
 
 
