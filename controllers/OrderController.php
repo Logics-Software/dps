@@ -446,12 +446,57 @@ class OrderController extends Controller {
 		return sprintf('%s%05d', $prefix, $nextNumber);
 	}
 
+	/**
+	 * Convert PHP ini size string to bytes (e.g., "7.5M" -> 7864320)
+	 */
+	private function convertToBytes($size) {
+		if (empty($size)) {
+			return 0;
+		}
+		
+		$size = trim($size);
+		$unit = strtolower(substr($size, -1));
+		$value = (float) substr($size, 0, -1);
+		
+		switch ($unit) {
+			case 'g':
+				$value *= 1024;
+				// fall through
+			case 'm':
+				$value *= 1024;
+				// fall through
+			case 'k':
+				$value *= 1024;
+		}
+		
+		return (int) $value;
+	}
+
 	private function handleFileUploads($noorder, $files, $user) {
 		$appConfig = require __DIR__ . '/../config/app.php';
 		$uploadPath = $appConfig['upload_path'] . 'orders/';
 		$allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'zip', 'rar'];
 		$maxFileSize = 5242880; // 5MB
 		$maxFiles = 5;
+		
+		// Check PHP upload settings
+		$phpUploadMaxSize = ini_get('upload_max_filesize');
+		$phpPostMaxSize = ini_get('post_max_size');
+		$phpMaxFileSize = $this->convertToBytes($phpUploadMaxSize);
+		$phpPostMaxSizeBytes = $this->convertToBytes($phpPostMaxSize);
+		
+		// Log PHP settings for debugging
+		error_log("PHP Upload Settings: upload_max_filesize={$phpUploadMaxSize} ({$phpMaxFileSize} bytes), post_max_size={$phpPostMaxSize} ({$phpPostMaxSizeBytes} bytes), configured max={$maxFileSize} bytes (5MB)");
+		
+		// Use the smaller limit between our config and PHP settings
+		if ($phpMaxFileSize > 0 && $phpMaxFileSize < $maxFileSize) {
+			error_log("WARNING: PHP upload_max_filesize ({$phpUploadMaxSize} = {$phpMaxFileSize} bytes) is smaller than configured max ({$maxFileSize} bytes). Using PHP limit.");
+			$maxFileSize = $phpMaxFileSize;
+		}
+		
+		if ($phpPostMaxSizeBytes > 0 && $phpPostMaxSizeBytes < $maxFileSize) {
+			error_log("WARNING: PHP post_max_size ({$phpPostMaxSize} = {$phpPostMaxSizeBytes} bytes) is smaller than configured max ({$maxFileSize} bytes). This may cause upload failures.");
+		}
 
 		// Ensure upload directory exists and is writable
 		if (!is_dir($uploadPath)) {
@@ -497,10 +542,17 @@ class OrderController extends Controller {
 
 			if ($files['error'][$i] !== UPLOAD_ERR_OK) {
 				$errorMsg = 'Error upload';
+				$phpUploadMaxSize = ini_get('upload_max_filesize');
+				$phpPostMaxSize = ini_get('post_max_size');
+				
 				switch ($files['error'][$i]) {
 					case UPLOAD_ERR_INI_SIZE:
+						$errorMsg = "File terlalu besar. PHP upload_max_filesize saat ini: {$phpUploadMaxSize} (diperlukan minimal 6M). Silakan hubungi administrator untuk mengubah setting PHP.";
+						error_log("UPLOAD_ERR_INI_SIZE: File {$files['name'][$i]} exceeds PHP upload_max_filesize ({$phpUploadMaxSize}). Configured max in app: 5MB");
+						break;
 					case UPLOAD_ERR_FORM_SIZE:
-						$errorMsg = 'File terlalu besar';
+						$errorMsg = "File terlalu besar. PHP post_max_size saat ini: {$phpPostMaxSize} (diperlukan minimal 6M). Silakan hubungi administrator untuk mengubah setting PHP.";
+						error_log("UPLOAD_ERR_FORM_SIZE: File {$files['name'][$i]} exceeds PHP post_max_size ({$phpPostMaxSize}). Configured max in app: 5MB");
 						break;
 					case UPLOAD_ERR_PARTIAL:
 						$errorMsg = 'File hanya terupload sebagian';
@@ -526,17 +578,47 @@ class OrderController extends Controller {
 			$tmpName = $files['tmp_name'][$i];
 			$fileSize = $files['size'][$i];
 			$fileType = $files['type'][$i];
-			$extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-
+			
+			// Log file info for debugging
+			error_log("Processing file upload: name={$originalName}, size={$fileSize} bytes (" . round($fileSize / 1024 / 1024, 2) . "MB), maxAllowed={$maxFileSize} bytes (" . round($maxFileSize / 1024 / 1024, 2) . "MB)");
+			
+			// Get extension - handle files without extension or with multiple dots
+			$pathInfo = pathinfo($originalName);
+			$extension = isset($pathInfo['extension']) ? strtolower($pathInfo['extension']) : '';
+			
+			// If no extension, try to detect from MIME type for images
+			if (empty($extension) && !empty($fileType)) {
+				$mimeToExt = [
+					'image/jpeg' => 'jpg',
+					'image/jpg' => 'jpg',
+					'image/png' => 'png',
+					'image/gif' => 'gif',
+					'image/webp' => 'webp'
+				];
+				if (isset($mimeToExt[$fileType])) {
+					$extension = $mimeToExt[$fileType];
+				}
+			}
+			
 			// Validate file type
-			if (!in_array($extension, $allowedTypes)) {
-				$errors[] = $originalName . ' - Format file tidak diizinkan (hanya: ' . implode(', ', $allowedTypes) . ')';
+			if (empty($extension) || !in_array($extension, $allowedTypes)) {
+				$errors[] = $originalName . ' - Format file tidak diizinkan (hanya: ' . implode(', ', $allowedTypes) . '). Extension: ' . ($extension ?: 'tidak terdeteksi');
+				error_log("File type validation failed: originalName={$originalName}, extension={$extension}, fileType={$fileType}");
 				continue;
 			}
 
 			// Validate file size
+			if ($fileSize <= 0) {
+				$errors[] = $originalName . ' - Ukuran file tidak valid (0 bytes)';
+				error_log("File size validation failed: originalName={$originalName}, fileSize={$fileSize}");
+				continue;
+			}
+			
 			if ($fileSize > $maxFileSize) {
-				$errors[] = $originalName . ' - Ukuran file terlalu besar (maksimal ' . ($maxFileSize / 1024 / 1024) . 'MB)';
+				$maxSizeMB = round($maxFileSize / 1024 / 1024, 2);
+				$fileSizeMB = round($fileSize / 1024 / 1024, 2);
+				$errors[] = $originalName . " - Ukuran file terlalu besar ({$fileSizeMB}MB, maksimal {$maxSizeMB}MB)";
+				error_log("File size exceeded: originalName={$originalName}, fileSize={$fileSize} bytes ({$fileSizeMB}MB), maxSize={$maxFileSize} bytes ({$maxSizeMB}MB)");
 				continue;
 			}
 
@@ -545,17 +627,68 @@ class OrderController extends Controller {
 			$targetPath = $uploadPath . $filename;
 			$relativePath = 'uploads/orders/' . $filename;
 
+			// Validate tmp file exists and is readable
+			if (!file_exists($tmpName) || !is_uploaded_file($tmpName)) {
+				$errors[] = $originalName . ' - File temporary tidak ditemukan atau tidak valid';
+				error_log("Temporary file validation failed: originalName={$originalName}, tmpName={$tmpName}, exists=" . (file_exists($tmpName) ? 'yes' : 'no'));
+				continue;
+			}
+			
 			// Move uploaded file
 			if (move_uploaded_file($tmpName, $targetPath)) {
+				// Resize and compress if it's a camera photo
+				$finalPath = $targetPath;
+				$finalFilename = $filename;
+				$finalSize = $fileSize;
+				$finalExtension = $extension;
+				
+				if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])) {
+					// Try to compress image (especially camera photos)
+					error_log("Attempting to compress image: originalName={$originalName}, targetPath={$targetPath}, extension={$extension}");
+					$compressResult = $this->resizeAndCompressImage($targetPath, $originalName);
+					
+					// Log compression result
+					if ($compressResult['success']) {
+						error_log("Image compression successful: {$originalName} - Saved {$compressResult['saved_percent']}%");
+						
+						// Verify compressed file exists
+						$newPath = dirname($targetPath) . '/' . $compressResult['new_filename'];
+						if (!file_exists($newPath)) {
+							error_log("WARNING: Compressed file not found: {$newPath}. Using original file.");
+							$compressResult['success'] = false;
+						}
+					} else {
+						error_log("Image compression failed: {$originalName} - " . ($compressResult['message'] ?? 'Unknown error'));
+					}
+					
+					if ($compressResult['success']) {
+						$finalFilename = $compressResult['new_filename'];
+						$finalPath = dirname($targetPath) . '/' . $finalFilename;
+						$finalSize = $compressResult['new_size'];
+						$relativePath = 'uploads/orders/' . $finalFilename;
+						
+						// Update extension if file was converted (PNG/GIF to JPEG)
+						if (preg_match('/\.jpg$/i', $finalFilename)) {
+							$finalExtension = 'jpg';
+						}
+						
+						// Update target path for cleanup if needed
+						$targetPath = $finalPath;
+					} else {
+						// Compression failed, but file is already saved, so continue with original
+						error_log("Using original file (compression failed): {$originalName}");
+					}
+				}
+				
 				// Save file info to database
 				try {
 					$this->orderFileModel->create([
 						'noorder' => $noorder,
-						'filename' => $filename,
+						'filename' => $finalFilename,
 						'original_filename' => $originalName,
 						'file_path' => $relativePath,
 						'file_type' => $fileType,
-						'file_size' => $fileSize,
+						'file_size' => $finalSize,
 						'uploaded_by' => $user['id'] ?? null
 					]);
 					$uploadedCount++;

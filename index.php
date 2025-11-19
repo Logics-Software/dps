@@ -6,6 +6,13 @@ date_default_timezone_set('Asia/Jakarta');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// Override PHP upload settings if possible (only works if not disabled by server)
+// This helps when php.ini cannot be modified
+@ini_set('upload_max_filesize', '6M'); // 6M for buffer (app limit is 5MB)
+@ini_set('post_max_size', '6M'); // 6M for buffer (app limit is 5MB)
+@ini_set('max_execution_time', '300'); // 5 minutes for large uploads
+@ini_set('max_input_time', '300');
+
 // Autoload classes
 spl_autoload_register(function ($class) {
     // Special handling for Message class to avoid conflict

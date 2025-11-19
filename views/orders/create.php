@@ -171,7 +171,18 @@ require __DIR__ . '/../layouts/header.php';
                             </div>
                             <div class="card-body">
                                 <div class="mb-3">
-                                    <input type="file" name="order_files[]" class="form-control" id="orderFilesInput" multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar">
+                                    <div class="d-flex gap-2 mb-2">
+                                        <input type="file" name="order_files[]" class="form-control" id="orderFilesInput" multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar">
+                                        <!-- Mobile camera input (hidden on desktop) -->
+                                        <input type="file" name="order_files[]" id="orderFilesMobile" class="form-control d-none" accept="image/*" capture="environment">
+                                        <button type="button" class="btn btn-primary" id="btnOpenCamera" data-bs-toggle="modal" data-bs-target="#cameraModal">
+                                            <?= icon('camera', 'mb-1 me-2', 16) ?> Kamera
+                                        </button>
+                                        <!-- Mobile direct camera button (hidden on desktop) -->
+                                        <button type="button" class="btn btn-primary d-none" id="btnMobileCamera">
+                                            <?= icon('camera', 'mb-1 me-2', 16) ?> Kamera
+                                        </button>
+                                    </div>
                                     <small class="form-text text-muted">Format yang diizinkan: JPG, PNG, GIF, PDF, DOC, DOCX, XLS, XLSX, TXT, ZIP, RAR. Maksimal 5 file, setiap file maksimal 5MB.</small>
                                     <div id="fileList" class="mt-2"></div>
                                 </div>
@@ -321,7 +332,34 @@ require __DIR__ . '/../layouts/header.php';
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kembali</button>
             </div>
         </div>
-	</div>
+    </div>
+</div>
+
+<!-- Modal Kamera -->
+<div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cameraModalLabel">Ambil Foto dari Kamera</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="btnCloseCamera"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="cameraError" class="alert alert-danger d-none"></div>
+                <video id="videoPreview" autoplay playsinline style="width: 100%; max-width: 640px; border-radius: 8px; background: #000; display: none;"></video>
+                <canvas id="canvasCapture" style="display: none;"></canvas>
+                <div id="cameraPlaceholder" class="p-5 bg-light rounded">
+                    <p class="text-muted mb-0">Klik tombol "Mulai Kamera" untuk mengaktifkan kamera</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btnCancelCamera">Batal</button>
+                <button type="button" class="btn btn-primary" id="btnStartCamera">Mulai Kamera</button>
+                <button type="button" class="btn btn-success" id="btnCapturePhoto" style="display: none;">📷 Ambil Foto</button>
+                <button type="button" class="btn btn-primary" id="btnRetakePhoto" style="display: none;">Ulangi</button>
+                <button type="button" class="btn btn-success" id="btnUsePhoto" style="display: none;">Gunakan Foto Ini</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php
@@ -1584,11 +1622,11 @@ function updateFileList() {
     ul.className = 'list-group list-group-flush';
     
     files.forEach((file, index) => {
-        if (file.size > maxFileSize) {
-            fileList.innerHTML = `<div class="alert alert-danger">File "${file.name}" terlalu besar (maksimal 5MB)</div>`;
-            orderFilesInput.value = '';
-            return;
-        }
+                if (file.size > maxFileSize) {
+                    fileList.innerHTML = `<div class="alert alert-danger">File "${file.name}" terlalu besar (maksimal 5MB)</div>`;
+                    orderFilesInput.value = '';
+                    return;
+                }
         
         const li = document.createElement('li');
         li.className = 'list-group-item d-flex justify-content-between align-items-center';
@@ -1603,6 +1641,224 @@ function updateFileList() {
 }
 
 orderFilesInput?.addEventListener('change', updateFileList);
+
+// Camera functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Detect mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                     (window.innerWidth <= 768 && 'ontouchstart' in window);
+    
+    const cameraModal = document.getElementById('cameraModal');
+    const btnOpenCamera = document.getElementById('btnOpenCamera');
+    const btnMobileCamera = document.getElementById('btnMobileCamera');
+    const fileInputMobile = document.getElementById('orderFilesMobile');
+    const btnStartCamera = document.getElementById('btnStartCamera');
+    const btnCapturePhoto = document.getElementById('btnCapturePhoto');
+    const btnRetakePhoto = document.getElementById('btnRetakePhoto');
+    const btnUsePhoto = document.getElementById('btnUsePhoto');
+    const btnCloseCamera = document.getElementById('btnCloseCamera');
+    const btnCancelCamera = document.getElementById('btnCancelCamera');
+    const videoPreview = document.getElementById('videoPreview');
+    const canvasCapture = document.getElementById('canvasCapture');
+    const cameraPlaceholder = document.getElementById('cameraPlaceholder');
+    const cameraError = document.getElementById('cameraError');
+    const fileInput = document.getElementById('orderFilesInput');
+    
+    let stream = null;
+    let capturedImage = null;
+    
+    const hasGetUserMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    
+    // Mobile device handling
+    if (isMobile) {
+        if (btnMobileCamera) btnMobileCamera.classList.remove('d-none');
+        if (btnOpenCamera) btnOpenCamera.style.display = 'none';
+        
+        if (btnMobileCamera && fileInputMobile) {
+            btnMobileCamera.addEventListener('click', function() {
+                fileInputMobile.click();
+            });
+            
+            fileInputMobile.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files.length > 0) {
+                    const dataTransfer = new DataTransfer();
+                    if (fileInput.files) {
+                        for (let i = 0; i < fileInput.files.length; i++) {
+                            dataTransfer.items.add(fileInput.files[i]);
+                        }
+                    }
+                    for (let i = 0; i < e.target.files.length; i++) {
+                        dataTransfer.items.add(e.target.files[i]);
+                    }
+                    fileInput.files = dataTransfer.files;
+                    const changeEvent = new Event('change', { bubbles: true });
+                    fileInput.dispatchEvent(changeEvent);
+                    fileInputMobile.value = '';
+                }
+            });
+        }
+    } else {
+        if (btnMobileCamera) btnMobileCamera.classList.add('d-none');
+        if (btnOpenCamera) btnOpenCamera.style.display = 'inline-block';
+        if (!hasGetUserMedia && btnOpenCamera) {
+            btnOpenCamera.disabled = true;
+            btnOpenCamera.title = 'Browser tidak mendukung akses kamera';
+        }
+    }
+    
+    function resetCameraUI() {
+        videoPreview.style.display = 'none';
+        cameraPlaceholder.style.display = 'block';
+        cameraPlaceholder.innerHTML = '<p class="text-muted mb-0">Klik tombol "Mulai Kamera" untuk mengaktifkan kamera</p>';
+        btnStartCamera.style.display = hasGetUserMedia ? 'inline-block' : 'none';
+        btnCapturePhoto.style.display = 'none';
+        btnRetakePhoto.style.display = 'none';
+        btnUsePhoto.style.display = 'none';
+        cameraError.classList.add('d-none');
+        capturedImage = null;
+    }
+    
+    function showCameraError(message) {
+        cameraError.textContent = message;
+        cameraError.classList.remove('d-none');
+    }
+    
+    function hideCameraError() {
+        cameraError.classList.add('d-none');
+    }
+    
+    function stopStream() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    }
+    
+    function stopCamera() {
+        stopStream();
+        resetCameraUI();
+    }
+    
+    async function startCamera() {
+        try {
+            hideCameraError();
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            });
+            videoPreview.srcObject = stream;
+            videoPreview.style.display = 'block';
+            cameraPlaceholder.style.display = 'none';
+            btnStartCamera.style.display = 'none';
+            btnCapturePhoto.style.display = 'inline-block';
+            videoPreview.addEventListener('loadedmetadata', function() {
+                canvasCapture.width = videoPreview.videoWidth;
+                canvasCapture.height = videoPreview.videoHeight;
+            }, { once: true });
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            let errorMessage = 'Gagal mengakses kamera. ';
+            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                errorMessage += 'Izin akses kamera ditolak. Silakan berikan izin di pengaturan browser.';
+            } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                errorMessage += 'Kamera tidak ditemukan.';
+            } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                errorMessage += 'Kamera sedang digunakan oleh aplikasi lain.';
+            } else {
+                errorMessage += error.message || 'Terjadi kesalahan.';
+            }
+            showCameraError(errorMessage);
+            resetCameraUI();
+        }
+    }
+    
+    function capturePhoto() {
+        if (!stream || !videoPreview.videoWidth) {
+            showCameraError('Kamera belum siap. Tunggu sebentar.');
+            return;
+        }
+        try {
+            const ctx = canvasCapture.getContext('2d');
+            ctx.drawImage(videoPreview, 0, 0, canvasCapture.width, canvasCapture.height);
+            canvasCapture.toBlob(function(blob) {
+                if (!blob) {
+                    showCameraError('Gagal mengambil foto.');
+                    return;
+                }
+                capturedImage = blob;
+                stopStream();
+                videoPreview.style.display = 'none';
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(blob);
+                img.style.maxWidth = '100%';
+                img.style.borderRadius = '8px';
+                img.style.marginBottom = '10px';
+                const previewContainer = document.createElement('div');
+                previewContainer.innerHTML = '';
+                previewContainer.appendChild(img);
+                cameraPlaceholder.innerHTML = '';
+                cameraPlaceholder.appendChild(previewContainer);
+                cameraPlaceholder.style.display = 'block';
+                btnCapturePhoto.style.display = 'none';
+                btnRetakePhoto.style.display = 'inline-block';
+                btnUsePhoto.style.display = 'inline-block';
+            }, 'image/jpeg', 0.9);
+        } catch (error) {
+            console.error('Error capturing photo:', error);
+            showCameraError('Gagal mengambil foto: ' + error.message);
+        }
+    }
+    
+    function usePhoto() {
+        if (!capturedImage) {
+            showCameraError('Tidak ada foto yang diambil.');
+            return;
+        }
+        const timestamp = new Date().getTime();
+        const filename = `camera_${timestamp}.jpg`;
+        const file = new File([capturedImage], filename, { type: 'image/jpeg' });
+        const dataTransfer = new DataTransfer();
+        if (fileInput.files) {
+            for (let i = 0; i < fileInput.files.length; i++) {
+                dataTransfer.items.add(fileInput.files[i]);
+            }
+        }
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+        const changeEvent = new Event('change', { bubbles: true });
+        fileInput.dispatchEvent(changeEvent);
+        const modal = bootstrap.Modal.getInstance(cameraModal);
+        if (modal) modal.hide();
+    }
+    
+    function retakePhoto() {
+        resetCameraUI();
+        startCamera();
+    }
+    
+    if (cameraModal) {
+        cameraModal.addEventListener('show.bs.modal', function() {
+            resetCameraUI();
+            if (!hasGetUserMedia) {
+                btnStartCamera.style.display = 'none';
+                showCameraError('Browser Anda tidak mendukung akses kamera. Silakan gunakan fitur upload file biasa.');
+            }
+        });
+        cameraModal.addEventListener('hide.bs.modal', function() {
+            stopCamera();
+        });
+    }
+    
+    if (btnStartCamera) btnStartCamera.addEventListener('click', startCamera);
+    if (btnCapturePhoto) btnCapturePhoto.addEventListener('click', capturePhoto);
+    if (btnRetakePhoto) btnRetakePhoto.addEventListener('click', retakePhoto);
+    if (btnUsePhoto) btnUsePhoto.addEventListener('click', usePhoto);
+    if (btnCloseCamera || btnCancelCamera) {
+        const closeHandler = () => stopCamera();
+        if (btnCloseCamera) btnCloseCamera.addEventListener('click', closeHandler);
+        if (btnCancelCamera) btnCancelCamera.addEventListener('click', closeHandler);
+    }
+});
 
 if (document.readyState === 'complete') {
     initOrderCreateForm();

@@ -40,3 +40,20 @@ AddDefaultCharset UTF-8
     AddCharset UTF-8 .css
 </IfModule>
 
+# PHP Upload Settings (override php.ini if allowed by server)
+# Note: This only works if PHP is running as Apache module or with PHP-FPM
+# If this doesn't work, you need to modify php.ini directly
+# Set to 6M for buffer (app limit is 5MB)
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 6M
+    php_value post_max_size 6M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+</IfModule>
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 6M
+    php_value post_max_size 6M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+</IfModule>
+
