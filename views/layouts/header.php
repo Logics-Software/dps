@@ -79,7 +79,7 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
 
                     <!-- Navigation Menu -->
                     <nav class="header-nav-menu" id="headerNavMenu">
-                        <a href="/dashboard" class="nav-link <?= ($_SERVER['REQUEST_URI'] ?? '') === '/dashboard' ? 'active' : '' ?>">Dashboard</a>
+                        <a href="/dashboard" class="nav-link fw-bold <?= ($_SERVER['REQUEST_URI'] ?? '') === '/dashboard' ? 'active' : '' ?>">Dashboard</a>
                                                 
                         <?php if (Auth::isManajemen()): ?>
                         <div class="nav-dropdown">
@@ -167,10 +167,8 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                                 <a href="/laporan/daftar-barang" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-barang') !== false ? 'active' : '' ?>">Daftar Barang</a>
                                 <a href="/laporan/daftar-stok" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-stok') !== false ? 'active' : '' ?>">Daftar Stok</a>
                                 <a href="/laporan/daftar-harga" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-harga') !== false ? 'active' : '' ?>">Daftar Harga Barang</a>
-                                <a href="#" class="nav-dropdown-item">Order Penjualan</a>
-                                <a href="#" class="nav-dropdown-item">Faktur Penjualan</a>
-                                <a href="#" class="nav-dropdown-item">Inkaso</a>
-                                <a href="#" class="nav-dropdown-item">Omset Penjualan</a>
+                                <a href="/laporan/daftar-tagihan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-tagihan') !== false ? 'active' : '' ?>">Daftar Tagihan</a>
+                                <a href="/laporan/omset" class="nav-dropdown-item">Omset Penjualan</a>
                             </div>
                         </div>
                         <?php endif; ?>                        

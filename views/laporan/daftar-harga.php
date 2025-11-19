@@ -6,6 +6,14 @@ if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
     $baseUrl = '/';
 }
 
+// Load sticky column CSS dan JS
+$additionalStyles = [
+    $baseUrl . '/assets/css/sticky-column.css'
+];
+$additionalScripts = [
+    $baseUrl . '/assets/js/sticky-column.js'
+];
+
 if (!function_exists('getSortUrlLaporanHarga')) {
     function getSortUrlLaporanHarga($column, $currentSortBy, $currentSortOrder, $search, $perPage, $kodepabrik, $kodegolongan, $kondisiStok) {
         $newSortOrder = ($currentSortBy == $column && $currentSortOrder == 'ASC') ? 'DESC' : 'ASC';
@@ -106,7 +114,7 @@ require __DIR__ . '/../layouts/header.php';
                                 <button type="submit" class="btn btn-filter btn-primary w-100">Cari</button>
                             </div>
                             <div class="col-6 col-md-1">
-                                <a href="/laporan/daftar-harga" class="btn btn-filter btn-outline-secondary">Reset</a>
+                                <a href="/laporan/daftar-harga" class="btn btn-filter btn-outline-secondary w-100">Reset</a>
                             </div>
                         </div>
                     </form>
@@ -138,12 +146,12 @@ require __DIR__ . '/../layouts/header.php';
                         </div>
                     </div>
 
-                    <div class="table-responsive">
+                    <div class="table-responsive table-sticky-column hide-first-col" id="tableDaftarHarga">
                         <table class="table table-striped table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
                                     <th>No</th>
-                                    <th class="th-sortable <?= ($sortBy ?? 'namabarang') === 'namabarang' ? (($sortOrder ?? 'ASC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
+                                    <th class="th-sortable sticky-col <?= ($sortBy ?? 'namabarang') === 'namabarang' ? (($sortOrder ?? 'ASC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
                                     <a href="<?= getSortUrlLaporanHarga('namabarang', $sortBy ?? 'namabarang', $sortOrder ?? 'ASC', $search ?? '', $perPage ?? 10, $kodepabrik ?? '', $kodegolongan ?? '', $kondisiStok ?? 'semua') ?>" class="text-decoration-none text-dark">
                                         Nama Barang
                                     </a>
@@ -156,18 +164,24 @@ require __DIR__ . '/../layouts/header.php';
                                         Pabrik
                                     </a>
                                 </th>
+                                <th>
+                                    Kondisi
+                                </th>
+                                <th>
+                                    ED
+                                </th>
                                     <th>
                                         Harga Jual
                                     </th>
                                     <th>
-                                        Discount
+                                        Disc
                                     </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($barangs)): ?>
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">Tidak ada data barang</td>
+                                    <td colspan="8" class="text-center text-muted py-4">Tidak ada data barang</td>
                                 </tr>
                                 <?php else: ?>
                                 <?php 
@@ -176,9 +190,11 @@ require __DIR__ . '/../layouts/header.php';
                                 ?>
                                 <tr>
                                     <td align="center"><?= $no++ ?></td>
-                                    <td><?= htmlspecialchars($barang['namabarang'] ?? '-') ?></td>
+                                    <td class="sticky-col"><?= htmlspecialchars($barang['namabarang'] ?? '-') ?></td>
                                     <td><?= htmlspecialchars($barang['satuan'] ?? '-') ?></td>
                                     <td><?= htmlspecialchars($barang['pabrik'] ?? '-') ?></td>
+                                    <td><?= htmlspecialchars($barang['kondisi'] ?? '-') ?></td>
+                                    <td><?= htmlspecialchars($barang['ed'] ?? '-') ?></td>
                                     <td class="text-end"><?= number_format((float)($barang['hargajual'] ?? 0), 0, ',', '.') ?></td>
                                     <td class="text-end"><?= number_format((float)($barang['discountjual'] ?? 0), 2, ',', '.') ?></td>
                                 </tr>
@@ -241,6 +257,7 @@ require __DIR__ . '/../layouts/header.php';
         </div>
     </div>
 </div>
+
 
 <?php require __DIR__ . '/../layouts/footer.php'; ?>
 

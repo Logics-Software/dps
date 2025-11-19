@@ -854,6 +854,8 @@ class LaporanController extends Controller {
                     mb.namabarang,
                     mb.satuan,
                     tp.namapabrik AS pabrik,
+                    mb.kondisi,
+                    mb.ed,
                     mb.hargajual,
                     mb.discountjual
                 FROM masterbarang mb
@@ -917,6 +919,8 @@ class LaporanController extends Controller {
                     mb.namabarang,
                     mb.satuan,
                     tp.namapabrik AS pabrik,
+                    mb.kondisi,
+                    mb.ed,
                     mb.hargajual,
                     mb.discountjual
                 FROM masterbarang mb
@@ -978,7 +982,7 @@ class LaporanController extends Controller {
         $output = fopen('php://output', 'w');
 
         // Header
-        fputcsv($output, ['Nama Barang', 'Satuan', 'Pabrik', 'Harga Jual', 'Discount Jual'], ';');
+        fputcsv($output, ['Nama Barang', 'Satuan', 'Pabrik', 'Kondisi', 'ED', 'Harga Jual', 'Discount Jual'], ';');
 
         // Data
         foreach ($barangs as $barang) {
@@ -986,6 +990,8 @@ class LaporanController extends Controller {
                 $barang['namabarang'] ?? '',
                 $barang['satuan'] ?? '',
                 $barang['pabrik'] ?? '',
+                $barang['kondisi'] ?? '',
+                $barang['ed'] ?? '',
                 $barang['hargajual'] ?? '0',
                 number_format((float)($barang['discountjual'] ?? 0), 2, ',', '.')
             ], ';');
@@ -1076,12 +1082,14 @@ class LaporanController extends Controller {
     <table>
         <thead>
             <tr>
-                <th style="width: 5%;">No</th>
-                <th style="width: 30%;">Nama Barang</th>
-                <th style="width: 10%;">Satuan</th>
-                <th style="width: 20%;">Pabrik</th>
-                <th style="width: 17.5%;">Harga Jual</th>
-                <th style="width: 17.5%;">Discount</th>
+                <th style="width: 4%;">No</th>
+                <th style="width: 25%;">Nama Barang</th>
+                <th style="width: 8%;">Satuan</th>
+                <th style="width: 15%;">Pabrik</th>
+                <th style="width: 12%;">Kondisi</th>
+                <th style="width: 10%;">ED</th>
+                <th style="width: 13%;">Harga Jual</th>
+                <th style="width: 13%;">Discount</th>
             </tr>
         </thead>
         <tbody>';
@@ -1093,10 +1101,482 @@ class LaporanController extends Controller {
                 <td>' . htmlspecialchars($barang['namabarang'] ?? '-') . '</td>
                 <td style="text-align: center;">' . htmlspecialchars($barang['satuan'] ?? '-') . '</td>
                 <td>' . htmlspecialchars($barang['pabrik'] ?? '-') . '</td>
+                <td>' . htmlspecialchars($barang['kondisi'] ?? '-') . '</td>
+                <td>' . htmlspecialchars($barang['ed'] ?? '-') . '</td>
                 <td style="text-align: right;">' . number_format((float)($barang['hargajual'] ?? 0), 0, ',', '.') . '</td>
                 <td style="text-align: right;">' . number_format((float)($barang['discountjual'] ?? 0), 2, ',', '.') . '</td>
             </tr>';
         }
+
+        $html .= '</tbody>
+    </table>
+    <div class="footer">
+        <p><strong>Dicetak oleh:</strong> ' . htmlspecialchars(Auth::user()['namalengkap'] ?? 'System') . '</p>
+        <p><strong>Tanggal:</strong> ' . date('d F Y, H:i:s') . '</p>
+    </div>
+    <script>
+        window.onload = function() {
+            window.print();
+        };
+    </script>
+</body>
+</html>';
+
+        // Output HTML that can be printed as PDF by browser
+        header('Content-Type: text/html; charset=utf-8');
+        echo $html;
+    }
+
+    public function daftarTagihan() {
+        Auth::requireRole(['admin', 'manajemen', 'operator', 'sales']);
+
+        $search = trim($_GET['search'] ?? '');
+        $kodecustomer = trim($_GET['kodecustomer'] ?? '');
+        $statusJatuhTempo = $_GET['status_jatuh_tempo'] ?? 'semua'; // 'semua', 'sudah', 'belum'
+        $sortBy = $_GET['sort_by'] ?? 'tanggalpenjualan';
+        $sortOrder = $_GET['sort_order'] ?? 'DESC';
+        $export = $_GET['export'] ?? ''; // 'excel' or 'pdf'
+
+        // Get all data for export, or paginated for display
+        if (!empty($export)) {
+            // For export, get all data
+            $tagihans = $this->getAllTagihansForReport($search, $kodecustomer, $statusJatuhTempo, $sortBy, $sortOrder);
+            
+            if ($export === 'excel') {
+                $this->exportExcelTagihan($tagihans);
+            } elseif ($export === 'pdf') {
+                $this->exportPDFTagihan($tagihans);
+            }
+            exit;
+        }
+
+        // For display, use pagination
+        $page = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
+        $perPageOptions = [10, 25, 50, 100, 200, 500, 1000];
+        $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
+        $perPage = in_array($perPage, $perPageOptions, true) ? $perPage : 10;
+
+        $tagihans = $this->getTagihansForReport($search, $kodecustomer, $statusJatuhTempo, $sortBy, $sortOrder, $page, $perPage);
+        $total = $this->countTagihansForReport($search, $kodecustomer, $statusJatuhTempo);
+        $totalPages = $perPage > 0 ? (int)ceil($total / $perPage) : 1;
+
+        // Calculate totals for current page
+        $totals = [
+            'nilaipenjualan' => 0,
+            'saldopenjualan' => 0
+        ];
+        foreach ($tagihans as $tagihan) {
+            $totals['nilaipenjualan'] += (float)($tagihan['nilaipenjualan'] ?? 0);
+            $totals['saldopenjualan'] += (float)($tagihan['saldopenjualan'] ?? 0);
+        }
+
+        // Calculate grand total from all data (not paginated)
+        $grandTotals = $this->getGrandTotalsForReport($search, $kodecustomer, $statusJatuhTempo);
+
+        // Get customers for dropdown
+        $customerModel = new Mastercustomer();
+        $customers = $customerModel->getAllForSelection();
+
+        $data = [
+            'tagihans' => $tagihans,
+            'page' => $page,
+            'perPage' => $perPage,
+            'total' => $total,
+            'totalPages' => $totalPages,
+            'search' => $search,
+            'kodecustomer' => $kodecustomer,
+            'statusJatuhTempo' => $statusJatuhTempo,
+            'sortBy' => $sortBy,
+            'sortOrder' => $sortOrder,
+            'customers' => $customers,
+            'totals' => $totals,
+            'grandTotals' => $grandTotals,
+        ];
+
+        $this->view('laporan/daftar-tagihan', $data);
+    }
+
+    private function getTagihansForReport($search = '', $kodecustomer = '', $statusJatuhTempo = 'semua', $sortBy = 'tanggalpenjualan', $sortOrder = 'DESC', $page = 1, $perPage = 10) {
+        $offset = ($page - 1) * $perPage;
+        $tanggalSistem = date('Y-m-d');
+        
+        $where = ["hp.saldopenjualan > 0"];
+        $params = [];
+
+        if (!empty($search)) {
+            $where[] = "(mc.namacustomer LIKE ? OR mc.namabadanusaha LIKE ?)";
+            $searchParam = "%{$search}%";
+            $params[] = $searchParam;
+            $params[] = $searchParam;
+        }
+
+        if (!empty($kodecustomer)) {
+            $where[] = "hp.kodecustomer = ?";
+            $params[] = $kodecustomer;
+        }
+
+        if ($statusJatuhTempo === 'sudah') {
+            $where[] = "hp.tanggaljatuhtempo < ?";
+            $params[] = $tanggalSistem;
+        } elseif ($statusJatuhTempo === 'belum') {
+            $where[] = "(hp.tanggaljatuhtempo >= ? OR hp.tanggaljatuhtempo IS NULL)";
+            $params[] = $tanggalSistem;
+        }
+
+        // Validate sort column
+        $validSortColumns = ['nopenjualan', 'tanggalpenjualan', 'tanggaljatuhtempo', 'namacustomer', 'nilaipenjualan', 'saldopenjualan'];
+        $sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'tanggalpenjualan';
+        $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+
+        $whereClause = implode(' AND ', $where);
+        $orderByColumn = $sortBy === 'namacustomer' ? 'mc.namacustomer' : "hp.{$sortBy}";
+
+        $sql = "SELECT 
+                    hp.nopenjualan,
+                    hp.tanggalpenjualan,
+                    hp.tanggaljatuhtempo,
+                    hp.nilaipenjualan,
+                    hp.saldopenjualan,
+                    mc.namacustomer,
+                    mc.namabadanusaha,
+                    mc.alamatcustomer
+                FROM headerpenjualan hp
+                LEFT JOIN mastercustomer mc ON hp.kodecustomer = mc.kodecustomer
+                WHERE {$whereClause}
+                ORDER BY {$orderByColumn} {$sortOrder}
+                LIMIT ? OFFSET ?";
+        
+        $params[] = $perPage;
+        $params[] = $offset;
+        
+        return $this->db->fetchAll($sql, $params);
+    }
+
+    private function countTagihansForReport($search = '', $kodecustomer = '', $statusJatuhTempo = 'semua') {
+        $tanggalSistem = date('Y-m-d');
+        
+        $where = ["hp.saldopenjualan > 0"];
+        $params = [];
+
+        if (!empty($search)) {
+            $where[] = "(mc.namacustomer LIKE ? OR mc.namabadanusaha LIKE ?)";
+            $searchParam = "%{$search}%";
+            $params[] = $searchParam;
+            $params[] = $searchParam;
+        }
+
+        if (!empty($kodecustomer)) {
+            $where[] = "hp.kodecustomer = ?";
+            $params[] = $kodecustomer;
+        }
+
+        if ($statusJatuhTempo === 'sudah') {
+            $where[] = "hp.tanggaljatuhtempo < ?";
+            $params[] = $tanggalSistem;
+        } elseif ($statusJatuhTempo === 'belum') {
+            $where[] = "(hp.tanggaljatuhtempo >= ? OR hp.tanggaljatuhtempo IS NULL)";
+            $params[] = $tanggalSistem;
+        }
+
+        $whereClause = implode(' AND ', $where);
+
+        $sql = "SELECT COUNT(*) as total
+                FROM headerpenjualan hp
+                LEFT JOIN mastercustomer mc ON hp.kodecustomer = mc.kodecustomer
+                WHERE {$whereClause}";
+        
+        $result = $this->db->fetchOne($sql, $params);
+        return $result ? (int)$result['total'] : 0;
+    }
+
+    private function getGrandTotalsForReport($search = '', $kodecustomer = '', $statusJatuhTempo = 'semua') {
+        $tanggalSistem = date('Y-m-d');
+        
+        $where = ["hp.saldopenjualan > 0"];
+        $params = [];
+
+        if (!empty($search)) {
+            $where[] = "(mc.namacustomer LIKE ? OR mc.namabadanusaha LIKE ?)";
+            $searchParam = "%{$search}%";
+            $params[] = $searchParam;
+            $params[] = $searchParam;
+        }
+
+        if (!empty($kodecustomer)) {
+            $where[] = "hp.kodecustomer = ?";
+            $params[] = $kodecustomer;
+        }
+
+        if ($statusJatuhTempo === 'sudah') {
+            $where[] = "hp.tanggaljatuhtempo < ?";
+            $params[] = $tanggalSistem;
+        } elseif ($statusJatuhTempo === 'belum') {
+            $where[] = "(hp.tanggaljatuhtempo >= ? OR hp.tanggaljatuhtempo IS NULL)";
+            $params[] = $tanggalSistem;
+        }
+
+        $whereClause = implode(' AND ', $where);
+
+        $sql = "SELECT 
+                    SUM(hp.nilaipenjualan) as total_nilaipenjualan,
+                    SUM(hp.saldopenjualan) as total_saldopenjualan
+                FROM headerpenjualan hp
+                LEFT JOIN mastercustomer mc ON hp.kodecustomer = mc.kodecustomer
+                WHERE {$whereClause}";
+        
+        $result = $this->db->fetchOne($sql, $params);
+        return [
+            'nilaipenjualan' => (float)($result['total_nilaipenjualan'] ?? 0),
+            'saldopenjualan' => (float)($result['total_saldopenjualan'] ?? 0)
+        ];
+    }
+
+    private function getAllTagihansForReport($search = '', $kodecustomer = '', $statusJatuhTempo = 'semua', $sortBy = 'tanggalpenjualan', $sortOrder = 'DESC') {
+        $tanggalSistem = date('Y-m-d');
+        
+        $where = ["hp.saldopenjualan > 0"];
+        $params = [];
+
+        if (!empty($search)) {
+            $where[] = "(mc.namacustomer LIKE ? OR mc.namabadanusaha LIKE ?)";
+            $searchParam = "%{$search}%";
+            $params[] = $searchParam;
+            $params[] = $searchParam;
+        }
+
+        if (!empty($kodecustomer)) {
+            $where[] = "hp.kodecustomer = ?";
+            $params[] = $kodecustomer;
+        }
+
+        if ($statusJatuhTempo === 'sudah') {
+            $where[] = "hp.tanggaljatuhtempo < ?";
+            $params[] = $tanggalSistem;
+        } elseif ($statusJatuhTempo === 'belum') {
+            $where[] = "(hp.tanggaljatuhtempo >= ? OR hp.tanggaljatuhtempo IS NULL)";
+            $params[] = $tanggalSistem;
+        }
+
+        // Validate sort column
+        $validSortColumns = ['nopenjualan', 'tanggalpenjualan', 'tanggaljatuhtempo', 'namacustomer', 'nilaipenjualan', 'saldopenjualan'];
+        $sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'tanggalpenjualan';
+        $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+
+        $whereClause = implode(' AND ', $where);
+        $orderByColumn = $sortBy === 'namacustomer' ? 'mc.namacustomer' : "hp.{$sortBy}";
+
+        $sql = "SELECT 
+                    hp.nopenjualan,
+                    hp.tanggalpenjualan,
+                    hp.tanggaljatuhtempo,
+                    hp.nilaipenjualan,
+                    hp.saldopenjualan,
+                    mc.namacustomer,
+                    mc.namabadanusaha,
+                    mc.alamatcustomer
+                FROM headerpenjualan hp
+                LEFT JOIN mastercustomer mc ON hp.kodecustomer = mc.kodecustomer
+                WHERE {$whereClause}
+                ORDER BY {$orderByColumn} {$sortOrder}";
+        
+        return $this->db->fetchAll($sql, $params);
+    }
+
+    private function exportExcelTagihan($tagihans) {
+        $filename = 'Laporan_Daftar_Tagihan_' . date('YmdHis') . '.csv';
+        
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        // Add BOM for UTF-8 to ensure Excel displays correctly
+        echo "\xEF\xBB\xBF";
+
+        $output = fopen('php://output', 'w');
+
+        // Header
+        fputcsv($output, ['No.Faktur', 'Tanggal Penjualan', 'Umur', 'Jatuh Tempo', 'Customer', 'Alamat Customer', 'Nilai Penjualan', 'Saldo Tagihan'], ';');
+
+        // Data
+        $tanggalSistem = new DateTime();
+        foreach ($tagihans as $tagihan) {
+            // Hitung umur
+            $umur = '-';
+            if (!empty($tagihan['tanggalpenjualan'])) {
+                try {
+                    $tanggalPenjualan = new DateTime($tagihan['tanggalpenjualan']);
+                    $diff = $tanggalSistem->diff($tanggalPenjualan);
+                    $umur = $diff->days;
+                } catch (Exception $e) {
+                    $umur = '-';
+                }
+            }
+
+            // Format customer dengan namabadanusaha
+            $customerDisplay = $tagihan['namacustomer'] ?? '';
+            if ($customerDisplay && !empty($tagihan['namabadanusaha'])) {
+                $customerDisplay .= ', ' . $tagihan['namabadanusaha'];
+            }
+
+            fputcsv($output, [
+                $tagihan['nopenjualan'] ?? '',
+                $tagihan['tanggalpenjualan'] ? date('d/m/Y', strtotime($tagihan['tanggalpenjualan'])) : '',
+                $umur !== '-' ? $umur . ' hari' : '-',
+                $tagihan['tanggaljatuhtempo'] ? date('d/m/Y', strtotime($tagihan['tanggaljatuhtempo'])) : '',
+                $customerDisplay ?: '',
+                $tagihan['alamatcustomer'] ?? '',
+                number_format((float)($tagihan['nilaipenjualan'] ?? 0), 0, ',', '.'),
+                number_format((float)($tagihan['saldopenjualan'] ?? 0), 0, ',', '.')
+            ], ';');
+        }
+
+        fclose($output);
+    }
+
+    private function exportPDFTagihan($tagihans) {
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Daftar Tagihan</title>
+    <style>
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 1cm;
+            }
+            body {
+                margin: 0;
+            }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 8pt;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18pt;
+            color: #333;
+        }
+        .header-info {
+            margin-bottom: 15px;
+            text-align: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .header-info p {
+            margin: 5px 0;
+            font-size: 10pt;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 7pt;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 4px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            text-align: center;
+        }
+        td {
+            text-align: left;
+        }
+        td.text-center {
+            text-align: center;
+        }
+        td.text-end {
+            text-align: right;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .footer {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #333;
+            font-size: 9pt;
+        }
+    </style>
+</head>
+<body>
+    <h1>Laporan Daftar Tagihan</h1>
+    <div class="header-info">
+        <p><strong>Tanggal Cetak:</strong> ' . date('d F Y, H:i:s') . '</p>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 4%;">No</th>
+                <th style="width: 12%;">No.Faktur</th>
+                <th style="width: 10%;">Tanggal</th>
+                <th style="width: 6%;">Umur</th>
+                <th style="width: 10%;">Jatuh Tempo</th>
+                <th style="width: 20%;">Customer</th>
+                <th style="width: 18%;">Alamat Customer</th>
+                <th style="width: 10%;">Nilai Penjualan</th>
+                <th style="width: 10%;">Saldo Tagihan</th>
+            </tr>
+        </thead>
+        <tbody>';
+
+        $no = 1;
+        $tanggalSistem = new DateTime();
+        $totalNilaiPenjualan = 0;
+        $totalSaldoTagihan = 0;
+
+        foreach ($tagihans as $tagihan) {
+            // Hitung umur
+            $umur = '-';
+            if (!empty($tagihan['tanggalpenjualan'])) {
+                try {
+                    $tanggalPenjualan = new DateTime($tagihan['tanggalpenjualan']);
+                    $diff = $tanggalSistem->diff($tanggalPenjualan);
+                    $umur = $diff->days;
+                } catch (Exception $e) {
+                    $umur = '-';
+                }
+            }
+
+            // Format customer dengan namabadanusaha
+            $customerDisplay = $tagihan['namacustomer'] ?? '';
+            if ($customerDisplay && !empty($tagihan['namabadanusaha'])) {
+                $customerDisplay .= ', ' . $tagihan['namabadanusaha'];
+            }
+
+            $nilaipenjualan = (float)($tagihan['nilaipenjualan'] ?? 0);
+            $saldopenjualan = (float)($tagihan['saldopenjualan'] ?? 0);
+            $totalNilaiPenjualan += $nilaipenjualan;
+            $totalSaldoTagihan += $saldopenjualan;
+
+            $html .= '<tr>
+                <td style="text-align: center;">' . $no++ . '</td>
+                <td>' . htmlspecialchars($tagihan['nopenjualan'] ?? '-') . '</td>
+                <td style="text-align: center;">' . ($tagihan['tanggalpenjualan'] ? date('d/m/Y', strtotime($tagihan['tanggalpenjualan'])) : '-') . '</td>
+                <td style="text-align: center;">' . ($umur !== '-' ? $umur . ' hari' : '-') . '</td>
+                <td style="text-align: center;">' . ($tagihan['tanggaljatuhtempo'] ? date('d/m/Y', strtotime($tagihan['tanggaljatuhtempo'])) : '-') . '</td>
+                <td>' . htmlspecialchars($customerDisplay ?: '-') . '</td>
+                <td>' . htmlspecialchars($tagihan['alamatcustomer'] ?? '-') . '</td>
+                <td style="text-align: right;">' . number_format($nilaipenjualan, 0, ',', '.') . '</td>
+                <td style="text-align: right;">' . number_format($saldopenjualan, 0, ',', '.') . '</td>
+            </tr>';
+        }
+
+        // Grand Total
+        $html .= '<tr style="background-color: #fff3cd; font-weight: bold;">
+            <td colspan="8" style="text-align: center;">GRAND TOTAL</td>
+            <td style="text-align: right;">' . number_format($totalNilaiPenjualan, 0, ',', '.') . '</td>
+            <td style="text-align: right;">' . number_format($totalSaldoTagihan, 0, ',', '.') . '</td>
+        </tr>';
 
         $html .= '</tbody>
     </table>

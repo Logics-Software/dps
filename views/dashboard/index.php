@@ -5,283 +5,981 @@ $baseUrl = rtrim($config['base_url'], '/');
 if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
     $baseUrl = '/';
 }
-require __DIR__ . '/../layouts/header.php';
 
 $user = $user ?? Auth::user();
 $role = $role ?? ($user['role'] ?? '');
 $stats = $stats ?? [];
+
+// Load sticky column CSS and JS if needed (for price changes and overdue invoices tables)
+if (($role === 'sales' || $role === 'manajemen' || $role === 'admin' || $role === 'operator') && (!empty($stats['price_changes']) || !empty($stats['overdue_invoices']))) {
+    $additionalStyles = $additionalStyles ?? [];
+    $additionalStyles[] = $baseUrl . '/assets/css/sticky-column.css';
+    $additionalScripts = $additionalScripts ?? [];
+    $additionalScripts[] = $baseUrl . '/assets/js/sticky-column.js';
+}
+
+require __DIR__ . '/../layouts/header.php';
 ?>
 
 <div class="container">
     <div class="row mb-3">
         <div class="col-12">
             <h1 class="mb-0">Dashboard</h1>
-            <!-- <h3 class="mb-0">Selamat Datang, <?= htmlspecialchars($user['namalengkap'] ?? 'User') ?>!</h3> -->
         </div>
     </div>
-
-    <?php if ($role === 'admin' || $role === 'manajemen'): ?>
-        <!-- Dashboard Admin & Manajemen -->
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
-                <div class="card text-center">
+        
+    <?php if ($role === 'manajemen' || $role === 'admin'): ?>
+        <!-- Dashboard Manajemen / Admin -->
+        <div class="row g-3 mb-3">
+            <?php if ($role === 'admin'): ?>
+            <!-- Admin: Total User Log Hari Ini -->
+            <div class="col-12 col-md-4">
+                <div class="card dashboard-stats-card">
                     <div class="card-body">
-                        <h5 class="card-title text-muted mb-2">Order Hari Ini</h5>
-                        <h3 class="mb-0"><?= number_format($stats['total_orders'] ?? 0) ?></h3>
-                        <a href="/orders" class="btn btn-sm btn-outline-primary mt-2">Lihat Detail</a>
+                        <div class="dashboard-stats-card-icon icon-blue">
+                            <?= icon('clock-rotate-left', '', 24) ?>
+                        </div>
+                        <h4 class="card-title text-muted mb-2">Total User Log Hari Ini</h4>
+                        <h3 class="mb-2"><?= number_format($stats['total_user_logs_today'] ?? 0) ?></h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="mb-0">Login Log</p>
+                            <a href="/login-logs" class="btn btn-sm btn-outline-primary">Lihat Detail</a>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
-                <div class="card text-center">
+            <?php else: ?>
+            <!-- Manajemen: Total Order Hari Ini -->
+            <div class="col-12 col-md-4">
+                <div class="card dashboard-stats-card">
                     <div class="card-body">
-                        <h5 class="card-title text-muted mb-2">Penjualan Hari Ini</h5>
-                        <h3 class="mb-0"><?= number_format($stats['total_penjualan'] ?? 0) ?></h3>
-                        <a href="/penjualan" class="btn btn-sm btn-outline-primary mt-2">Lihat Detail</a>
+                        <div class="dashboard-stats-card-icon icon-blue">
+                            <?= icon('file-invoice', '', 24) ?>
+                        </div>
+                        <h4 class="card-title text-muted mb-2">Total Order Hari Ini</h4>
+                        <h3 class="mb-2">Rp <?= number_format($stats['all_orders_total'] ?? 0, 0, ',', '.') ?></h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="mb-0"><?= number_format($stats['total_orders'] ?? 0) ?> Order</p>
+                            <a href="/orders" class="btn btn-sm btn-outline-primary">Lihat Detail</a>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
-                <div class="card text-center">
+            <?php endif; ?>
+            <div class="col-12 col-md-4">
+                <div class="card dashboard-stats-card">
                     <div class="card-body">
-                        <h5 class="card-title text-muted mb-2">Inkaso Hari Ini</h5>
-                        <h3 class="mb-0"><?= number_format($stats['total_penerimaan'] ?? 0) ?></h3>
-                        <a href="/penerimaan" class="btn btn-sm btn-outline-primary mt-2">Lihat Detail</a>
+                        <div class="dashboard-stats-card-icon icon-green">
+                            <?= icon('file-invoice-dollar', '', 24) ?>
+                        </div>
+                        <h5 class="card-title text-muted mb-2">Total Penjualan Hari Ini</h5>
+                        <h3 class="mb-2">Rp <?= number_format($stats['all_penjualan_total'] ?? 0, 0, ',', '.') ?></h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="mb-0"><?= number_format($stats['total_penjualan'] ?? 0) ?> Faktur</p>
+                            <a href="/penjualan" class="btn btn-sm btn-outline-primary">Lihat Detail</a>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
-                <div class="card text-center">
+            <div class="col-12 col-md-4">
+                <div class="card dashboard-stats-card">
                     <div class="card-body">
-                        <h5 class="card-title text-muted mb-2">Total Users</h5>
-                        <h3 class="mb-0"><?= number_format($stats['total_users'] ?? 0) ?></h3>
-                        <?php if ($role === 'admin'): ?>
-                        <a href="/users" class="btn btn-sm btn-outline-primary mt-2">Kelola User</a>
-                        <?php endif; ?>
+                        <div class="dashboard-stats-card-icon icon-purple">
+                            <?= icon('money-bill-transfer', '', 24) ?>
+                        </div>
+                        <h5 class="card-title text-muted mb-2">Total Inkaso Hari Ini</h5>
+                        <h3 class="mb-2">Rp <?= number_format($stats['all_penerimaan_total'] ?? 0, 0, ',', '.') ?></h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="mb-0"><?= number_format($stats['total_penerimaan'] ?? 0) ?> Inkaso</p>
+                            <a href="/penerimaan" class="btn btn-sm btn-outline-primary">Lihat Detail</a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row g-3">
+        <!-- Chart Penjualan dan Inkaso Per Bulan YTD (All Sales) -->
+        <?php if (!empty($stats['monthly_sales']) || !empty($stats['monthly_inkaso'])): ?>
+        <div class="row g-3 mb-3">
+            <?php if (!empty($stats['monthly_sales'])): ?>
             <div class="col-12 col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Quick Access</h5>
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0">Penjualan Per Bulan</h5>
                     </div>
                     <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <a href="/orders" class="btn btn-outline-primary text-start">
-                                <?= icon('file-invoice', 'me-2', 18) ?> Transaksi Order
-                            </a>
-                            <a href="/penjualan" class="btn btn-outline-primary text-start">
-                                <?= icon('file-invoice-dollar', 'me-2', 18) ?> Transaksi Penjualan
-                            </a>
-                            <a href="/penerimaan" class="btn btn-outline-primary text-start">
-                                <?= icon('money-bill-transfer', 'me-2', 18) ?> Transaksi Inkaso
-                            </a>
-                            <?php if ($role === 'admin'): ?>
-                            <a href="/users" class="btn btn-outline-primary text-start">
-                                <?= icon('users', 'me-2', 18) ?> Manajemen User
-                            </a>
-                            <a href="/login-logs" class="btn btn-outline-primary text-start">
-                                <?= icon('clock-rotate-left', 'me-2', 18) ?> Login Logs
-                            </a>
-                            <?php endif; ?>
-                            <a href="/messages" class="btn btn-outline-primary text-start">
-                                <?= icon('envelope', 'me-2', 18) ?> Pesan
-                                <?php if (($stats['unread_messages'] ?? 0) > 0): ?>
-                                <span class="badge bg-danger ms-auto"><?= $stats['unread_messages'] ?></span>
-                                <?php endif; ?>
+                        <canvas id="salesChartManajemen" style="max-height: 400px;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($stats['monthly_inkaso'])): ?>
+            <div class="col-12 col-md-6">
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0">Inkaso Per Bulan</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="inkasoChartManajemen" style="max-height: 400px;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <!-- Harga Barang Baru -->
+        <?php if (!empty($stats['price_changes'])): ?>
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0">Harga Barang Baru</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive table-sticky-column">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th class="sticky-col" style="min-width: 150px;">Nama Barang</th>
+                                        <th>Satuan</th>
+                                        <th>Pabrik</th>
+                                        <th>Kondisi</th>
+                                        <th>ED</th>
+                                        <th>Harga</th>
+                                        <th>Disc</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($stats['price_changes'] as $item): ?>
+                                    <tr>
+                                        <td class="sticky-col"><?= htmlspecialchars($item['namabarang'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['satuan'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['pabrik'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['kondisi'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['ed'] ?? '-') ?></td>
+                                        <td align="right">Rp <?= number_format($item['harga'] ?? 0, 0, ',', '.') ?></td>
+                                        <td align="right"><?= number_format($item['discount'] ?? 0, 0, ',', '.') ?>%</td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="/laporan/daftar-harga" class="btn btn-dark">
+                                Lebih lanjut <?= icon('ellipsis-horizontal', 'me-2', 18) ?>
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Informasi Sistem</h5>
+        </div>
+        <?php endif; ?>
+
+        <!-- Faktur Overdue (All Sales) -->
+        <?php if (!empty($stats['overdue_invoices'])): ?>
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0">Faktur Overdue</h5>
                     </div>
                     <div class="card-body">
-                        <p class="mb-2"><strong>Tanggal:</strong> <?= date('d F Y') ?></p>
-                        <p class="mb-2"><strong>Waktu:</strong> <?= date('H:i:s') ?></p>
-                        <p class="mb-0"><strong>Role:</strong> <?= htmlspecialchars(ucfirst($role)) ?></p>
+                        <div class="table-responsive table-sticky-column">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th class="sticky-col sticky-col-faktur">No. Faktur</th>
+                                        <th>Tanggal</th>
+                                        <th>Umur</th>
+                                        <th>Jatuh Tempo</th>
+                                        <th>Customer</th>
+                                        <th>Alamat Customer</th>
+                                        <th style="min-width: 100px;">Saldo Tagihan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($stats['overdue_invoices'] as $invoice): ?>
+                                    <tr>
+                                        <td class="sticky-col sticky-col-faktur fw-bold text-lg"><?= htmlspecialchars($invoice['nopenjualan'] ?? '-') ?></td>
+                                        <td><?= !empty($invoice['tanggalpenjualan']) ? date('d/m/Y', strtotime($invoice['tanggalpenjualan'])) : '-' ?></td>
+                                        <td align="center"><?= !empty($invoice['umur']) ? number_format($invoice['umur']) : '-' ?></td>
+                                        <td><?= !empty($invoice['tanggaljatuhtempo']) ? date('d/m/Y', strtotime($invoice['tanggaljatuhtempo'])) : '-' ?></td>
+                                        <td><?= htmlspecialchars($invoice['namacustomer'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($invoice['alamatcustomer'] ?? '-') ?></td>
+                                        <td align="right">Rp <?= number_format($invoice['saldopenjualan'] ?? 0, 0, ',', '.') ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="/laporan/daftar-tagihan" class="btn btn-dark">
+                                Lebih lanjut <?= icon('ellipsis-horizontal', 'me-2', 18) ?>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <?php endif; ?>
+    <?php endif; ?>
 
-    <?php elseif ($role === 'operator'): ?>
+    <?php if ($role === 'operator'): ?>
         <!-- Dashboard Operator -->
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-4">
-                <div class="card text-center">
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-md-4">
+                <div class="card dashboard-stats-card">
                     <div class="card-body">
-                        <h5 class="card-title text-muted mb-2">Order Hari Ini</h5>
-                        <h3 class="mb-0"><?= number_format($stats['total_orders'] ?? 0) ?></h3>
-                        <a href="/orders" class="btn btn-sm btn-outline-primary mt-2">Lihat Detail</a>
+                        <div class="dashboard-stats-card-icon icon-blue">
+                            <?= icon('file-invoice', '', 24) ?>
+                        </div>
+                        <h4 class="card-title text-muted mb-2">Total Order Hari Ini</h4>
+                        <h3 class="mb-2">Rp <?= number_format($stats['all_orders_total'] ?? 0, 0, ',', '.') ?></h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="mb-0"><?= number_format($stats['total_orders'] ?? 0) ?> Order</p>
+                            <a href="/orders" class="btn btn-sm btn-outline-primary">Lihat Detail</a>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-md-4">
-                <div class="card text-center">
+            <div class="col-12 col-md-4">
+                <div class="card dashboard-stats-card">
                     <div class="card-body">
-                        <h5 class="card-title text-muted mb-2">Penjualan Hari Ini</h5>
-                        <h3 class="mb-0"><?= number_format($stats['total_penjualan'] ?? 0) ?></h3>
-                        <a href="/penjualan" class="btn btn-sm btn-outline-primary mt-2">Lihat Detail</a>
+                        <div class="dashboard-stats-card-icon icon-green">
+                            <?= icon('file-invoice-dollar', '', 24) ?>
+                        </div>
+                        <h5 class="card-title text-muted mb-2">Total Penjualan Hari Ini</h5>
+                        <h3 class="mb-2">Rp <?= number_format($stats['all_penjualan_total'] ?? 0, 0, ',', '.') ?></h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="mb-0"><?= number_format($stats['total_penjualan'] ?? 0) ?> Faktur</p>
+                            <a href="/penjualan" class="btn btn-sm btn-outline-primary">Lihat Detail</a>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-md-4">
-                <div class="card text-center">
+            <div class="col-12 col-md-4">
+                <div class="card dashboard-stats-card">
                     <div class="card-body">
-                        <h5 class="card-title text-muted mb-2">Inkaso Hari Ini</h5>
-                        <h3 class="mb-0"><?= number_format($stats['total_penerimaan'] ?? 0) ?></h3>
-                        <a href="/penerimaan" class="btn btn-sm btn-outline-primary mt-2">Lihat Detail</a>
+                        <div class="dashboard-stats-card-icon icon-purple">
+                            <?= icon('money-bill-transfer', '', 24) ?>
+                        </div>
+                        <h5 class="card-title text-muted mb-2">Total Inkaso Hari Ini</h5>
+                        <h3 class="mb-2">Rp <?= number_format($stats['all_penerimaan_total'] ?? 0, 0, ',', '.') ?></h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="mb-0"><?= number_format($stats['total_penerimaan'] ?? 0) ?> Inkaso</p>
+                            <a href="/penerimaan" class="btn btn-sm btn-outline-primary">Lihat Detail</a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row g-3">
-            <div class="col-12 col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Quick Access</h5>
+        <!-- Harga Barang Baru -->
+        <?php if (!empty($stats['price_changes'])): ?>
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0">Harga Barang Baru</h5>
                     </div>
                     <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <a href="/orders" class="btn btn-outline-primary text-start">
-                                <?= icon('file-invoice', 'me-2', 18) ?> Transaksi Order
-                            </a>
-                            <a href="/penjualan" class="btn btn-outline-primary text-start">
-                                <?= icon('file-invoice-dollar', 'me-2', 18) ?> Transaksi Penjualan
-                            </a>
-                            <a href="/penerimaan" class="btn btn-outline-primary text-start">
-                                <?= icon('money-bill-transfer', 'me-2', 18) ?> Transaksi Inkaso
-                            </a>
-                            <a href="/messages" class="btn btn-outline-primary text-start">
-                                <?= icon('envelope', 'me-2', 18) ?> Pesan
-                                <?php if (($stats['unread_messages'] ?? 0) > 0): ?>
-                                <span class="badge bg-danger ms-auto"><?= $stats['unread_messages'] ?></span>
-                                <?php endif; ?>
+                        <div class="table-responsive table-sticky-column">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th class="sticky-col" style="min-width: 150px;">Nama Barang</th>
+                                        <th>Satuan</th>
+                                        <th>Pabrik</th>
+                                        <th>Kondisi</th>
+                                        <th>ED</th>
+                                        <th>Harga</th>
+                                        <th>Disc</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($stats['price_changes'] as $item): ?>
+                                    <tr>
+                                        <td class="sticky-col"><?= htmlspecialchars($item['namabarang'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['satuan'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['pabrik'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['kondisi'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['ed'] ?? '-') ?></td>
+                                        <td align="right">Rp <?= number_format($item['harga'] ?? 0, 0, ',', '.') ?></td>
+                                        <td align="right"><?= number_format($item['discount'] ?? 0, 0, ',', '.') ?>%</td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="/laporan/daftar-harga" class="btn btn-dark">
+                                Lebih lanjut <?= icon('ellipsis-horizontal', 'me-2', 18) ?>
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Informasi</h5>
+        </div>
+        <?php endif; ?>
+
+        <!-- Faktur Overdue (All Sales) -->
+        <?php if (!empty($stats['overdue_invoices'])): ?>
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0">Faktur Overdue</h5>
                     </div>
                     <div class="card-body">
-                        <p class="mb-2"><strong>Tanggal:</strong> <?= date('d F Y') ?></p>
-                        <p class="mb-2"><strong>Waktu:</strong> <?= date('H:i:s') ?></p>
-                        <p class="mb-0"><strong>Role:</strong> Operator</p>
+                        <div class="table-responsive table-sticky-column">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th class="sticky-col sticky-col-faktur">No. Faktur</th>
+                                        <th>Tanggal</th>
+                                        <th>Umur</th>
+                                        <th>Jatuh Tempo</th>
+                                        <th>Customer</th>
+                                        <th>Alamat Customer</th>
+                                        <th style="min-width: 100px;">Saldo Tagihan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($stats['overdue_invoices'] as $invoice): ?>
+                                    <tr>
+                                        <td class="sticky-col sticky-col-faktur fw-bold text-lg"><?= htmlspecialchars($invoice['nopenjualan'] ?? '-') ?></td>
+                                        <td><?= !empty($invoice['tanggalpenjualan']) ? date('d/m/Y', strtotime($invoice['tanggalpenjualan'])) : '-' ?></td>
+                                        <td align="center"><?= !empty($invoice['umur']) ? number_format($invoice['umur']) : '-' ?></td>
+                                        <td><?= !empty($invoice['tanggaljatuhtempo']) ? date('d/m/Y', strtotime($invoice['tanggaljatuhtempo'])) : '-' ?></td>
+                                        <td><?= htmlspecialchars($invoice['namacustomer'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($invoice['alamatcustomer'] ?? '-') ?></td>
+                                        <td align="right">Rp <?= number_format($invoice['saldopenjualan'] ?? 0, 0, ',', '.') ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="/laporan/daftar-tagihan" class="btn btn-dark">
+                                Lebih lanjut <?= icon('ellipsis-horizontal', 'me-2', 18) ?>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <?php endif; ?>
 
     <?php elseif ($role === 'sales'): ?>
         <!-- Dashboard Sales -->
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-4">
-                <div class="card text-center">
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-md-4">
+                <div class="card dashboard-stats-card">
                     <div class="card-body">
-                        <h5 class="card-title text-muted mb-2">Order Saya</h5>
-                        <h3 class="mb-0"><?= number_format($stats['my_orders'] ?? 0) ?></h3>
-                        <a href="/orders" class="btn btn-sm btn-outline-primary mt-2">Lihat Detail</a>
+                        <div class="dashboard-stats-card-icon icon-blue">
+                            <?= icon('file-invoice', '', 24) ?>
+                        </div>
+                        <h4 class="card-title text-muted mb-2">Order Saya</h4>
+                        <h3 class="mb-2">Rp <?= number_format($stats['my_orders_total'] ?? 0, 0, ',', '.') ?></h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="mb-0"><?= number_format($stats['my_orders'] ?? 0) ?> Order</p>
+                            <a href="/orders" class="btn btn-sm btn-outline-primary">Lihat Detail</a>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-md-4">
-                <div class="card text-center">
+            <div class="col-12 col-md-4">
+                <div class="card dashboard-stats-card">
                     <div class="card-body">
+                        <div class="dashboard-stats-card-icon icon-green">
+                            <?= icon('file-invoice-dollar', '', 24) ?>
+                        </div>
                         <h5 class="card-title text-muted mb-2">Penjualan Saya</h5>
-                        <h3 class="mb-0"><?= number_format($stats['my_penjualan'] ?? 0) ?></h3>
-                        <a href="/penjualan" class="btn btn-sm btn-outline-primary mt-2">Lihat Detail</a>
+                        <h3 class="mb-2">Rp <?= number_format($stats['my_penjualan_total'] ?? 0, 0, ',', '.') ?></h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="mb-0"><?= number_format($stats['my_penjualan'] ?? 0) ?> Faktur</p>
+                            <a href="/penjualan" class="btn btn-sm btn-outline-primary">Lihat Detail</a>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-md-4">
-                <div class="card text-center">
+            <div class="col-12 col-md-4">
+                <div class="card dashboard-stats-card">
                     <div class="card-body">
+                        <div class="dashboard-stats-card-icon icon-purple">
+                            <?= icon('money-bill-transfer', '', 24) ?>
+                        </div>
                         <h5 class="card-title text-muted mb-2">Inkaso Saya</h5>
-                        <h3 class="mb-0"><?= number_format($stats['my_penerimaan'] ?? 0) ?></h3>
-                        <a href="/penerimaan" class="btn btn-sm btn-outline-primary mt-2">Lihat Detail</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-3">
-            <div class="col-12 col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Quick Access</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <a href="/orders/create" class="btn btn-primary text-start">
-                                <?= icon('square-plus-dark', 'me-2', 18) ?> Buat Order Baru
-                            </a>
-                            <a href="/visits" class="btn btn-outline-primary text-start">
-                                <?= icon('location-dark', 'me-2', 18) ?> Kunjungan
-                            </a>
-                            <a href="/penerimaan/create" class="btn btn-outline-primary text-start">
-                                <?= icon('square-plus-dark', 'me-2', 18) ?> Buat Inkaso Baru
-                            </a>
-                            <a href="/orders" class="btn btn-outline-primary text-start">
-                                <?= icon('file-invoice', 'me-2', 18) ?> Daftar Order
-                            </a>
-                            <a href="/penjualan" class="btn btn-outline-primary text-start">
-                                <?= icon('file-invoice-dollar', 'me-2', 18) ?> Daftar Penjualan
-                            </a>
-                            <a href="/penerimaan" class="btn btn-outline-primary text-start">
-                                <?= icon('money-bill-transfer', 'me-2', 18) ?> Daftar Inkaso
-                            </a>
-                            <a href="/messages" class="btn btn-outline-primary text-start">
-                                <?= icon('envelope', 'me-2', 18) ?> Pesan
-                                <?php if (($stats['unread_messages'] ?? 0) > 0): ?>
-                                <span class="badge bg-danger ms-auto"><?= $stats['unread_messages'] ?></span>
-                                <?php endif; ?>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Laporan</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <a href="/laporan/daftar-barang" class="btn btn-outline-primary text-start w-100">Daftar Barang</a>
-                            <a href="/laporan/daftar-stok" class="btn btn-outline-primary text-start w-100">Daftar Stok</a>
-                            <a href="/laporan/daftar-harga" class="btn btn-outline-primary text-start w-100">Daftar Harga Barang</a>
+                        <h3 class="mb-2">Rp <?= number_format($stats['my_penerimaan_total'] ?? 0, 0, ',', '.') ?></h3>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="mb-2"><?= number_format($stats['my_penerimaan'] ?? 0) ?> Inkaso</p>
+                            <a href="/penerimaan" class="btn btn-sm btn-outline-primary">Lihat Detail</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-    <?php else: ?>
-        <!-- Default Dashboard -->
-        <div class="row">
+        <!-- Chart Penjualan dan Inkaso Per Bulan YTD -->
+        <?php if (!empty($stats['monthly_sales']) || !empty($stats['monthly_inkaso'])): ?>
+        <div class="row g-3 mb-3">
+            <?php if (!empty($stats['monthly_sales'])): ?>
+            <div class="col-12 col-md-6">
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0">Penjualan Per Bulan</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="salesChart" style="max-height: 400px;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($stats['monthly_inkaso'])): ?>
+            <div class="col-12 col-md-6">
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0">Inkaso Per Bulan</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="inkasoChart" style="max-height: 400px;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <!-- Perubahan Harga Barang -->
+        <?php if (!empty($stats['price_changes'])): ?>
+        <div class="row g-3 mb-3">
             <div class="col-12">
-                <div class="card">
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0">Harga Barang Baru</h5>
+                    </div>
                     <div class="card-body">
-                        <h5 class="card-title">Dashboard</h5>
-                        <p class="card-text">Selamat datang di sistem DPS Online.</p>
+                        <div class="table-responsive table-sticky-column">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th class="sticky-col" style="min-width: 150px;">Nama Barang</th>
+                                        <th>Satuan</th>
+                                        <th>Pabrik</th>
+                                        <th>Kondisi</th>
+                                        <th>ED</th>
+                                        <th>Harga</th>
+                                        <th>Disc</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($stats['price_changes'] as $item): ?>
+                                    <tr>
+                                        <td class="sticky-col"><?= htmlspecialchars($item['namabarang'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['satuan'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['pabrik'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['kondisi'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['ed'] ?? '-') ?></td>
+                                        <td align="right">Rp <?= number_format($item['harga'] ?? 0, 0, ',', '.') ?></td>
+                                        <td align="right"><?= number_format($item['discount'] ?? 0, 0, ',', '.') ?>%</td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="/laporan/daftar-harga" class="btn btn-dark">
+                                Lebih lanjut<?= icon('ellipsis-horizontal', 'me-2', 18) ?>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <?php endif; ?>
+
+        <!-- Faktur Overdue -->
+        <?php if (!empty($stats['overdue_invoices'])): ?>
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0">Faktur Overdue</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive table-sticky-column">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th class="sticky-col sticky-col-faktur">No. Faktur</th>
+                                        <th>Tanggal</th>
+                                        <th>Umur</th>
+                                        <th>Jatuh Tempo</th>
+                                        <th>Customer</th>
+                                        <th>Alamat Customer</th>
+                                        <th style="min-width: 100px;">Saldo Tagihan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($stats['overdue_invoices'] as $invoice): ?>
+                                    <tr>
+                                        <td class="sticky-col sticky-col-faktur fw-bold text-lg"><?= htmlspecialchars($invoice['nopenjualan'] ?? '-') ?></td>
+                                        <td><?= !empty($invoice['tanggalpenjualan']) ? date('d/m/Y', strtotime($invoice['tanggalpenjualan'])) : '-' ?></td>
+                                        <td align="center"><?= !empty($invoice['umur']) ? number_format($invoice['umur']) : '-' ?></td>
+                                        <td><?= !empty($invoice['tanggaljatuhtempo']) ? date('d/m/Y', strtotime($invoice['tanggaljatuhtempo'])) : '-' ?></td>
+                                        <td><?= htmlspecialchars($invoice['namacustomer'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($invoice['alamatcustomer'] ?? '-') ?></td>
+                                        <td align="right">Rp <?= number_format($invoice['saldopenjualan'] ?? 0, 0, ',', '.') ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="/laporan/daftar-tagihan" class="btn btn-dark">
+                                Lebih lanjut <?= icon('ellipsis-horizontal', 'me-2', 18) ?>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+        
     <?php endif; ?>
 </div>
+
+<?php if (($role === 'sales' || $role === 'manajemen' || $role === 'admin') && !empty($stats['monthly_sales'])): ?>
+<?php
+$config = require __DIR__ . '/../../config/app.php';
+$baseUrl = rtrim($config['base_url'], '/');
+if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
+    $baseUrl = '/';
+}
+?>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const monthlySales = <?= json_encode($stats['monthly_sales']) ?>;
+    
+    // Prepare data
+    const labels = [];
+    const data = [];
+    
+    // monthlySales is already an array, so we can iterate directly
+    monthlySales.forEach(item => {
+        labels.push(item.month);
+        // Convert to thousands (per mil)
+        data.push(item.total / 1000);
+    });
+    
+    // Find max value for better Y-axis scaling (in thousands)
+    const maxValue = Math.max(...data, 0);
+    const yAxisMax = maxValue > 0 ? Math.ceil(maxValue * 1.2 / 1.5) * 1.5 : 6;
+    
+    // Create chart for sales role
+    const ctx = document.getElementById('salesChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Penjualan',
+                    data: data,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: 'rgb(59, 130, 246)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2.5,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                // Convert back to full value and format
+                                const value = context.parsed.y * 1000;
+                                return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#6b7280'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: yAxisMax,
+                        ticks: {
+                            stepSize: 1.5,
+                            font: {
+                                size: 12
+                            },
+                            color: '#6b7280',
+                            callback: function(value) {
+                                // Format in thousands with 'K' suffix
+                                return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 }).format(value) + 'K';
+                            }
+                        },
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false,
+                            borderDash: [5, 5]
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    }
+    
+    // Create chart for manajemen role
+    const ctxManajemen = document.getElementById('salesChartManajemen');
+    if (ctxManajemen) {
+        new Chart(ctxManajemen, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Penjualan',
+                    data: data,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: 'rgb(59, 130, 246)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2.5,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                // Convert back to full value and format
+                                const value = context.parsed.y * 1000;
+                                return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#6b7280'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: yAxisMax,
+                        ticks: {
+                            stepSize: 1.5,
+                            font: {
+                                size: 12
+                            },
+                            color: '#6b7280',
+                            callback: function(value) {
+                                // Format in thousands with 'K' suffix
+                                return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 }).format(value) + 'K';
+                            }
+                        },
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false,
+                            borderDash: [5, 5]
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    }
+});
+</script>
+<?php endif; ?>
+
+<?php if (($role === 'sales' || $role === 'manajemen' || $role === 'admin') && !empty($stats['monthly_inkaso'])): ?>
+<?php
+$config = require __DIR__ . '/../../config/app.php';
+$baseUrl = rtrim($config['base_url'], '/');
+if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
+    $baseUrl = '/';
+}
+?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const monthlyInkaso = <?= json_encode($stats['monthly_inkaso']) ?>;
+    
+    // Prepare data
+    const labels = [];
+    const data = [];
+    
+    // monthlyInkaso is already an array, so we can iterate directly
+    monthlyInkaso.forEach(item => {
+        labels.push(item.month);
+        // Convert to thousands (per mil)
+        data.push(item.total / 1000);
+    });
+    
+    // Find max value for better Y-axis scaling (in thousands)
+    const maxValue = Math.max(...data, 0);
+    const yAxisMax = maxValue > 0 ? Math.ceil(maxValue * 1.2 / 1.5) * 1.5 : 6;
+    
+    // Create chart for sales role
+    const ctx = document.getElementById('inkasoChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Inkaso',
+                    data: data,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: 'rgb(59, 130, 246)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2.5,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return 'Rp ' + new Intl.NumberFormat('id-ID').format(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#6b7280'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: yAxisMax,
+                        ticks: {
+                            stepSize: 1500,
+                            font: {
+                                size: 12
+                            },
+                            color: '#6b7280',
+                            callback: function(value) {
+                                return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 }).format(value) + 'K';
+                            }
+                        },
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false,
+                            borderDash: [5, 5]
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    }
+    
+    // Create chart for manajemen role
+    const ctxManajemenInkaso = document.getElementById('inkasoChartManajemen');
+    if (ctxManajemenInkaso) {
+        new Chart(ctxManajemenInkaso, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Inkaso',
+                    data: data,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: 'rgb(59, 130, 246)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2.5,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                // Convert back to full value and format
+                                const value = context.parsed.y * 1000;
+                                return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#6b7280'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: yAxisMax,
+                        ticks: {
+                            stepSize: 1.5,
+                            font: {
+                                size: 12
+                            },
+                            color: '#6b7280',
+                            callback: function(value) {
+                                // Format in thousands with 'K' suffix
+                                return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 }).format(value) + 'K';
+                            }
+                        },
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false,
+                            borderDash: [5, 5]
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    }
+});
+</script>
+<?php endif; ?>
 
 <?php require __DIR__ . '/../layouts/footer.php'; ?>

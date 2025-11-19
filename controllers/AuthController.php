@@ -41,7 +41,7 @@ class AuthController extends Controller {
                     'login_at' => $loginTime,
                     'status' => 'success'
                 ]);
-                Session::flash('success', 'Login berhasil');
+                // Session::flash('success', 'Login berhasil'); // Hidden - tidak menampilkan pesan sukses login
                 $this->redirect('/dashboard');
             } else {
                 $loginLogModel->create([

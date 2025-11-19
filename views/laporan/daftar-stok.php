@@ -6,6 +6,14 @@ if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
     $baseUrl = '/';
 }
 
+// Load sticky column CSS dan JS
+$additionalStyles = [
+    $baseUrl . '/assets/css/sticky-column.css'
+];
+$additionalScripts = [
+    $baseUrl . '/assets/js/sticky-column.js'
+];
+
 if (!function_exists('getSortUrlLaporanStok')) {
     function getSortUrlLaporanStok($column, $currentSortBy, $currentSortOrder, $search, $perPage, $kodepabrik, $kodegolongan, $kondisiStok) {
         $newSortOrder = ($currentSortBy == $column && $currentSortOrder == 'ASC') ? 'DESC' : 'ASC';
@@ -106,7 +114,7 @@ require __DIR__ . '/../layouts/header.php';
                                 <button type="submit" class="btn btn-filter btn-primary w-100">Cari</button>
                             </div>
                             <div class="col-6 col-md-1">
-                                <a href="/laporan/daftar-stok" class="btn btn-filter btn-outline-secondary">Reset</a>
+                                <a href="/laporan/daftar-stok" class="btn btn-filter btn-outline-secondary w-100">Reset</a>
                             </div>
                         </div>
                     </form>
@@ -138,12 +146,12 @@ require __DIR__ . '/../layouts/header.php';
                         </div>
                     </div>
 
-                    <div class="table-responsive">
+                    <div class="table-responsive table-sticky-column hide-first-col">
                         <table class="table table-striped table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
                                     <th>No</th>
-                                    <th class="th-sortable <?= ($sortBy ?? 'namabarang') === 'namabarang' ? (($sortOrder ?? 'ASC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
+                                    <th class="th-sortable sticky-col <?= ($sortBy ?? 'namabarang') === 'namabarang' ? (($sortOrder ?? 'ASC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
                                     <a href="<?= getSortUrlLaporanStok('namabarang', $sortBy ?? 'namabarang', $sortOrder ?? 'ASC', $search ?? '', $perPage ?? 10, $kodepabrik ?? '', $kodegolongan ?? '', $kondisiStok ?? 'semua') ?>" class="text-decoration-none text-dark">
                                         Nama Barang
                                     </a>
@@ -158,7 +166,7 @@ require __DIR__ . '/../layouts/header.php';
                                         Pabrik
                                     </a>
                                 </th>
-                                <th class="th-sortable <?= ($sortBy ?? 'namabarang') === 'stok' ? (($sortOrder ?? 'ASC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
+                                <th class="th-sortable text-center <?= ($sortBy ?? 'namabarang') === 'stok' ? (($sortOrder ?? 'ASC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>" style="max-width: 50px;">
                                     <a href="<?= getSortUrlLaporanStok('stok', $sortBy ?? 'namabarang', $sortOrder ?? 'ASC', $search ?? '', $perPage ?? 10, $kodepabrik ?? '', $kodegolongan ?? '', $kondisiStok ?? 'semua') ?>" class="text-decoration-none text-dark">
                                         Stok
                                     </a>
@@ -177,7 +185,7 @@ require __DIR__ . '/../layouts/header.php';
                                 ?>
                                 <tr>
                                     <td align="center"><?= $no++ ?></td>
-                                    <td><?= htmlspecialchars($barang['namabarang'] ?? '-') ?></td>
+                                    <td class="sticky-col"><?= htmlspecialchars($barang['namabarang'] ?? '-') ?></td>
                                     <td><?= htmlspecialchars($barang['satuan'] ?? '-') ?></td>
                                     <td><?= htmlspecialchars($barang['pabrik'] ?? '-') ?></td>
                                     <td class="text-end"><?= number_format((float)($barang['stok'] ?? 0), 0, ',', '.') ?></td>

@@ -7,7 +7,7 @@ class Detailpenerimaan {
 	}
 
 	public function getByNopenerimaan($nopenerimaan) {
-		$sql = "SELECT dp.*, hpj.nopenjualan, hpj.tanggalpenjualan, hpj.saldopenjualan, mc.namacustomer, u.namasales
+		$sql = "SELECT dp.*, hpj.nopenjualan, hpj.tanggalpenjualan, hpj.saldopenjualan, mc.namacustomer, mc.namabadanusaha, u.namasales
 				FROM detailpenerimaan dp
 				LEFT JOIN headerpenjualan hpj ON dp.nopenjualan = hpj.nopenjualan
 				LEFT JOIN mastercustomer mc ON hpj.kodecustomer = mc.kodecustomer
@@ -26,7 +26,7 @@ class Detailpenerimaan {
 			$params[] = $kodecustomer;
 		}
 
-		$sql = "SELECT hp.nopenjualan, hp.tanggalpenjualan, hp.saldopenjualan, mc.namacustomer, u.namasales
+		$sql = "SELECT hp.nopenjualan, hp.tanggalpenjualan, hp.saldopenjualan, mc.namacustomer, mc.namabadanusaha, u.namasales
 				FROM headerpenjualan hp
 				LEFT JOIN mastercustomer mc ON hp.kodecustomer = mc.kodecustomer
 				LEFT JOIN mastersales u ON hp.kodesales = u.kodesales

@@ -6,6 +6,14 @@ if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
     $baseUrl = '/';
 }
 
+// Load sticky column CSS dan JS
+$additionalStyles = [
+    $baseUrl . '/assets/css/sticky-column.css'
+];
+$additionalScripts = [
+    $baseUrl . '/assets/js/sticky-column.js'
+];
+
 if (!function_exists('getSortUrlLaporan')) {
     function getSortUrlLaporan($column, $currentSortBy, $currentSortOrder, $search, $perPage, $kodepabrik, $kodegolongan, $kondisiStok) {
         $newSortOrder = ($currentSortBy == $column && $currentSortOrder == 'ASC') ? 'DESC' : 'ASC';
@@ -106,7 +114,7 @@ require __DIR__ . '/../layouts/header.php';
                                 <button type="submit" class="btn btn-filter btn-primary w-100">Cari</button>
                             </div>
                             <div class="col-6 col-md-1">
-                                <a href="/laporan/daftar-barang" class="btn btn-filter btn-outline-secondary">Reset</a>
+                                <a href="/laporan/daftar-barang" class="btn btn-filter btn-outline-secondary w-100">Reset</a>
                             </div>
                         </div>
                     </form>
@@ -138,7 +146,7 @@ require __DIR__ . '/../layouts/header.php';
                         </div>
                     </div>
 
-                    <div class="table-responsive">
+                    <div class="table-responsive table-sticky-column hide-first-col">
                         <table class="table table-striped table-hover align-middle">
                             <thead class="table-light">
                                 <tr>

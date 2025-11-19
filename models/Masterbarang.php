@@ -179,6 +179,8 @@ class Masterbarang {
                     oot,
                     prekursor,
                     nie,
+                    kondisi,
+                    ed,
                     hpp,
                     hargabeli,
                     discountbeli,
@@ -186,7 +188,7 @@ class Masterbarang {
                     discountjual,
                     stokakhir,
                     status
-                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
         $params = [
             $data['kodebarang'],
@@ -199,6 +201,8 @@ class Masterbarang {
             $data['oot'] ?? 'tidak',
             $data['prekursor'] ?? 'tidak',
             $data['nie'] ?? null,
+            $data['kondisi'] ?? null,
+            $data['ed'] ?? null,
             $data['hpp'] ?? null,
             $data['hargabeli'] ?? null,
             $data['discountbeli'] ?? null,
@@ -227,6 +231,8 @@ class Masterbarang {
             'oot',
             'prekursor',
             'nie',
+            'kondisi',
+            'ed',
             'hpp',
             'hargabeli',
             'discountbeli',
@@ -280,7 +286,9 @@ class Masterbarang {
                        mb.kandungan,
                        mb.oot,
                        mb.prekursor,
-                       mb.nie
+                       mb.nie,
+                       mb.kondisi,
+                       mb.ed
                 FROM masterbarang mb
                 LEFT JOIN tabelpabrik tp ON mb.kodepabrik = tp.kodepabrik
                 LEFT JOIN tabelgolongan tg ON mb.kodegolongan = tg.kodegolongan

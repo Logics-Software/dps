@@ -227,6 +227,41 @@ class Headerorder {
 		$sql = "SELECT noorder FROM headerorder WHERE noorder LIKE ? ORDER BY noorder DESC LIMIT 1";
 		return $this->db->fetchOne($sql, [$prefix . '%']);
 	}
+
+	public function sumTotal($options = []) {
+		$kodesales = $options['kodesales'] ?? null;
+		$startDate = $options['start_date'] ?? null;
+		$endDate = $options['end_date'] ?? null;
+		$status = $options['status'] ?? '';
+
+		$where = ["1=1"];
+		$params = [];
+
+		if (!empty($kodesales)) {
+			$where[] = "ho.kodesales = ?";
+			$params[] = $kodesales;
+		}
+
+		if (!empty($status)) {
+			$where[] = "ho.status = ?";
+			$params[] = $status;
+		}
+
+		if (!empty($startDate) && !empty($endDate)) {
+			$where[] = "ho.tanggalorder BETWEEN ? AND ?";
+			$params[] = $startDate;
+			$params[] = $endDate;
+		}
+
+		$whereClause = implode(' AND ', $where);
+
+		$sql = "SELECT COALESCE(SUM(ho.nilaiorder), 0) AS total
+				FROM headerorder ho
+				WHERE {$whereClause}";
+
+		$result = $this->db->fetchOne($sql, $params);
+		return (float)($result['total'] ?? 0);
+	}
 }
 
 

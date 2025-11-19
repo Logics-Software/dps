@@ -52,6 +52,8 @@ Public Function CreateMasterbarang(kodebarang As String, namabarang As String, _
                                    Optional oot As String = "tidak", _
                                    Optional prekursor As String = "tidak", _
                                    Optional nie As String = "", _
+                                   Optional kondisi As String = "", _
+                                   Optional ed As String = "", _
                                    Optional hpp As String = "", _
                                    Optional hargabeli As String = "", _
                                    Optional discountbeli As String = "", _
@@ -74,6 +76,8 @@ Public Function CreateMasterbarang(kodebarang As String, namabarang As String, _
     postData = postData & "&oot=" & URLEncode(oot)
     postData = postData & "&prekursor=" & URLEncode(prekursor)
     If nie <> "" Then postData = postData & "&nie=" & URLEncode(nie)
+    If kondisi <> "" Then postData = postData & "&kondisi=" & URLEncode(kondisi)
+    If ed <> "" Then postData = postData & "&ed=" & URLEncode(ed)
     If hpp <> "" Then postData = postData & "&hpp=" & URLEncode(hpp)
     If hargabeli <> "" Then postData = postData & "&hargabeli=" & URLEncode(hargabeli)
     If discountbeli <> "" Then postData = postData & "&discountbeli=" & URLEncode(discountbeli)
@@ -96,6 +100,8 @@ Public Function UpdateMasterbarang(id As Long, _
                                    Optional oot As String = "", _
                                    Optional prekursor As String = "", _
                                    Optional nie As String = "", _
+                                   Optional kondisi As String = "", _
+                                   Optional ed As String = "", _
                                    Optional hpp As String = "", _
                                    Optional hargabeli As String = "", _
                                    Optional discountbeli As String = "", _
@@ -121,6 +127,8 @@ Public Function UpdateMasterbarang(id As Long, _
     If oot <> "" Then postData = postData & "&oot=" & URLEncode(oot): hasData = True
     If prekursor <> "" Then postData = postData & "&prekursor=" & URLEncode(prekursor): hasData = True
     If nie <> "" Then postData = postData & "&nie=" & URLEncode(nie): hasData = True
+    If kondisi <> "" Then postData = postData & "&kondisi=" & URLEncode(kondisi): hasData = True
+    If ed <> "" Then postData = postData & "&ed=" & URLEncode(ed): hasData = True
     If hpp <> "" Then postData = postData & "&hpp=" & URLEncode(hpp): hasData = True
     If hargabeli <> "" Then postData = postData & "&hargabeli=" & URLEncode(hargabeli): hasData = True
     If discountbeli <> "" Then postData = postData & "&discountbeli=" & URLEncode(discountbeli): hasData = True
@@ -172,6 +180,8 @@ Public Function PatchMasterbarang(id As Long, _
     If oot <> "" Then postData = postData & "&oot=" & URLEncode(oot): hasData = True
     If prekursor <> "" Then postData = postData & "&prekursor=" & URLEncode(prekursor): hasData = True
     If nie <> "" Then postData = postData & "&nie=" & URLEncode(nie): hasData = True
+    If kondisi <> "" Then postData = postData & "&kondisi=" & URLEncode(kondisi): hasData = True
+    If ed <> "" Then postData = postData & "&ed=" & URLEncode(ed): hasData = True
     If hpp <> "" Then postData = postData & "&hpp=" & URLEncode(hpp): hasData = True
     If hargabeli <> "" Then postData = postData & "&hargabeli=" & URLEncode(hargabeli): hasData = True
     If discountbeli <> "" Then postData = postData & "&discountbeli=" & URLEncode(discountbeli): hasData = True

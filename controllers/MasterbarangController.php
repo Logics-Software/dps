@@ -99,6 +99,8 @@ class MasterbarangController extends Controller {
                 'oot' => $_POST['oot'] ?? 'tidak',
                 'prekursor' => $_POST['prekursor'] ?? 'tidak',
                 'nie' => $_POST['nie'] ?? null,
+                'kondisi' => $_POST['kondisi'] ?? null,
+                'ed' => $_POST['ed'] ?? null,
                 'hpp' => $_POST['hpp'] ?? null,
                 'hargabeli' => $_POST['hargabeli'] ?? null,
                 'discountbeli' => $_POST['discountbeli'] ?? null,

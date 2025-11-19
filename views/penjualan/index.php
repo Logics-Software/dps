@@ -164,7 +164,7 @@ require __DIR__ . '/../layouts/header.php';
                                 <a class="page-link" href="<?= buildPenjualanQuery($page - 1, $perPage, $search, $periode, $startDate, $endDate, $statuspkp, $sortBy ?? 'tanggalpenjualan', $sortOrder ?? 'DESC') ?>">Previous</a>
                             </li>
                             <?php
-                            $maxLinks = 5;
+                            $maxLinks = 3;
                             $half = (int)floor($maxLinks / 2);
                             $start = max(1, $page - $half);
                             $end = min($totalPages, $start + $maxLinks - 1);

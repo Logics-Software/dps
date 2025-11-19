@@ -101,6 +101,14 @@ require __DIR__ . '/../layouts/header.php';
                                 <input type="text" name="nie" class="form-control" value="<?= htmlspecialchars($item['nie'] ?? '') ?>">
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label">Kondisi</label>
+                                <input type="text" name="kondisi" class="form-control" value="<?= htmlspecialchars($item['kondisi'] ?? '') ?>" maxlength="100">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">ED</label>
+                                <input type="text" name="ed" class="form-control" value="<?= htmlspecialchars($item['ed'] ?? '') ?>" maxlength="50">
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label">HPP</label>
                                 <input type="number" step="0.01" name="hpp" class="form-control" value="<?= htmlspecialchars($item['hpp'] ?? '') ?>">
                             </div>

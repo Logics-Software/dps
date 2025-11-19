@@ -99,11 +99,12 @@ require __DIR__ . '/../layouts/header.php';
                             <thead class="table-light">
                                 <tr>
                                     <th>No</th>
-                                    <th>No Penjualan</th>
-                                    <th>Tanggal Penjualan</th>
+                                    <th>No.Faktur</th>
+                                    <th>Tanggal</th>
+                                    <th>Umur</th>
                                     <th>Customer</th>
                                     <th>No Giro</th>
-                                    <th>Tanggal Cair</th>
+                                    <th>Tgl.Cair</th>
                                     <th class="text-end">Piutang</th>
                                     <th class="text-end">Potongan</th>
                                     <th class="text-end">Lain-lain</th>
@@ -113,15 +114,39 @@ require __DIR__ . '/../layouts/header.php';
                             <tbody>
                                 <?php if (empty($details)): ?>
                                 <tr>
-                                    <td colspan="10" class="text-center text-muted py-4">Tidak ada detail penerimaan</td>
+                                    <td colspan="11" class="text-center text-muted py-4">Tidak ada detail penerimaan</td>
                                 </tr>
                                 <?php else: ?>
-                                <?php foreach ($details as $index => $detail): ?>
+                                <?php 
+                                $tanggalInkaso = $penerimaan['tanggalpenerimaan'] ? strtotime($penerimaan['tanggalpenerimaan']) : null;
+                                foreach ($details as $index => $detail): 
+                                    // Hitung umur (hari) dari tanggal inkaso - tanggal penjualan
+                                    $umur = '-';
+                                    if ($tanggalInkaso && !empty($detail['tanggalpenjualan'])) {
+                                        $tanggalPenjualan = strtotime($detail['tanggalpenjualan']);
+                                        if ($tanggalPenjualan) {
+                                            $diff = $tanggalInkaso - $tanggalPenjualan;
+                                            $umur = max(0, floor($diff / (60 * 60 * 24))); // Konversi detik ke hari
+                                        }
+                                    }
+                                ?>
                                 <tr>
-                                    <td><?= $index + 1 ?></td>
+                                    <td align="center"><?= $index + 1 ?></td>
                                     <td class="fw-semibold"><?= htmlspecialchars($detail['nopenjualan'] ?? '-') ?></td>
                                     <td><?= $detail['tanggalpenjualan'] ? date('d/m/Y', strtotime($detail['tanggalpenjualan'])) : '-' ?></td>
-                                    <td><?= htmlspecialchars($detail['namacustomer'] ?? '-') ?></td>
+                                    <td class="text-center"><?= $umur !== '-' ? $umur . ' hari' : '-' ?></td>
+                                    <td><?php
+                                        $namacustomer = $detail['namacustomer'] ?? '';
+                                        $namabadanusaha = $detail['namabadanusaha'] ?? '';
+                                        if ($namacustomer) {
+                                            echo htmlspecialchars($namacustomer);
+                                            if ($namabadanusaha) {
+                                                echo ', ' . htmlspecialchars($namabadanusaha);
+                                            }
+                                        } else {
+                                            echo '-';
+                                        }
+                                    ?></td>
                                     <td><?= htmlspecialchars($detail['nogiro'] ?? '-') ?></td>
                                     <td><?= $detail['tanggalcair'] ? date('d/m/Y', strtotime($detail['tanggalcair'])) : '-' ?></td>
                                     <td class="text-end"><?= number_format((float)($detail['piutang'] ?? 0), 0, ',', '.') ?></td>
@@ -134,7 +159,7 @@ require __DIR__ . '/../layouts/header.php';
                             </tbody>
                             <tfoot class="table-light">
                                 <tr>
-                                    <th colspan="6" class="text-end">Total:</th>
+                                    <th colspan="7" class="text-end">Total:</th>
                                     <th class="text-end"><?= number_format((float)$penerimaan['totalpiutang'], 0, ',', '.') ?></th>
                                     <th class="text-end"><?= number_format((float)$penerimaan['totalpotongan'], 0, ',', '.') ?></th>
                                     <th class="text-end"><?= number_format((float)$penerimaan['totallainlain'], 0, ',', '.') ?></th>

@@ -1,19 +1,19 @@
 VERSION 5.00
 Begin VB.Form frmMasterBarang 
    Caption         =   "Master Barang Management"
-   ClientHeight    =   7440
+   ClientHeight    =   7800
    ClientLeft      =   4950
    ClientTop       =   2475
    ClientWidth     =   9720
    LinkTopic       =   "Form1"
-   ScaleHeight     =   7440
+   ScaleHeight     =   7800
    ScaleWidth      =   9720
    Begin VB.CommandButton cmdDelete 
       Caption         =   "Delete"
       Height          =   375
       Left            =   7920
       TabIndex        =   21
-      Top             =   5280
+      Top             =   5640
       Width           =   1215
    End
    Begin VB.CommandButton cmdUpdate 
@@ -21,7 +21,7 @@ Begin VB.Form frmMasterBarang
       Height          =   375
       Left            =   6600
       TabIndex        =   20
-      Top             =   5280
+      Top             =   5640
       Width           =   1215
    End
    Begin VB.CommandButton cmdSave 
@@ -29,7 +29,7 @@ Begin VB.Form frmMasterBarang
       Height          =   375
       Left            =   5280
       TabIndex        =   19
-      Top             =   5280
+      Top             =   5640
       Width           =   1215
    End
    Begin VB.CommandButton cmdLoad 
@@ -37,7 +37,7 @@ Begin VB.Form frmMasterBarang
       Height          =   375
       Left            =   3960
       TabIndex        =   18
-      Top             =   5280
+      Top             =   5640
       Width           =   1215
    End
    Begin VB.ComboBox cmbPrekursor 
@@ -45,7 +45,7 @@ Begin VB.Form frmMasterBarang
       Left            =   2760
       Style           =   2  'Dropdown List
       TabIndex        =   14
-      Top             =   4440
+      Top             =   5160
       Width           =   2175
    End
    Begin VB.ComboBox cmbOtt 
@@ -53,49 +53,49 @@ Begin VB.Form frmMasterBarang
       Left            =   2760
       Style           =   2  'Dropdown List
       TabIndex        =   16
-      Top             =   4080
+      Top             =   4800
       Width           =   2175
    End
    Begin VB.TextBox txtStokAkhir 
       Height          =   315
       Left            =   2760
       TabIndex        =   15
-      Top             =   3720
+      Top             =   4440
       Width           =   2175
    End
    Begin VB.TextBox txtDiscountJual 
       Height          =   315
       Left            =   2760
       TabIndex        =   14
-      Top             =   3360
+      Top             =   4080
       Width           =   2175
    End
    Begin VB.TextBox txtHargaJual 
       Height          =   315
       Left            =   2760
       TabIndex        =   13
-      Top             =   3000
+      Top             =   3720
       Width           =   2175
    End
    Begin VB.TextBox txtDiscountBeli 
       Height          =   315
       Left            =   2760
       TabIndex        =   12
-      Top             =   2640
+      Top             =   3360
       Width           =   2175
    End
    Begin VB.TextBox txtHargaBeli 
       Height          =   315
       Left            =   2760
       TabIndex        =   11
-      Top             =   2280
+      Top             =   3000
       Width           =   2175
    End
    Begin VB.TextBox txtHPP 
       Height          =   315
       Left            =   2760
       TabIndex        =   10
-      Top             =   1920
+      Top             =   2640
       Width           =   2175
    End
    Begin VB.TextBox txtNIE 
@@ -103,6 +103,20 @@ Begin VB.Form frmMasterBarang
       Left            =   2760
       TabIndex        =   9
       Top             =   1560
+      Width           =   2175
+   End
+   Begin VB.TextBox txtKondisi 
+      Height          =   315
+      Left            =   2760
+      TabIndex        =   22
+      Top             =   1920
+      Width           =   2175
+   End
+   Begin VB.TextBox txtED 
+      Height          =   315
+      Left            =   2760
+      TabIndex        =   23
+      Top             =   2280
       Width           =   2175
    End
    Begin VB.TextBox txtKandungan 
@@ -181,7 +195,7 @@ Begin VB.Form frmMasterBarang
       Height          =   255
       Left            =   720
       TabIndex        =   22
-      Top             =   5880
+      Top             =   6240
       Width           =   8775
    End
    Begin VB.Label Label1 
@@ -264,12 +278,28 @@ Begin VB.Form frmMasterBarang
       Top             =   1440
       Width           =   2175
    End
+   Begin VB.Label Label18 
+      Caption         =   "Kondisi:"
+      Height          =   255
+      Left            =   2760
+      TabIndex        =   40
+      Top             =   1800
+      Width           =   2175
+   End
+   Begin VB.Label Label19 
+      Caption         =   "ED:"
+      Height          =   255
+      Left            =   2760
+      TabIndex        =   41
+      Top             =   2160
+      Width           =   2175
+   End
    Begin VB.Label Label10 
       Caption         =   "HPP:"
       Height          =   255
       Left            =   2760
       TabIndex        =   32
-      Top             =   1800
+      Top             =   2520
       Width           =   2175
    End
    Begin VB.Label Label11 
@@ -277,7 +307,7 @@ Begin VB.Form frmMasterBarang
       Height          =   255
       Left            =   2760
       TabIndex        =   33
-      Top             =   2160
+      Top             =   2880
       Width           =   2175
    End
    Begin VB.Label Label12 
@@ -285,7 +315,7 @@ Begin VB.Form frmMasterBarang
       Height          =   255
       Left            =   2760
       TabIndex        =   34
-      Top             =   2520
+      Top             =   3240
       Width           =   2175
    End
    Begin VB.Label Label13 
@@ -293,7 +323,7 @@ Begin VB.Form frmMasterBarang
       Height          =   255
       Left            =   2760
       TabIndex        =   35
-      Top             =   2880
+      Top             =   3600
       Width           =   2175
    End
    Begin VB.Label Label14 
@@ -301,7 +331,7 @@ Begin VB.Form frmMasterBarang
       Height          =   255
       Left            =   2760
       TabIndex        =   36
-      Top             =   3240
+      Top             =   3960
       Width           =   2175
    End
    Begin VB.Label Label15 
@@ -309,7 +339,7 @@ Begin VB.Form frmMasterBarang
       Height          =   255
       Left            =   2760
       TabIndex        =   37
-      Top             =   3600
+      Top             =   4320
       Width           =   2175
    End
    Begin VB.Label Label16 
@@ -317,7 +347,7 @@ Begin VB.Form frmMasterBarang
       Height          =   255
       Left            =   2760
       TabIndex        =   38
-      Top             =   3960
+      Top             =   4680
       Width           =   2175
    End
    Begin VB.Label Label17 
@@ -325,7 +355,7 @@ Begin VB.Form frmMasterBarang
       Height          =   255
       Left            =   2760
       TabIndex        =   39
-      Top             =   4320
+      Top             =   5040
       Width           =   2175
    End
 End
@@ -431,6 +461,8 @@ Private Sub cmdSave_Click()
         cmbOtt.Text, _
         cmbPrekursor.Text, _
         Trim(txtNIE.Text), _
+        Trim(txtKondisi.Text), _
+        Trim(txtED.Text), _
         Trim(txtHPP.Text), _
         Trim(txtHargaBeli.Text), _
         Trim(txtDiscountBeli.Text), _
@@ -487,6 +519,8 @@ Private Sub cmdUpdate_Click()
         cmbOtt.Text, _
         cmbPrekursor.Text, _
         Trim(txtNIE.Text), _
+        Trim(txtKondisi.Text), _
+        Trim(txtED.Text), _
         Trim(txtHPP.Text), _
         Trim(txtHargaBeli.Text), _
         Trim(txtDiscountBeli.Text), _
@@ -590,6 +624,8 @@ Private Sub lstData_Click()
         txtKodeSupplier.Text = ParseJSONValue(data, "kodesupplier")
         txtKandungan.Text = ParseJSONValue(data, "kandungan")
         txtNIE.Text = ParseJSONValue(data, "nie")
+        txtKondisi.Text = ParseJSONValue(data, "kondisi")
+        txtED.Text = ParseJSONValue(data, "ed")
         txtHPP.Text = ParseJSONValue(data, "hpp")
         txtHargaBeli.Text = ParseJSONValue(data, "hargabeli")
         txtDiscountBeli.Text = ParseJSONValue(data, "discountbeli")
@@ -642,6 +678,8 @@ Private Sub ClearForm()
     txtKodeSupplier.Text = ""
     txtKandungan.Text = ""
     txtNIE.Text = ""
+    txtKondisi.Text = ""
+    txtED.Text = ""
     txtHPP.Text = ""
     txtHargaBeli.Text = ""
     txtDiscountBeli.Text = ""

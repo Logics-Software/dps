@@ -63,6 +63,10 @@ require __DIR__ . '/../layouts/header.php';
                                 <dd class="col-7"><?= htmlspecialchars($item['namagolongan'] ?? $item['kodegolongan'] ?? '-') ?></dd>
                                 <dt class="col-5">Supplier</dt>
                                 <dd class="col-7"><?= htmlspecialchars($item['namasupplier'] ?? $item['kodesupplier'] ?? '-') ?></dd>
+                                <dt class="col-5">Kondisi</dt>
+                                <dd class="col-7"><?= htmlspecialchars($item['kondisi'] ?? '-') ?></dd>
+                                <dt class="col-5">ED</dt>
+                                <dd class="col-7"><?= htmlspecialchars($item['ed'] ?? '-') ?></dd>
                             </dl>
                         </div>
                         <?php if ($currentUser['role'] != "sales") {

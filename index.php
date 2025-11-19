@@ -199,6 +199,11 @@ $router->put('/api/penerimaan', 'ApiPenerimaanController', 'index');
 $router->patch('/api/penerimaan', 'ApiPenerimaanController', 'index');
 $router->delete('/api/penerimaan', 'ApiPenerimaanController', 'index');
 
+// API Omset routes (no authentication required - for VB bridging)
+$router->get('/api/omset', 'ApiOmsetController', 'omset');
+$router->post('/api/omset', 'ApiOmsetController', 'omset');
+$router->delete('/api/omset', 'ApiOmsetController', 'omset');
+
 // API Mastercustomer routes (no authentication required)
 $router->get('/api/mastercustomer', 'ApiMastercustomerController', 'index');
 $router->post('/api/mastercustomer', 'ApiMastercustomerController', 'index');
@@ -209,6 +214,8 @@ $router->delete('/api/mastercustomer', 'ApiMastercustomerController', 'index');
 $router->get('/laporan/daftar-barang', 'LaporanController', 'daftarBarang');
 $router->get('/laporan/daftar-stok', 'LaporanController', 'daftarStok');
 $router->get('/laporan/daftar-harga', 'LaporanController', 'daftarHarga');
+$router->get('/laporan/daftar-tagihan', 'LaporanController', 'daftarTagihan');
+$router->get('/laporan/omset', 'OmsetController', 'index');
 
 // Message routes - specific routes first, then generic ones
 $router->get('/messages/show/{id}', 'MessageController', 'show');

@@ -98,5 +98,12 @@ class LoginLog {
             'total' => $total
         ];
     }
+
+    public function countToday() {
+        $today = date('Y-m-d');
+        $sql = "SELECT COUNT(*) as total FROM login_log WHERE DATE(login_at) = ?";
+        $result = $this->db->fetchOne($sql, [$today]);
+        return $result ? (int)$result['total'] : 0;
+    }
 }
 

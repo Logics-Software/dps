@@ -96,7 +96,10 @@ require __DIR__ . '/../layouts/header.php';
                             <table class="table table-bordered align-middle penerimaan-detail-table" id="detailTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="detail-col-penjualan">No Penjualan</th>
+                                        <th class="detail-col-penjualan">No.Faktur</th>
+                                        <th class="detail-col-tanggal">Tanggal</th>
+                                        <th class="detail-col-umur">Umur</th>
+                                        <th class="detail-col-customer">Customer</th>
                                         <th class="detail-col-giro">No Giro</th>
                                         <th class="detail-col-tanggal">Tanggal Cair</th>
                                         <th class="detail-col-piutang text-end">Piutang</th>
@@ -112,7 +115,7 @@ require __DIR__ . '/../layouts/header.php';
                                 Belum ada detail penerimaan ditambahkan
                             </div>
                         </div>
-                        <div class="d-flex flex-wrap align-items-center justify-content-between mt-3 gap-2">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between mt-0 gap-2">
                             <button type="button" class="btn btn-outline-primary btn-sm" id="addDetailBtn">Tambah Detail</button>
                             <div class="text-end flex-grow-1 flex-md-grow-0">
                                 <div class="row g-2">
@@ -458,7 +461,10 @@ function initPenerimaanCreateForm() {
                 value: penjualan.nopenjualan,
                 label: label,
                 customProperties: {
-                    saldo: penjualan.saldopenjualan || 0
+                    saldo: penjualan.saldopenjualan || 0,
+                    tanggalpenjualan: penjualan.tanggalpenjualan || '',
+                    namacustomer: penjualan.namacustomer || '',
+                    namabadanusaha: penjualan.namabadanusaha || ''
                 }
             });
         });
@@ -494,11 +500,30 @@ function initPenerimaanCreateForm() {
                         calculateModalNetto();
                     }
                 }
+                // Simpan data penjualan untuk digunakan saat render tabel
+                if (selectedPenjualan) {
+                    modalPenjualanSelect.dataset.tanggalpenjualan = selectedPenjualan.tanggalpenjualan || '';
+                    modalPenjualanSelect.dataset.namacustomer = selectedPenjualan.namacustomer || '';
+                    modalPenjualanSelect.dataset.namabadanusaha = selectedPenjualan.namabadanusaha || '';
+                }
             }
         };
         
         // Tambahkan event listener baru
         penjualanElement.addEventListener('change', penjualanElement._penjualanChangeHandler);
+    }
+
+    function calculateUmur(tanggalInkaso, tanggalPenjualan) {
+        if (!tanggalInkaso || !tanggalPenjualan) return '-';
+        try {
+            const tglInkaso = new Date(tanggalInkaso);
+            const tglPenjualan = new Date(tanggalPenjualan);
+            const diffTime = tglInkaso - tglPenjualan;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays >= 0 ? diffDays + ' hari' : '-';
+        } catch (e) {
+            return '-';
+        }
     }
 
     function renderDetailTable() {
@@ -507,10 +532,25 @@ function initPenerimaanCreateForm() {
             detailEmptyState.classList.remove('d-none');
         } else {
             detailEmptyState.classList.add('d-none');
+            // Ambil tanggal inkaso dari form (jika ada)
+            const tanggalInkasoInput = document.querySelector('input[name="tanggalpenerimaan"]');
+            const tanggalInkaso = tanggalInkasoInput ? tanggalInkasoInput.value : null;
+            
             penerimaanDetails.forEach((item, index) => {
                 const row = document.createElement('tr');
+                const tanggalPenjualan = item.tanggalpenjualan || '';
+                const umur = calculateUmur(tanggalInkaso, tanggalPenjualan);
+                const formattedTanggalPenjualan = tanggalPenjualan ? new Date(tanggalPenjualan).toLocaleDateString('id-ID') : '-';
+                
+                const customerDisplay = item.namacustomer 
+                    ? (item.namacustomer + (item.namabadanusaha ? ', ' + item.namabadanusaha : ''))
+                    : '-';
+                
                 row.innerHTML = `
                     <td>${escapeHtml(item.nopenjualan)}</td>
+                    <td>${formattedTanggalPenjualan}</td>
+                    <td class="text-center">${umur}</td>
+                    <td>${escapeHtml(customerDisplay)}</td>
                     <td>${escapeHtml(item.nogiro || '-')}</td>
                     <td>${item.tanggalcair ? new Date(item.tanggalcair).toLocaleDateString('id-ID') : '-'}</td>
                     <td class="text-end">${formatCurrency(item.piutang)}</td>
@@ -587,6 +627,13 @@ function initPenerimaanCreateForm() {
         if (selectedDetail) {
             if (penjualanChoiceInstance && selectedDetail.nopenjualan) {
                 penjualanChoiceInstance.setChoiceByValue(selectedDetail.nopenjualan);
+                // Set data penjualan untuk perhitungan umur
+                const selectedPenjualan = availablePenjualan.find(p => p.nopenjualan === selectedDetail.nopenjualan);
+                if (selectedPenjualan) {
+                    modalPenjualanSelect.dataset.tanggalpenjualan = selectedPenjualan.tanggalpenjualan || '';
+                    modalPenjualanSelect.dataset.namacustomer = selectedPenjualan.namacustomer || '';
+                    modalPenjualanSelect.dataset.namabadanusaha = selectedPenjualan.namabadanusaha || '';
+                }
             }
             rawPiutang = parseFloat(selectedDetail.piutang) || 0;
             rawPotongan = parseFloat(selectedDetail.potongan) || 0;
@@ -668,8 +715,13 @@ function initPenerimaanCreateForm() {
         }
 
         const jenispenerimaan = jenispenerimaanSelect?.value || 'tunai';
+        // Ambil data penjualan yang dipilih
+        const selectedPenjualan = availablePenjualan.find(p => p.nopenjualan === nopenjualan);
         const rowData = {
             nopenjualan: nopenjualan,
+            tanggalpenjualan: selectedPenjualan?.tanggalpenjualan || '',
+            namacustomer: selectedPenjualan?.namacustomer || '',
+            namabadanusaha: selectedPenjualan?.namabadanusaha || '',
             nogiro: jenispenerimaan === 'giro' ? (modalNoGiroInput.value || '') : '',
             tanggalcair: jenispenerimaan === 'giro' ? (modalTanggalCairInput.value || '') : '',
             piutang: rawPiutang,
@@ -734,6 +786,14 @@ function initPenerimaanCreateForm() {
             });
         });
     });
+
+    // Update tabel saat tanggal inkaso berubah (jika ada input tanggal)
+    const tanggalInkasoInput = document.querySelector('input[name="tanggalpenerimaan"]');
+    if (tanggalInkasoInput) {
+        tanggalInkasoInput.addEventListener('change', function() {
+            renderDetailTable();
+        });
+    }
 
     renderDetailTable();
 }

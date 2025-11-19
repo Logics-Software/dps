@@ -143,7 +143,7 @@ require __DIR__ . '/../layouts/header.php';
                                 <a class="page-link" href="<?= buildPenerimaanQuery($page - 1, $perPage, $search, $status, $dateFilter ?? 'today', $rawStartDate ?? $startDate ?? '', $rawEndDate ?? $endDate ?? '') ?>">Previous</a>
                             </li>
                             <?php
-                            $maxLinks = 5;
+                            $maxLinks = 3;
                             $half = (int)floor($maxLinks / 2);
                             $start = max(1, $page - $half);
                             $end = min($totalPages, $start + $maxLinks - 1);

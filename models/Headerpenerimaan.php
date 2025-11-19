@@ -303,6 +303,41 @@ class Headerpenerimaan {
 				LIMIT 1";
 		return $this->db->fetchOne($sql, [$prefix . '%']);
 	}
+
+	public function sumTotal($options = []) {
+		$kodesales = $options['kodesales'] ?? null;
+		$startDate = $options['start_date'] ?? null;
+		$endDate = $options['end_date'] ?? null;
+		$status = $options['status'] ?? null;
+
+		$params = [];
+		$where = ["1=1"];
+
+		if ($startDate && $endDate) {
+			$where[] = "hp.tanggalpenerimaan BETWEEN ? AND ?";
+			$params[] = $startDate;
+			$params[] = $endDate;
+		}
+
+		if (!empty($status) && in_array($status, ['belumproses', 'proses'], true)) {
+			$where[] = "hp.status = ?";
+			$params[] = $status;
+		}
+
+		if (!empty($kodesales)) {
+			$where[] = "hp.kodesales = ?";
+			$params[] = $kodesales;
+		}
+
+		$whereClause = implode(' AND ', $where);
+
+		$sql = "SELECT COALESCE(SUM(hp.totalnetto), 0) AS total
+				FROM headerpenerimaan hp
+				WHERE {$whereClause}";
+
+		$result = $this->db->fetchOne($sql, $params);
+		return (float)($result['total'] ?? 0);
+	}
 }
 
 

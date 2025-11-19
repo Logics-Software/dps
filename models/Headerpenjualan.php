@@ -302,6 +302,44 @@ class Headerpenjualan {
 		}
 		return [$start, $end];
 	}
+
+	public function sumTotal($options = []) {
+		$kodesales = $options['kodesales'] ?? null;
+		$periode = $options['periode'] ?? 'today';
+		$startDate = $options['start_date'] ?? null;
+		$endDate = $options['end_date'] ?? null;
+		$statuspkp = $options['statuspkp'] ?? null;
+
+		[$filterStart, $filterEnd] = $this->resolveDateRange($periode, $startDate, $endDate);
+
+		$params = [];
+		$where = ["1=1"];
+
+		if ($filterStart && $filterEnd) {
+			$where[] = "hp.tanggalpenjualan BETWEEN ? AND ?";
+			$params[] = $filterStart;
+			$params[] = $filterEnd;
+		}
+
+		if (!empty($kodesales)) {
+			$where[] = "hp.kodesales = ?";
+			$params[] = $kodesales;
+		}
+
+		if (!empty($statuspkp) && in_array($statuspkp, ['pkp', 'nonpkp'], true)) {
+			$where[] = "hp.statuspkp = ?";
+			$params[] = $statuspkp;
+		}
+
+		$whereClause = implode(' AND ', $where);
+
+		$sql = "SELECT COALESCE(SUM(hp.nilaipenjualan), 0) AS total
+				FROM headerpenjualan hp
+				WHERE {$whereClause}";
+
+		$result = $this->db->fetchOne($sql, $params);
+		return (float)($result['total'] ?? 0);
+	}
 }
 
 
