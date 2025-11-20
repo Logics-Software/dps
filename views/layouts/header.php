@@ -80,66 +80,11 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                     <!-- Navigation Menu -->
                     <nav class="header-nav-menu" id="headerNavMenu">
                         <a href="/dashboard" class="nav-link fw-bold <?= ($_SERVER['REQUEST_URI'] ?? '') === '/dashboard' ? 'active' : '' ?>">Dashboard</a>
-                                                
-                        <?php if (Auth::isManajemen()): ?>
-                        <div class="nav-dropdown">
-                            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
-                                User
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
-                                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
-                            <div class="nav-dropdown-menu">
-                                <a href="/users" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/users') !== false ? 'active' : '' ?>">Manajemen User</a>
-                                <a href="/login-logs" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/login-logs') !== false ? 'active' : '' ?>">Login Logs</a>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
-                        <?php if (Auth::check() && (in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator', 'sales']))): ?>
-                        <div class="nav-dropdown">
-                            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
-                                Tabel
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
-                                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
-                            <div class="nav-dropdown-menu">
-                                <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator', 'sales'])): ?>
-                                <a href="/tabelpabrik" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/tabelpabrik') !== false ? 'active' : '' ?>">Tabel Pabrik</a>
-                                <a href="/tabelgolongan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/tabelgolongan') !== false ? 'active' : '' ?>">Tabel Golongan</a>
-                                <?php endif; ?>
-                                <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator'])): ?>
-                                <a href="/tabelaktivitas" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/tabelaktivitas') !== false ? 'active' : '' ?>">Tabel Aktivitas</a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
-                        <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator', 'sales'])): ?>
-                        <div class="nav-dropdown">
-                            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
-                                Master
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
-                                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
-                            <div class="nav-dropdown-menu">
-                                <a href="/masterbarang" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/masterbarang') !== false ? 'active' : '' ?>">Master Barang</a>
-                                <a href="/mastercustomer" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/mastercustomer') !== false ? 'active' : '' ?>">Master Customer</a>
-                                <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator', 'sales'])): ?>
-                                <a href="/mastersales" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/mastersales') !== false ? 'active' : '' ?>">Master Sales</a>
-                                <a href="/mastersupplier" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/mastersupplier') !== false ? 'active' : '' ?>">Master Supplier</a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-
+                        
                         <?php if (Auth::check() && Auth::isSales()): ?>
+                        <!-- Menu untuk Role Sales -->
+                        <a href="/mastercustomer" class="nav-link <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/mastercustomer') !== false ? 'active' : '' ?>">Data Customer</a>
                         <a href="/visits" class="nav-link <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/visits') !== false ? 'active' : '' ?>">Kunjungan</a>
-                        <?php endif; ?>
-
-                        <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator', 'sales'])): ?>
                         <div class="nav-dropdown">
                             <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
                                 Transaksi
@@ -148,14 +93,10 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                                 </svg>
                             </button>
                             <div class="nav-dropdown-menu">
-                                <a href="/orders" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/orders') !== false ? 'active' : '' ?>">Transaksi Order</a>
-                                <a href="/penjualan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penjualan') !== false ? 'active' : '' ?>">Transaksi Penjualan</a>
-                                <a href="/penerimaan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penerimaan') !== false ? 'active' : '' ?>">Transaksi Inkaso</a>
+                                <a href="/orders" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/orders') !== false ? 'active' : '' ?>">Order</a>
+                                <a href="/penerimaan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penerimaan') !== false ? 'active' : '' ?>">Inkaso</a>
                             </div>
                         </div>
-                        <?php endif; ?>
-
-                        <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator', 'sales'])): ?>
                         <div class="nav-dropdown">
                             <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
                                 Laporan
@@ -171,6 +112,93 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                                 <a href="/laporan/omset" class="nav-dropdown-item">Omset Penjualan</a>
                             </div>
                         </div>
+                        <?php else: ?>
+                        <!-- Menu untuk Role Admin, Manajemen, Operator -->
+                        <?php if (Auth::isManajemen()): ?>
+                        <div class="nav-dropdown">
+                            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
+                                User
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
+                                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <div class="nav-dropdown-menu">
+                                <a href="/users" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/users') !== false ? 'active' : '' ?>">Manajemen User</a>
+                                <a href="/login-logs" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/login-logs') !== false ? 'active' : '' ?>">Login Logs</a>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator'])): ?>
+                        <div class="nav-dropdown">
+                            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
+                                Tabel
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
+                                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <div class="nav-dropdown-menu">
+                                <a href="/tabelpabrik" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/tabelpabrik') !== false ? 'active' : '' ?>">Tabel Pabrik</a>
+                                <a href="/tabelgolongan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/tabelgolongan') !== false ? 'active' : '' ?>">Tabel Golongan</a>
+                                <a href="/tabelaktivitas" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/tabelaktivitas') !== false ? 'active' : '' ?>">Tabel Aktivitas</a>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator'])): ?>
+                        <div class="nav-dropdown">
+                            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
+                                Master
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
+                                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <div class="nav-dropdown-menu">
+                                <a href="/masterbarang" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/masterbarang') !== false ? 'active' : '' ?>">Master Barang</a>
+                                <a href="/mastercustomer" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/mastercustomer') !== false ? 'active' : '' ?>">Master Customer</a>
+                                <a href="/mastersales" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/mastersales') !== false ? 'active' : '' ?>">Master Sales</a>
+                                <a href="/mastersupplier" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/mastersupplier') !== false ? 'active' : '' ?>">Master Supplier</a>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator'])): ?>
+                            <a href="/visits" class="nav-link <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/visits') !== false ? 'active' : '' ?>">Kunjungan</a>
+                        <?php endif; ?>
+
+                        <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator'])): ?>
+                        <div class="nav-dropdown">
+                            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
+                                Transaksi
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
+                                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <div class="nav-dropdown-menu">
+                                <a href="/orders" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/orders') !== false ? 'active' : '' ?>">Transaksi Order</a>
+                                <a href="/penjualan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penjualan') !== false ? 'active' : '' ?>">Transaksi Penjualan</a>
+                                <a href="/penerimaan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penerimaan') !== false ? 'active' : '' ?>">Transaksi Inkaso</a>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if (Auth::check() && in_array($currentUser['role'] ?? '', ['admin', 'manajemen', 'operator'])): ?>
+                        <div class="nav-dropdown">
+                            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
+                                Laporan
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
+                                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <div class="nav-dropdown-menu">
+                                <a href="/laporan/daftar-barang" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-barang') !== false ? 'active' : '' ?>">Daftar Barang</a>
+                                <a href="/laporan/daftar-stok" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-stok') !== false ? 'active' : '' ?>">Daftar Stok</a>
+                                <a href="/laporan/daftar-harga" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-harga') !== false ? 'active' : '' ?>">Daftar Harga Barang</a>
+                                <a href="/laporan/daftar-tagihan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/laporan/daftar-tagihan') !== false ? 'active' : '' ?>">Daftar Tagihan</a>
+                                <a href="/laporan/omset" class="nav-dropdown-item">Omset Penjualan</a>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                         <?php endif; ?>                        
                     </nav>
 

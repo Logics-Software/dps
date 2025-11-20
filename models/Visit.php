@@ -68,7 +68,7 @@ class Visit {
         return $this->db->fetchOne($sql, [$userId]);
     }
 
-    public function listByUser($userId, $page = 1, $perPage = 20, $status = '', $search = '') {
+    public function listByUser($userId, $page = 1, $perPage = 20, $status = '', $search = '', $periode = 'today', $kodecustomer = '', $startDate = '', $endDate = '') {
         $offset = ($page - 1) * $perPage;
         $params = [$userId];
         $where = ['v.user_id = ?'];
@@ -82,6 +82,50 @@ class Visit {
             $where[] = '(mc.namacustomer LIKE ? OR mc.kodecustomer LIKE ? OR mc.kotacustomer LIKE ?)';
             $searchParam = "%{$search}%";
             $params = array_merge($params, [$searchParam, $searchParam, $searchParam]);
+        }
+
+        // Filter periode
+        if (!empty($periode)) {
+            $filterStartDate = null;
+            $filterEndDate = null;
+            
+            if ($periode === 'custom' && !empty($startDate) && !empty($endDate)) {
+                // Custom date range
+                $filterStartDate = $startDate;
+                $filterEndDate = $endDate;
+            } else {
+                switch ($periode) {
+                    case 'week':
+                        $filterStartDate = date('Y-m-d', strtotime('monday this week'));
+                        $filterEndDate = date('Y-m-d', strtotime('sunday this week'));
+                        break;
+                    case 'month':
+                        $filterStartDate = date('Y-m-01');
+                        $filterEndDate = date('Y-m-t');
+                        break;
+                    case 'year':
+                        $filterStartDate = date('Y-01-01');
+                        $filterEndDate = date('Y-12-31');
+                        break;
+                    case 'today':
+                    default:
+                        $filterStartDate = date('Y-m-d');
+                        $filterEndDate = date('Y-m-d');
+                        break;
+                }
+            }
+            
+            if ($filterStartDate && $filterEndDate) {
+                $where[] = 'DATE(v.check_in_time) BETWEEN ? AND ?';
+                $params[] = $filterStartDate;
+                $params[] = $filterEndDate;
+            }
+        }
+
+        // Filter customer
+        if (!empty($kodecustomer)) {
+            $where[] = 'mc.kodecustomer = ?';
+            $params[] = $kodecustomer;
         }
 
         $whereSql = 'WHERE ' . implode(' AND ', $where);

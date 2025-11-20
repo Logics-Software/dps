@@ -263,7 +263,7 @@ $bulanNama = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
                                             </select>
                                         </div>
                                         <div class="col-4 col-md-3">
-                                            <button type="submit" class="btn btn-filter btn-secondary w-100">Terapkan</button>
+                                            <button type="submit" class="btn btn-filter btn-secondary w-100">Filter</button>
                                         </div>
                                         <div class="col-4 col-md-3">
                                             <a href="/laporan/omset" class="btn btn-filter btn-outline-secondary w-100">Reset</a>

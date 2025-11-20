@@ -13,7 +13,7 @@ class VisitController extends Controller {
     }
 
     public function index() {
-        Auth::requireRole(['sales']);
+        Auth::requireAuth();
 
         $currentUser = Auth::user();
         $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
@@ -21,11 +21,19 @@ class VisitController extends Controller {
         $perPage = in_array($perPage, [10, 20, 50, 100, 200, 500, 1000]) ? $perPage : 10;
         $status = $_GET['status'] ?? '';
         $search = $_GET['search'] ?? '';
+        $periode = $_GET['periode'] ?? 'today';
+        $kodecustomer = $_GET['kodecustomer'] ?? '';
+        $startDate = $_GET['start_date'] ?? '';
+        $endDate = $_GET['end_date'] ?? '';
 
-        $result = $this->visitModel->listByUser($currentUser['id'], $page, $perPage, $status, $search);
+        $result = $this->visitModel->listByUser($currentUser['id'], $page, $perPage, $status, $search, $periode, $kodecustomer, $startDate, $endDate);
         $totalPages = $perPage > 0 ? (int)ceil($result['total'] / $perPage) : 1;
 
         $activeVisit = $this->visitModel->findActiveByUser($currentUser['id']);
+
+        // Get customers for filter dropdown
+        $customerModel = new Mastercustomer();
+        $customers = $customerModel->getAllForSelection();
 
         $data = [
             'visits' => $result['data'],
@@ -35,6 +43,11 @@ class VisitController extends Controller {
             'totalPages' => $totalPages,
             'statusFilter' => $status,
             'search' => $search,
+            'periode' => $periode,
+            'kodecustomer' => $kodecustomer,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'customers' => $customers,
             'activeVisit' => $activeVisit
         ];
 

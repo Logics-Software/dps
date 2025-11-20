@@ -8,6 +8,13 @@ if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
 
 $statusOptions = ['Direncanakan', 'Sedang Berjalan', 'Selesai', 'Dibatalkan'];
 
+$user = $user ?? Auth::user();
+$role = $role ?? ($user['role'] ?? '');
+$periode = $periode ?? 'today';
+$startDate = $startDate ?? '';
+$endDate = $endDate ?? '';
+
+
 require __DIR__ . '/../layouts/header.php';
 ?>
 
@@ -33,9 +40,11 @@ require __DIR__ . '/../layouts/header.php';
                     <p class="mb-1">Mulai: <?= date('d/m/Y H:i', strtotime($activeVisit['check_in_time'])) ?></p>
                     <p class="mb-0">Status: <span class="badge bg-warning text-dark">Sedang Berjalan</span></p>
                 </div>
+                <?php if (Auth::isSales()): ?>
                 <div>
                     <a href="/visits/checkout/<?= $activeVisit['visit_id'] ?>" class="btn btn-outline-primary">Selesaikan Sekarang</a>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -45,46 +54,65 @@ require __DIR__ . '/../layouts/header.php';
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h4 class="mb-0 me-auto">Kunjungan</h4>
-                <?php if (!empty($activeVisit)): ?>
-                <a href="/visits/checkout/<?= $activeVisit['visit_id'] ?>" class="btn btn-warning">
-                    <?= icon('share-from-square', 'mb-1 me-2', 16) ?> Lanjutkan Check-out
-                </a>
-                <?php else: ?>
-                <a href="/visits/check-in" class="btn btn-primary">
-                    <?= icon('paper-plane', 'mb-1 me-2', 16) ?> Check-in Baru
-                </a>
+                <?php if (Auth::isSales()): ?>
+                    <?php if (!empty($activeVisit)): ?>
+                    <a href="/visits/checkout/<?= $activeVisit['visit_id'] ?>" class="btn btn-warning">
+                        <?= icon('share-from-square', 'mb-1 me-2', 16) ?> Lanjutkan Check-out
+                    </a>
+                    <?php else: ?>
+                    <a href="/visits/check-in" class="btn btn-primary">
+                        <?= icon('paper-plane', 'mb-1 me-2', 16) ?> Check-in Baru
+                    </a>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         </div>
 
         <div class="card-body">
             <!-- <div class="row search-filter-card"> -->
-                <form class="row search-filter-card g-2 mb-3" method="GET" action="/visits">
-                    <div class="col-7 col-md-4 col-lg-4">
-                        <input type="text" class="form-control" name="search" placeholder="Cari customer, kode atau kota" value="<?= htmlspecialchars($search) ?>">
-                    </div>
-                    <div class="col-5 col-md-3 col-lg-3">
-                        <select name="status" class="form-select">
-                            <option value="">Semua Status</option>
-                            <?php foreach ($statusOptions as $option): ?>
-                            <option value="<?= $option ?>" <?= $statusFilter === $option ? 'selected' : '' ?>><?= $option ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-5 col-lg-5">
-                        <div class="row g-2">
-                            <div class="col-4 col-md-4">
-                                <select name="per_page" class="form-select" onchange="this.form.submit()">
-                                    <?php foreach ([10, 20, 50, 100, 200, 500, 1000] as $option): ?>
-                                    <option value="<?= $option ?>" <?= $perPage == $option ? 'selected' : '' ?>><?= $option ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-4 col-md-4">
-                                <button type="submit" class="btn btn-filter btn-secondary w-100">Terapkan</button>
-                            </div>
-                            <div class="col-4 col-md-4">
-                                <a href="/visits" class="btn btn-filter btn-outline-secondary w-100">Reset</a>
+                <form method="GET" action="/visits" class="mb-3" id="filterForm">
+                    <div class="row g-2 align-items-end search-filter-card">
+                        <div class="col-12 col-lg-3">
+                            <input type="text" class="form-control" name="search" placeholder="Cari customer, kode atau kota" value="<?= htmlspecialchars($search) ?>">
+                        </div>
+                        <div class="col-6 col-lg-2">
+                            <select name="status" class="form-select" onchange="this.form.submit()">
+                                <option value="">Semua Status</option>
+                                <?php foreach ($statusOptions as $option): ?>
+                                <option value="<?= $option ?>" <?= $statusFilter === $option ? 'selected' : '' ?>><?= $option ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-6 col-lg-2">
+                            <select name="periode" class="form-select" id="periodeSelect" onchange="handleDateFilterChange(true)">
+                                <option value="today" <?= ($periode ?? 'today') === 'today' ? 'selected' : '' ?>>Hari ini</option>
+                                <option value="week" <?= ($periode ?? '') === 'week' ? 'selected' : '' ?>>Minggu ini</option>
+                                <option value="month" <?= ($periode ?? '') === 'month' ? 'selected' : '' ?>>Bulan ini</option>
+                                <option value="year" <?= ($periode ?? '') === 'year' ? 'selected' : '' ?>>Tahun ini</option>
+                                <option value="custom" <?= ($periode ?? '') === 'custom' ? 'selected' : '' ?>>Custom</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-lg-2" id="startDateWrapper" style="display: <?= ($periode ?? 'today') === 'custom' ? 'block' : 'none' ?>;">
+                            <input type="date" name="start_date" class="form-control" value="<?= htmlspecialchars($startDate) ?>" placeholder="Dari">
+                        </div>
+                        <div class="col-6 col-lg-2" id="endDateWrapper" style="display: <?= ($periode ?? 'today') === 'custom' ? 'block' : 'none' ?>;">
+                            <input type="date" name="end_date" class="form-control" value="<?= htmlspecialchars($endDate) ?>" placeholder="Sampai">
+                        </div>
+                        <div class="col-6 col-lg-1">
+                            <select name="per_page" class="form-select" onchange="this.form.submit()">
+                                <?php foreach ([10, 20, 50, 100, 200, 500, 1000] as $option): ?>
+                                <option value="<?= $option ?>" <?= $perPage == $option ? 'selected' : '' ?>><?= $option ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-12 col-lg-4 d-lg-flex justify-content-lg-end">
+                            <div class="row g-2 w-100">
+                                <div class="col-6 col-lg-6">
+                                    <button type="submit" class="btn btn-filter btn-secondary w-100">Filter</button>
+                                </div>
+                                <div class="col-6 col-lg-6">
+                                    <a href="/visits" class="btn btn-filter btn-outline-secondary w-100">Reset</a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -163,7 +191,9 @@ require __DIR__ . '/../layouts/header.php';
                             <td>
                                 <div class="d-flex flex-column gap-2">
                                     <?php if ($visit['status_kunjungan'] === 'Sedang Berjalan'): ?>
-                                    <a href="/visits/checkout/<?= $visit['visit_id'] ?>" class="btn btn-sm btn-warning">Check-out</a>
+                                        <?php if (Auth::isSales()): ?>
+                                        <a href="/visits/checkout/<?= $visit['visit_id'] ?>" class="btn btn-sm btn-warning">Check-out</a>
+                                        <?php endif; ?>
                                     <?php else: ?>
                                     <?php
                                     // Ensure visit_id exists
@@ -205,7 +235,7 @@ require __DIR__ . '/../layouts/header.php';
             <nav>
                 <ul class="pagination justify-content-center">
                     <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-                        <a class="page-link" href="?page=<?= $page - 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($statusFilter) ?>">Previous</a>
+                        <a class="page-link" href="?page=<?= $page - 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($statusFilter) ?>&periode=<?= urlencode($periode ?? 'today') ?><?= !empty($startDate) ? '&start_date=' . urlencode($startDate) : '' ?><?= !empty($endDate) ? '&end_date=' . urlencode($endDate) : '' ?>">Previous</a>
                     </li>
                     <?php
                     $maxLinks = 3;
@@ -215,11 +245,19 @@ require __DIR__ . '/../layouts/header.php';
                     if ($end - $start + 1 < $maxLinks) {
                         $start = max(1, $end - $maxLinks + 1);
                     }
-                    $buildLink = function ($p) use ($perPage, $search, $statusFilter) {
-                        return '?page=' . $p
+                    $buildLink = function ($p) use ($perPage, $search, $statusFilter, $periode, $startDate, $endDate) {
+                        $link = '?page=' . $p
                             . '&per_page=' . $perPage
                             . '&search=' . urlencode($search)
-                            . '&status=' . urlencode($statusFilter);
+                            . '&status=' . urlencode($statusFilter)
+                            . '&periode=' . urlencode($periode ?? 'today');
+                        if (!empty($startDate)) {
+                            $link .= '&start_date=' . urlencode($startDate);
+                        }
+                        if (!empty($endDate)) {
+                            $link .= '&end_date=' . urlencode($endDate);
+                        }
+                        return $link;
                     };
                     if ($start > 1) {
                         echo '<li class="page-item"><a class="page-link" href="' . $buildLink(1) . '">1</a></li>';
@@ -238,7 +276,7 @@ require __DIR__ . '/../layouts/header.php';
                     }
                     ?>
                     <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
-                        <a class="page-link" href="?page=<?= $page + 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($statusFilter) ?>">Next</a>
+                        <a class="page-link" href="?page=<?= $page + 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($statusFilter) ?>&periode=<?= urlencode($periode ?? 'today') ?><?= !empty($startDate) ? '&start_date=' . urlencode($startDate) : '' ?><?= !empty($endDate) ? '&end_date=' . urlencode($endDate) : '' ?>">Next</a>
                     </li>
                 </ul>
             </nav>
@@ -634,6 +672,35 @@ $jsCode = <<<'JAVASCRIPT'
 JAVASCRIPT;
 $jsCode = str_replace('BASE_URL_PLACEHOLDER', $baseUrlJs, $jsCode);
 $additionalInlineScripts[] = $jsCode;
+
+// JavaScript untuk toggle custom date range
+$customDateRangeJs = <<<'JAVASCRIPT'
+function handleDateFilterChange(triggerSubmit = false) {
+    const filter = document.getElementById('periodeSelect').value;
+    const startWrapper = document.getElementById('startDateWrapper');
+    const endWrapper = document.getElementById('endDateWrapper');
+    const isCustom = filter === 'custom';
+    
+    if (startWrapper && endWrapper) {
+        startWrapper.style.display = isCustom ? 'block' : 'none';
+        endWrapper.style.display = isCustom ? 'block' : 'none';
+    }
+    
+    if (!isCustom && triggerSubmit) {
+        const startInput = document.querySelector('input[name="start_date"]');
+        const endInput = document.querySelector('input[name="end_date"]');
+        if (startInput) startInput.value = '';
+        if (endInput) endInput.value = '';
+        const form = document.getElementById('filterForm');
+        if (form) form.submit();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    handleDateFilterChange(false);
+});
+JAVASCRIPT;
+$additionalInlineScripts[] = $customDateRangeJs;
 ?>
 
 <?php require __DIR__ . '/../layouts/footer.php'; ?>

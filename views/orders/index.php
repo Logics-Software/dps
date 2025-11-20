@@ -53,52 +53,50 @@ require __DIR__ . '/../layouts/header.php';
 		</div>
 
 		<div class="card-body">
-			<form method="GET" class="row g-2 mb-3" id="filterForm">
-				<div class="col-6 col-md-3">
-					<input type="text" name="search" value="<?= htmlspecialchars($search ?? '') ?>" class="form-control" placeholder="Cari customer...">
-				</div>
-				<div class="col-6 col-md-2">
-					<select name="status" class="form-select">
-						<option value="">Semua Status</option>
-						<option value="order" <?= ($status ?? '') === 'order' ? 'selected' : '' ?>>Order</option>
-						<option value="faktur" <?= ($status ?? '') === 'faktur' ? 'selected' : '' ?>>Faktur</option>
-					</select>
-				</div>
-				<div class="col-6 col-md-2">
-					<select name="periode" id="periodeFilter" class="form-select" onchange="toggleCustomDate()">
-						<?php 
-						$periodeOptions = [
-							'today' => 'Hari ini',
-							'week' => 'Minggu ini',
-							'month' => 'Bulan ini',
-							'year' => 'Tahun ini',
-							'custom' => 'Custom'
-						];
-						$currentPeriode = $dateFilter ?? 'today';
-						foreach ($periodeOptions as $key => $label): 
-						?>
-						<option value="<?= $key ?>" <?= $currentPeriode === $key ? 'selected' : '' ?>><?= $label ?></option>
-						<?php endforeach; ?>
-					</select>
-				</div>
-				<div class="col-6 col-md-2" id="customDateContainer" style="display: <?= ($dateFilter ?? 'today') === 'custom' ? 'block' : 'none' ?>;">
-					<input type="date" name="start_date" value="<?= htmlspecialchars($rawStartDate ?? '') ?>" class="form-control" placeholder="Dari">
-				</div>
-				<div class="col-6 col-md-2" id="customDateEndContainer" style="display: <?= ($dateFilter ?? 'today') === 'custom' ? 'block' : 'none' ?>;">
-					<input type="date" name="end_date" value="<?= htmlspecialchars($rawEndDate ?? '') ?>" class="form-control" placeholder="Sampai">
-				</div>
-				<div class="col-6 col-md-2">
-					<select name="per_page" class="form-select">
-						<?php foreach ([10, 25, 50, 100, 200, 500, 1000] as $pp): ?>
-						<option value="<?= $pp ?>" <?= ($perPage ?? 10) == $pp ? 'selected' : '' ?>><?= $pp ?></option>
-						<?php endforeach; ?>
-					</select>
-				</div>
-				<div class="col-6 col-md-auto d-grid d-md-block">
-					<button class="btn btn-filter btn-secondary w-100" type="submit"><?= icon('filter', 'me-2 mb-0', 18) ?> Terapkan</button>
-				</div>
-				<div class="col-6 col-md-auto d-grid d-md-block">
-					<a class="btn btn-filter btn-outline-secondary w-100" href="/orders"><?= icon('filter-circle-xmark', 'me-2 mb-0', 18) ?> Reset</a>
+			<form method="GET" action="/orders" class="mb-3" id="filterForm">
+				<div class="row g-2 align-items-end search-filter-card">
+					<div class="col-12 col-lg-3">
+						<input type="text" class="form-control" name="search" placeholder="Cari customer..." value="<?= htmlspecialchars($search ?? '') ?>">
+					</div>
+					<div class="col-6 col-lg-2">
+						<select name="status" class="form-select" onchange="this.form.submit()">
+							<option value="">Semua Status</option>
+							<option value="order" <?= ($status ?? '') === 'order' ? 'selected' : '' ?>>Order</option>
+							<option value="faktur" <?= ($status ?? '') === 'faktur' ? 'selected' : '' ?>>Faktur</option>
+						</select>
+					</div>
+					<div class="col-6 col-lg-2">
+						<select name="periode" id="dateFilter" class="form-select" onchange="handleDateFilterChange(true)">
+							<option value="today" <?= ($dateFilter ?? 'today') === 'today' ? 'selected' : '' ?>>Hari ini</option>
+							<option value="week" <?= ($dateFilter ?? '') === 'week' ? 'selected' : '' ?>>Minggu ini</option>
+							<option value="month" <?= ($dateFilter ?? '') === 'month' ? 'selected' : '' ?>>Bulan ini</option>
+							<option value="year" <?= ($dateFilter ?? '') === 'year' ? 'selected' : '' ?>>Tahun ini</option>
+							<option value="custom" <?= ($dateFilter ?? 'today') === 'custom' ? 'selected' : '' ?>>Custom</option>
+						</select>
+					</div>
+					<div class="col-6 col-lg-2" id="startDateWrapper" style="display: <?= ($dateFilter ?? 'today') === 'custom' ? 'block' : 'none' ?>;">
+						<input type="date" name="start_date" class="form-control" value="<?= htmlspecialchars($rawStartDate ?? '') ?>" placeholder="Dari">
+					</div>
+					<div class="col-6 col-lg-2" id="endDateWrapper" style="display: <?= ($dateFilter ?? 'today') === 'custom' ? 'block' : 'none' ?>;">
+						<input type="date" name="end_date" class="form-control" value="<?= htmlspecialchars($rawEndDate ?? '') ?>" placeholder="Sampai">
+					</div>
+					<div class="col-6 col-lg-1">
+						<select name="per_page" class="form-select" onchange="this.form.submit()">
+							<?php foreach ([10, 25, 50, 100, 200, 500, 1000] as $pp): ?>
+							<option value="<?= $pp ?>" <?= ($perPage ?? 10) == $pp ? 'selected' : '' ?>><?= $pp ?></option>
+							<?php endforeach; ?>
+						</select>
+					</div>
+					<div class="col-12 col-lg-4 d-lg-flex justify-content-lg-end">
+						<div class="row g-2 w-100">
+							<div class="col-6 col-lg-6">
+								<button type="submit" class="btn btn-filter btn-secondary w-100">Filter</button>
+							</div>
+							<div class="col-6 col-lg-6">
+								<a href="/orders" class="btn btn-filter btn-outline-secondary w-100">Reset</a>
+							</div>
+						</div>
+					</div>
 				</div>
 				<input type="hidden" name="page" value="1">
 				<input type="hidden" name="sort_by" value="<?= htmlspecialchars($sortBy ?? 'tanggalorder') ?>">
@@ -166,22 +164,29 @@ require __DIR__ . '/../layouts/header.php';
 </div>
 
 <script>
-function toggleCustomDate() {
-	const periodeFilter = document.getElementById('periodeFilter');
-	const customDateContainer = document.getElementById('customDateContainer');
-	const customDateEndContainer = document.getElementById('customDateEndContainer');
-	
-	if (periodeFilter.value === 'custom') {
-		customDateContainer.style.display = 'block';
-		customDateEndContainer.style.display = 'block';
-	} else {
-		customDateContainer.style.display = 'none';
-		customDateEndContainer.style.display = 'none';
-	}
+function handleDateFilterChange(triggerSubmit = false) {
+    const filter = document.getElementById('dateFilter').value;
+    const startWrapper = document.getElementById('startDateWrapper');
+    const endWrapper = document.getElementById('endDateWrapper');
+    const isCustom = filter === 'custom';
+    
+    if (startWrapper && endWrapper) {
+        startWrapper.style.display = isCustom ? 'block' : 'none';
+        endWrapper.style.display = isCustom ? 'block' : 'none';
+    }
+    
+    if (!isCustom && triggerSubmit) {
+        const startInput = document.querySelector('input[name="start_date"]');
+        const endInput = document.querySelector('input[name="end_date"]');
+        if (startInput) startInput.value = '';
+        if (endInput) endInput.value = '';
+        const form = document.getElementById('filterForm');
+        if (form) form.submit();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-	toggleCustomDate();
+    handleDateFilterChange(false);
 });
 </script>
 

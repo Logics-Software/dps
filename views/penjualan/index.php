@@ -68,30 +68,36 @@ require __DIR__ . '/../layouts/header.php';
                                 </select>
                             </div>
                             <div class="col-6 col-lg-2">
-                                <select name="periode" id="periodeFilter" class="form-select" onchange="handlePenjualanPeriodeChange(true)">
-                                    <option value="today" <?= $periode === 'today' ? 'selected' : '' ?>>Hari ini</option>
-                                    <option value="week" <?= $periode === 'week' ? 'selected' : '' ?>>Minggu ini</option>
-                                    <option value="month" <?= $periode === 'month' ? 'selected' : '' ?>>Bulan ini</option>
-                                    <option value="year" <?= $periode === 'year' ? 'selected' : '' ?>>Tahun ini</option>
-                                    <option value="custom" <?= $periode === 'custom' ? 'selected' : '' ?>>Custom</option>
+                                <select name="periode" id="dateFilter" class="form-select" onchange="handleDateFilterChange(true)">
+                                    <option value="today" <?= ($periode ?? 'today') === 'today' ? 'selected' : '' ?>>Hari ini</option>
+                                    <option value="week" <?= ($periode ?? '') === 'week' ? 'selected' : '' ?>>Minggu ini</option>
+                                    <option value="month" <?= ($periode ?? '') === 'month' ? 'selected' : '' ?>>Bulan ini</option>
+                                    <option value="year" <?= ($periode ?? '') === 'year' ? 'selected' : '' ?>>Tahun ini</option>
+                                    <option value="custom" <?= ($periode ?? 'today') === 'custom' ? 'selected' : '' ?>>Custom</option>
                                 </select>
                             </div>
-                            <div class="col-6 col-lg-2" id="penjualanStartWrapper">
-                                <input type="date" name="start_date" class="form-control" value="<?= htmlspecialchars($startDate ?? '') ?>">
+                            <div class="col-6 col-lg-2" id="startDateWrapper" style="display: <?= ($periode ?? 'today') === 'custom' ? 'block' : 'none' ?>;">
+                                <input type="date" name="start_date" class="form-control" value="<?= htmlspecialchars($startDate ?? '') ?>" placeholder="Dari">
                             </div>
-                            <div class="col-6 col-lg-2" id="penjualanEndWrapper">
-                                <input type="date" name="end_date" class="form-control" value="<?= htmlspecialchars($endDate ?? '') ?>">
+                            <div class="col-6 col-lg-2" id="endDateWrapper" style="display: <?= ($periode ?? 'today') === 'custom' ? 'block' : 'none' ?>;">
+                                <input type="date" name="end_date" class="form-control" value="<?= htmlspecialchars($endDate ?? '') ?>" placeholder="Sampai">
                             </div>
-                            <div class="col-6 col-lg-2">
+                            <div class="col-6 col-lg-1">
                                 <select name="per_page" class="form-select" onchange="this.form.submit()">
                                     <?php foreach ($perPageOptions as $option): ?>
                                     <option value="<?= $option ?>" <?= $perPage == $option ? 'selected' : '' ?>><?= $option ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-12 col-lg-3 d-flex gap-2 justify-content-lg-end">
-                                <button type="submit" class="btn btn-filter btn-secondary flex-grow-1 flex-lg-grow-0">Terapkan</button>
-                                <a href="/penjualan" class="btn btn-filter btn-outline-secondary flex-grow-1 flex-lg-grow-0">Reset</a>
+                            <div class="col-12 col-lg-4 d-lg-flex justify-content-lg-end">
+                                <div class="row g-2 w-100">
+                                    <div class="col-6 col-lg-6">
+                                        <button type="submit" class="btn btn-filter btn-secondary w-100">Filter</button>
+                                    </div>
+                                    <div class="col-6 col-lg-6">
+                                        <a href="/penjualan" class="btn btn-filter btn-outline-secondary w-100">Reset</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <input type="hidden" name="sort_by" value="<?= htmlspecialchars($sortBy ?? 'tanggalpenjualan') ?>">
@@ -225,23 +231,29 @@ function buildPenjualanQuery($page, $perPage, $search, $periode, $startDate, $en
 ?>
 
 <script>
-function handlePenjualanPeriodeChange(triggerSubmit = false) {
-    const select = document.getElementById('periodeFilter');
-    const isCustom = select.value === 'custom';
-    const startWrapper = document.getElementById('penjualanStartWrapper');
-    const endWrapper = document.getElementById('penjualanEndWrapper');
-    startWrapper.style.display = isCustom ? 'block' : 'none';
-    endWrapper.style.display = isCustom ? 'block' : 'none';
+function handleDateFilterChange(triggerSubmit = false) {
+    const filter = document.getElementById('dateFilter').value;
+    const startWrapper = document.getElementById('startDateWrapper');
+    const endWrapper = document.getElementById('endDateWrapper');
+    const isCustom = filter === 'custom';
+    
+    if (startWrapper && endWrapper) {
+        startWrapper.style.display = isCustom ? 'block' : 'none';
+        endWrapper.style.display = isCustom ? 'block' : 'none';
+    }
+    
     if (!isCustom && triggerSubmit) {
+        const startInput = document.querySelector('input[name="start_date"]');
+        const endInput = document.querySelector('input[name="end_date"]');
+        if (startInput) startInput.value = '';
+        if (endInput) endInput.value = '';
         const form = document.getElementById('penjualanFilterForm');
-        form.querySelector('input[name="start_date"]').value = '';
-        form.querySelector('input[name="end_date"]').value = '';
-        form.submit();
+        if (form) form.submit();
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    handlePenjualanPeriodeChange(false);
+document.addEventListener('DOMContentLoaded', function() {
+    handleDateFilterChange(false);
 });
 </script>
 

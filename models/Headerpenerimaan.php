@@ -132,6 +132,30 @@ class Headerpenerimaan {
 
 		$conn->beginTransaction();
 		try {
+			// Kurangi saldopenjualan sebelum insert
+			$penjualanModel = new Headerpenjualan();
+			foreach ($details as $detail) {
+				$nopenjualan = $detail['nopenjualan'] ?? '';
+				$piutang = (float)($detail['piutang'] ?? 0);
+				
+				if (!empty($nopenjualan) && $piutang > 0) {
+					$penjualan = $penjualanModel->findByNopenjualan($nopenjualan);
+					if ($penjualan) {
+						$saldopenjualan = (float)($penjualan['saldopenjualan'] ?? 0);
+						
+						if ($saldopenjualan < $piutang) {
+							throw new Exception("Saldo penjualan untuk {$nopenjualan} tidak mencukupi. Saldo tersedia: {$saldopenjualan}, dibutuhkan: {$piutang}");
+						}
+						
+						// Kurangi saldopenjualan
+						$saldoBaru = $saldopenjualan - $piutang;
+						$penjualanModel->updateSaldo($nopenjualan, $saldoBaru);
+					} else {
+						throw new Exception("Penjualan dengan nomor {$nopenjualan} tidak ditemukan");
+					}
+				}
+			}
+
 			$headerSql = "INSERT INTO headerpenerimaan (nopenerimaan, tanggalpenerimaan, statuspkp, jenispenerimaan, kodesales, kodecustomer, totalpiutang, totalpotongan, totallainlain, totalnetto, status, noinkaso, userid)
 						  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			$this->db->query($headerSql, [
@@ -191,9 +215,55 @@ class Headerpenerimaan {
 
 		$conn->beginTransaction();
 		try {
+			$penjualanModel = new Headerpenjualan();
+			$detailModel = new Detailpenerimaan();
+
+			// Jika ada perubahan detail, sesuaikan saldopenjualan
+			if (is_array($details)) {
+				// Ambil detail penerimaan yang lama
+				$oldDetails = $detailModel->getByNopenerimaan($nopenerimaan);
+
+				// Kembalikan saldopenjualan dari detail lama
+				foreach ($oldDetails as $oldDetail) {
+					$nopenjualan = $oldDetail['nopenjualan'] ?? '';
+					$piutangLama = (float)($oldDetail['piutang'] ?? 0);
+					
+					if (!empty($nopenjualan) && $piutangLama > 0) {
+						$penjualan = $penjualanModel->findByNopenjualan($nopenjualan);
+						if ($penjualan) {
+							$saldopenjualan = (float)($penjualan['saldopenjualan'] ?? 0);
+							$saldoBaru = $saldopenjualan + $piutangLama;
+							$penjualanModel->updateSaldo($nopenjualan, $saldoBaru);
+						}
+					}
+				}
+
+				// Validasi dan kurangi saldopenjualan untuk detail baru
+				foreach ($details as $detail) {
+					$nopenjualan = $detail['nopenjualan'] ?? '';
+					$piutang = (float)($detail['piutang'] ?? 0);
+					
+					if (!empty($nopenjualan) && $piutang > 0) {
+						$penjualan = $penjualanModel->findByNopenjualan($nopenjualan);
+						if ($penjualan) {
+							$saldopenjualan = (float)($penjualan['saldopenjualan'] ?? 0);
+							
+							if ($saldopenjualan < $piutang) {
+								throw new Exception("Saldo penjualan untuk {$nopenjualan} tidak mencukupi. Saldo tersedia: {$saldopenjualan}, dibutuhkan: {$piutang}");
+							}
+							
+							// Kurangi saldopenjualan
+							$saldoBaru = $saldopenjualan - $piutang;
+							$penjualanModel->updateSaldo($nopenjualan, $saldoBaru);
+						} else {
+							throw new Exception("Penjualan dengan nomor {$nopenjualan} tidak ditemukan");
+						}
+					}
+				}
+			}
+
 			if (!empty($headerData)) {
-				$fields = []
-;
+				$fields = [];
 				$params = [];
 
 				foreach ($headerData as $key => $value) {
@@ -267,6 +337,26 @@ class Headerpenerimaan {
 		$conn = $this->db->getConnection();
 		$conn->beginTransaction();
 		try {
+			// Ambil detail penerimaan untuk mengembalikan saldopenjualan
+			$detailModel = new Detailpenerimaan();
+			$details = $detailModel->getByNopenerimaan($nopenerimaan);
+
+			// Kembalikan saldopenjualan
+			$penjualanModel = new Headerpenjualan();
+			foreach ($details as $detail) {
+				$nopenjualan = $detail['nopenjualan'] ?? '';
+				$piutang = (float)($detail['piutang'] ?? 0);
+				
+				if (!empty($nopenjualan) && $piutang > 0) {
+					$penjualan = $penjualanModel->findByNopenjualan($nopenjualan);
+					if ($penjualan) {
+						$saldopenjualan = (float)($penjualan['saldopenjualan'] ?? 0);
+						$saldoBaru = $saldopenjualan + $piutang;
+						$penjualanModel->updateSaldo($nopenjualan, $saldoBaru);
+					}
+				}
+			}
+
 			$this->db->query("DELETE FROM detailpenerimaan WHERE nopenerimaan = ?", [$nopenerimaan]);
 			$this->db->query("DELETE FROM headerpenerimaan WHERE nopenerimaan = ?", [$nopenerimaan]);
 			$conn->commit();

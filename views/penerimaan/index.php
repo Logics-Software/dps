@@ -70,7 +70,7 @@ require __DIR__ . '/../layouts/header.php';
                             <div class="col-12 col-lg-4 d-lg-flex justify-content-lg-end">
                                 <div class="row g-2 w-100">
                                     <div class="col-6 col-lg-6">
-                                        <button type="submit" class="btn btn-filter btn-secondary w-100">Terapkan</button>
+                                        <button type="submit" class="btn btn-filter btn-secondary w-100">Filter</button>
                                     </div>
                                     <div class="col-6 col-lg-6">
                                         <a href="/penerimaan" class="btn btn-filter btn-outline-secondary w-100">Reset</a>

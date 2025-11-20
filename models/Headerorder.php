@@ -126,6 +126,26 @@ class Headerorder {
 		try {
 			$conn->beginTransaction();
 
+			// Validasi dan kurangi stok sebelum insert
+			$barangModel = new Masterbarang();
+			foreach ($details as $detail) {
+				$barang = $barangModel->findByKodebarang($detail['kodebarang']);
+				if (!$barang) {
+					throw new Exception("Barang dengan kode {$detail['kodebarang']} tidak ditemukan");
+				}
+
+				$stokAkhir = (float)($barang['stokakhir'] ?? 0);
+				$jumlah = (int)($detail['jumlah'] ?? 0);
+
+				if ($stokAkhir < $jumlah) {
+					throw new Exception("Stok barang {$barang['namabarang']} ({$detail['kodebarang']}) tidak mencukupi. Stok tersedia: {$stokAkhir}, dibutuhkan: {$jumlah}");
+				}
+
+				// Kurangi stok
+				$stokBaru = $stokAkhir - $jumlah;
+				$barangModel->update($barang['id'], ['stokakhir' => $stokBaru]);
+			}
+
 			$sqlHeader = "INSERT INTO headerorder (noorder, tanggalorder, kodesales, statuspkp, kodecustomer, keterangan, nilaiorder, nopenjualan, status)
 						  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			$this->db->query($sqlHeader, [
@@ -166,6 +186,45 @@ class Headerorder {
 
 		try {
 			$conn->beginTransaction();
+
+			$barangModel = new Masterbarang();
+			$detailModel = new Detailorder();
+
+			// Jika ada perubahan detail, sesuaikan stok
+			if ($details !== null) {
+				// Ambil detail order yang lama
+				$oldDetails = $detailModel->getByNoorder($noorder);
+
+				// Kembalikan stok dari detail lama
+				foreach ($oldDetails as $oldDetail) {
+					$barang = $barangModel->findByKodebarang($oldDetail['kodebarang']);
+					if ($barang) {
+						$stokAkhir = (float)($barang['stokakhir'] ?? 0);
+						$jumlahLama = (int)($oldDetail['jumlah'] ?? 0);
+						$stokBaru = $stokAkhir + $jumlahLama;
+						$barangModel->update($barang['id'], ['stokakhir' => $stokBaru]);
+					}
+				}
+
+				// Validasi dan kurangi stok untuk detail baru
+				foreach ($details as $detail) {
+					$barang = $barangModel->findByKodebarang($detail['kodebarang']);
+					if (!$barang) {
+						throw new Exception("Barang dengan kode {$detail['kodebarang']} tidak ditemukan");
+					}
+
+					$stokAkhir = (float)($barang['stokakhir'] ?? 0);
+					$jumlah = (int)($detail['jumlah'] ?? 0);
+
+					if ($stokAkhir < $jumlah) {
+						throw new Exception("Stok barang {$barang['namabarang']} ({$detail['kodebarang']}) tidak mencukupi. Stok tersedia: {$stokAkhir}, dibutuhkan: {$jumlah}");
+					}
+
+					// Kurangi stok
+					$stokBaru = $stokAkhir - $jumlah;
+					$barangModel->update($barang['id'], ['stokakhir' => $stokBaru]);
+				}
+			}
 
 			$sqlHeader = "UPDATE headerorder
 						  SET tanggalorder = ?, kodesales = ?, statuspkp = ?, kodecustomer = ?, keterangan = ?, nilaiorder = ?, nopenjualan = ?, status = ?
@@ -212,6 +271,22 @@ class Headerorder {
 
 		try {
 			$conn->beginTransaction();
+
+			// Ambil detail order untuk mengembalikan stok
+			$detailModel = new Detailorder();
+			$details = $detailModel->getByNoorder($noorder);
+
+			// Kembalikan stok barang
+			$barangModel = new Masterbarang();
+			foreach ($details as $detail) {
+				$barang = $barangModel->findByKodebarang($detail['kodebarang']);
+				if ($barang) {
+					$stokAkhir = (float)($barang['stokakhir'] ?? 0);
+					$jumlah = (int)($detail['jumlah'] ?? 0);
+					$stokBaru = $stokAkhir + $jumlah;
+					$barangModel->update($barang['id'], ['stokakhir' => $stokBaru]);
+				}
+			}
 
 			$this->db->query("DELETE FROM detailorder WHERE noorder = ?", [$noorder]);
 			$this->db->query("DELETE FROM headerorder WHERE noorder = ?", [$noorder]);
