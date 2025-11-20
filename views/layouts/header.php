@@ -95,6 +95,7 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                             <div class="nav-dropdown-menu">
                                 <a href="/orders" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/orders') !== false ? 'active' : '' ?>">Order</a>
                                 <a href="/penerimaan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penerimaan') !== false ? 'active' : '' ?>">Inkaso</a>
+                                <a href="/perubahanharga" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/perubahanharga') !== false ? 'active' : '' ?>">Perubahan Harga</a>
                             </div>
                         </div>
                         <div class="nav-dropdown">
@@ -175,9 +176,11 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                                 </svg>
                             </button>
                             <div class="nav-dropdown-menu">
-                                <a href="/orders" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/orders') !== false ? 'active' : '' ?>">Transaksi Order</a>
-                                <a href="/penjualan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penjualan') !== false ? 'active' : '' ?>">Transaksi Penjualan</a>
-                                <a href="/penerimaan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penerimaan') !== false ? 'active' : '' ?>">Transaksi Inkaso</a>
+                                <a href="/orders" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/orders') !== false ? 'active' : '' ?>">Order Penjualan</a>
+                                <a href="/penjualan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penjualan') !== false ? 'active' : '' ?>">Penjualan</a>
+                                <a href="/penerimaan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penerimaan') !== false ? 'active' : '' ?>">Inkaso</a>
+                                <a href="/pembelian" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/pembelian') !== false ? 'active' : '' ?>">Pembelian</a>
+                                <a href="/perubahanharga" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/perubahanharga') !== false ? 'active' : '' ?>">Perubahan Harga</a>
                             </div>
                         </div>
                         <?php endif; ?>

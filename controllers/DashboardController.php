@@ -130,6 +130,8 @@ class DashboardController extends Controller {
         $priceChanges = $this->getRecentPriceChanges();
         // Get overdue invoices
         $overdueInvoices = $this->getOverdueInvoices($kodesales);
+        // Get recent barang datang
+        $barangDatang = $this->getRecentBarangDatang();
         
         return [
             'my_orders' => $headerOrder->count($options),
@@ -142,6 +144,7 @@ class DashboardController extends Controller {
             'monthly_inkaso' => $monthlyInkaso,
             'price_changes' => $priceChanges,
             'overdue_invoices' => $overdueInvoices,
+            'barang_datang' => $barangDatang,
             'unread_messages' => $messageModel->getUnreadCount(Auth::user()['id'] ?? 0)
         ];
     }
@@ -339,12 +342,12 @@ class DashboardController extends Controller {
                     tp.namapabrik as pabrik,
                     mb.kondisi,
                     mb.ed,
-                    mb.hargajual as harga,
-                    mb.discountjual as discount
-                FROM masterbarang mb
+                    ph.hargabaru as harga,
+                    ph.discountbaru as discount
+                FROM perubahanharga ph
+                LEFT JOIN masterbarang mb ON ph.kodebarang = mb.kodebarang
                 LEFT JOIN tabelpabrik tp ON mb.kodepabrik = tp.kodepabrik
-                WHERE mb.updated_at IS NOT NULL
-                ORDER BY mb.updated_at DESC
+                ORDER BY ph.tanggalperubahan DESC
                 LIMIT 10";
         
         return $db->fetchAll($sql);
@@ -383,6 +386,26 @@ class DashboardController extends Controller {
         array_unshift($params, $today);
         
         return $db->fetchAll($sql, $params);
+    }
+    
+    private function getRecentBarangDatang() {
+        $db = Database::getInstance();
+        
+        $sql = "SELECT 
+                    mb.namabarang,
+                    mb.satuan,
+                    tp.namapabrik as pabrik,
+                    mb.kondisi,
+                    mb.ed,
+                    pb.tanggalpembelian as tanggal,
+                    pb.jumlah
+                FROM pembelianbarang pb
+                LEFT JOIN masterbarang mb ON pb.kodebarang = mb.kodebarang
+                LEFT JOIN tabelpabrik tp ON mb.kodepabrik = tp.kodepabrik
+                ORDER BY pb.tanggalpembelian DESC
+                LIMIT 10";
+        
+        return $db->fetchAll($sql);
     }
 }
 

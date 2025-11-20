@@ -10,8 +10,8 @@ $user = $user ?? Auth::user();
 $role = $role ?? ($user['role'] ?? '');
 $stats = $stats ?? [];
 
-// Load sticky column CSS and JS if needed (for price changes and overdue invoices tables)
-if (($role === 'sales' || $role === 'manajemen' || $role === 'admin' || $role === 'operator') && (!empty($stats['price_changes']) || !empty($stats['overdue_invoices']))) {
+// Load sticky column CSS and JS if needed (for price changes, barang datang, and overdue invoices tables)
+if (($role === 'sales' || $role === 'manajemen' || $role === 'admin' || $role === 'operator') && (!empty($stats['price_changes']) || !empty($stats['barang_datang']) || !empty($stats['overdue_invoices']))) {
     $additionalStyles = $additionalStyles ?? [];
     $additionalStyles[] = $baseUrl . '/assets/css/sticky-column.css';
     $additionalScripts = $additionalScripts ?? [];
@@ -160,14 +160,14 @@ require __DIR__ . '/../layouts/header.php';
                                         <td><?= htmlspecialchars($item['kondisi'] ?? '-') ?></td>
                                         <td><?= htmlspecialchars($item['ed'] ?? '-') ?></td>
                                         <td align="right">Rp <?= number_format($item['harga'] ?? 0, 0, ',', '.') ?></td>
-                                        <td align="right"><?= number_format($item['discount'] ?? 0, 0, ',', '.') ?>%</td>
+                                        <td align="right"><?= number_format($item['discount'] ?? 0, 2, ',', '.') ?>%</td>
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
                         <div class="text-end mt-3">
-                            <a href="/laporan/daftar-harga" class="btn btn-secondary">
+                            <a href="/perubahanharga" class="btn btn-secondary">
                                 Lebih lanjut <?= icon('ellipsis-horizontal', 'me-2', 18) ?>
                             </a>
                         </div>
@@ -203,9 +203,9 @@ require __DIR__ . '/../layouts/header.php';
                                     <?php foreach ($stats['overdue_invoices'] as $invoice): ?>
                                     <tr>
                                         <td class="sticky-col sticky-col-faktur fw-bold text-lg"><?= htmlspecialchars($invoice['nopenjualan'] ?? '-') ?></td>
-                                        <td><?= !empty($invoice['tanggalpenjualan']) ? date('d/m/Y', strtotime($invoice['tanggalpenjualan'])) : '-' ?></td>
+                                        <td align="center"><?= !empty($invoice['tanggalpenjualan']) ? date('d/m/Y', strtotime($invoice['tanggalpenjualan'])) : '-' ?></td>
                                         <td align="center"><?= !empty($invoice['umur']) ? number_format($invoice['umur']) : '-' ?></td>
-                                        <td><?= !empty($invoice['tanggaljatuhtempo']) ? date('d/m/Y', strtotime($invoice['tanggaljatuhtempo'])) : '-' ?></td>
+                                        <td align="center"><?= !empty($invoice['tanggaljatuhtempo']) ? date('d/m/Y', strtotime($invoice['tanggaljatuhtempo'])) : '-' ?></td>
                                         <td><?= htmlspecialchars($invoice['namacustomer'] ?? '-') ?></td>
                                         <td><?= htmlspecialchars($invoice['alamatcustomer'] ?? '-') ?></td>
                                         <td align="right">Rp <?= number_format($invoice['saldopenjualan'] ?? 0, 0, ',', '.') ?></td>
@@ -307,14 +307,14 @@ require __DIR__ . '/../layouts/header.php';
                                         <td><?= htmlspecialchars($item['kondisi'] ?? '-') ?></td>
                                         <td><?= htmlspecialchars($item['ed'] ?? '-') ?></td>
                                         <td align="right">Rp <?= number_format($item['harga'] ?? 0, 0, ',', '.') ?></td>
-                                        <td align="right"><?= number_format($item['discount'] ?? 0, 0, ',', '.') ?>%</td>
+                                        <td align="right"><?= number_format($item['discount'] ?? 0, 2, ',', '.') ?>%</td>
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
                         <div class="text-end mt-3">
-                            <a href="/laporan/daftar-harga" class="btn btn-secondary">
+                            <a href="/perubahanharga" class="btn btn-secondary">
                                 Lebih lanjut <?= icon('ellipsis-horizontal', 'me-2', 18) ?>
                             </a>
                         </div>
@@ -350,9 +350,9 @@ require __DIR__ . '/../layouts/header.php';
                                     <?php foreach ($stats['overdue_invoices'] as $invoice): ?>
                                     <tr>
                                         <td class="sticky-col sticky-col-faktur fw-bold text-lg"><?= htmlspecialchars($invoice['nopenjualan'] ?? '-') ?></td>
-                                        <td><?= !empty($invoice['tanggalpenjualan']) ? date('d/m/Y', strtotime($invoice['tanggalpenjualan'])) : '-' ?></td>
+                                        <td align="center"><?= !empty($invoice['tanggalpenjualan']) ? date('d/m/Y', strtotime($invoice['tanggalpenjualan'])) : '-' ?></td>
                                         <td align="center"><?= !empty($invoice['umur']) ? number_format($invoice['umur']) : '-' ?></td>
-                                        <td><?= !empty($invoice['tanggaljatuhtempo']) ? date('d/m/Y', strtotime($invoice['tanggaljatuhtempo'])) : '-' ?></td>
+                                        <td align="center"><?= !empty($invoice['tanggaljatuhtempo']) ? date('d/m/Y', strtotime($invoice['tanggaljatuhtempo'])) : '-' ?></td>
                                         <td><?= htmlspecialchars($invoice['namacustomer'] ?? '-') ?></td>
                                         <td><?= htmlspecialchars($invoice['alamatcustomer'] ?? '-') ?></td>
                                         <td align="right">Rp <?= number_format($invoice['saldopenjualan'] ?? 0, 0, ',', '.') ?></td>
@@ -484,7 +484,7 @@ require __DIR__ . '/../layouts/header.php';
                                         <td><?= htmlspecialchars($item['kondisi'] ?? '-') ?></td>
                                         <td><?= htmlspecialchars($item['ed'] ?? '-') ?></td>
                                         <td align="right">Rp <?= number_format($item['harga'] ?? 0, 0, ',', '.') ?></td>
-                                        <td align="right"><?= number_format($item['discount'] ?? 0, 0, ',', '.') ?>%</td>
+                                        <td align="right"><?= number_format($item['discount'] ?? 0, 2, ',', '.') ?>%</td>
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -493,6 +493,54 @@ require __DIR__ . '/../layouts/header.php';
                         <div class="text-end mt-3">
                             <a href="/laporan/daftar-harga" class="btn btn-secondary">
                                 Lebih lanjut<?= icon('ellipsis-horizontal', 'me-2', 18) ?>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Barang Datang -->
+        <?php if ($role === 'sales' && !empty($stats['barang_datang'])): ?>
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <div class="card dashboard-card">
+                    <div class="card-header dashboard-card-header">
+                        <h5 class="mb-0">Barang Datang</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive table-sticky-column">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th class="sticky-col" style="min-width: 150px;">Nama Barang</th>
+                                        <th>Satuan</th>
+                                        <th>Pabrik</th>
+                                        <th>Kondisi</th>
+                                        <th>ED</th>
+                                        <th>Tanggal</th>
+                                        <th>Jumlah</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($stats['barang_datang'] as $item): ?>
+                                    <tr>
+                                        <td class="sticky-col"><?= htmlspecialchars($item['namabarang'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['satuan'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['pabrik'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['kondisi'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($item['ed'] ?? '-') ?></td>
+                                        <td align="center"><?= !empty($item['tanggal']) ? date('d/m/Y', strtotime($item['tanggal'])) : '-' ?></td>
+                                        <td align="right"><?= number_format($item['jumlah'] ?? 0, 0, ',', '.') ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-end mt-3">
+                            <a href="/pembelian" class="btn btn-secondary">
+                                Lebih lanjut <?= icon('ellipsis-horizontal', 'me-2', 18) ?>
                             </a>
                         </div>
                     </div>
@@ -527,9 +575,9 @@ require __DIR__ . '/../layouts/header.php';
                                     <?php foreach ($stats['overdue_invoices'] as $invoice): ?>
                                     <tr>
                                         <td class="sticky-col sticky-col-faktur fw-bold text-lg"><?= htmlspecialchars($invoice['nopenjualan'] ?? '-') ?></td>
-                                        <td><?= !empty($invoice['tanggalpenjualan']) ? date('d/m/Y', strtotime($invoice['tanggalpenjualan'])) : '-' ?></td>
+                                        <td align="center"><?= !empty($invoice['tanggalpenjualan']) ? date('d/m/Y', strtotime($invoice['tanggalpenjualan'])) : '-' ?></td>
                                         <td align="center"><?= !empty($invoice['umur']) ? number_format($invoice['umur']) : '-' ?></td>
-                                        <td><?= !empty($invoice['tanggaljatuhtempo']) ? date('d/m/Y', strtotime($invoice['tanggaljatuhtempo'])) : '-' ?></td>
+                                        <td align="center"><?= !empty($invoice['tanggaljatuhtempo']) ? date('d/m/Y', strtotime($invoice['tanggaljatuhtempo'])) : '-' ?></td>
                                         <td><?= htmlspecialchars($invoice['namacustomer'] ?? '-') ?></td>
                                         <td><?= htmlspecialchars($invoice['alamatcustomer'] ?? '-') ?></td>
                                         <td align="right">Rp <?= number_format($invoice['saldopenjualan'] ?? 0, 0, ',', '.') ?></td>

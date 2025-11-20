@@ -218,6 +218,38 @@ $router->post('/api/mastercustomer', 'ApiMastercustomerController', 'index');
 $router->put('/api/mastercustomer', 'ApiMastercustomerController', 'index');
 $router->delete('/api/mastercustomer', 'ApiMastercustomerController', 'index');
 
+// Pembelian Barang routes
+$router->get('/pembelian', 'PembelianController', 'index');
+$router->get('/pembelian/create', 'PembelianController', 'create');
+$router->post('/pembelian/create', 'PembelianController', 'create');
+$router->get('/pembelian/view/{id}', 'PembelianController', 'show');
+$router->get('/pembelian/edit/{id}', 'PembelianController', 'edit');
+$router->post('/pembelian/edit/{id}', 'PembelianController', 'edit');
+$router->get('/pembelian/delete/{id}', 'PembelianController', 'delete');
+
+// API Pembelianbarang routes (no authentication required - for VB bridging)
+$router->get('/api/pembelianbarang', 'ApiPembelianbarangController', 'index');
+$router->post('/api/pembelianbarang', 'ApiPembelianbarangController', 'index');
+$router->put('/api/pembelianbarang', 'ApiPembelianbarangController', 'index');
+$router->patch('/api/pembelianbarang', 'ApiPembelianbarangController', 'index');
+$router->delete('/api/pembelianbarang', 'ApiPembelianbarangController', 'index');
+
+// Perubahan Harga routes
+$router->get('/perubahanharga', 'PerubahanhargaController', 'index');
+$router->get('/perubahanharga/create', 'PerubahanhargaController', 'create');
+$router->post('/perubahanharga/create', 'PerubahanhargaController', 'create');
+$router->get('/perubahanharga/view/{id}', 'PerubahanhargaController', 'show');
+$router->get('/perubahanharga/edit/{id}', 'PerubahanhargaController', 'edit');
+$router->post('/perubahanharga/edit/{id}', 'PerubahanhargaController', 'edit');
+$router->get('/perubahanharga/delete/{id}', 'PerubahanhargaController', 'delete');
+
+// API Perubahanharga routes (no authentication required - for VB bridging)
+$router->get('/api/perubahanharga', 'ApiPerubahanhargaController', 'index');
+$router->post('/api/perubahanharga', 'ApiPerubahanhargaController', 'index');
+$router->put('/api/perubahanharga', 'ApiPerubahanhargaController', 'index');
+$router->patch('/api/perubahanharga', 'ApiPerubahanhargaController', 'index');
+$router->delete('/api/perubahanharga', 'ApiPerubahanhargaController', 'index');
+
 // Laporan routes
 $router->get('/laporan/daftar-barang', 'LaporanController', 'daftarBarang');
 $router->get('/laporan/daftar-stok', 'LaporanController', 'daftarStok');
