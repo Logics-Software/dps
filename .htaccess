@@ -32,6 +32,16 @@ AddDefaultCharset UTF-8
     <FilesMatch "\.(css|js)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
+    
+    # API endpoints - no cache to ensure fresh data
+    <FilesMatch "index\.php">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+    
+    # Connection keep-alive for better performance
+    Header set Connection "keep-alive"
 </IfModule>
 
 # Ensure CSS files are served with correct MIME type

@@ -53,12 +53,25 @@ if (!function_exists('icon')) {
         endforeach;
     endif;
     ?>
+    <?php if (!empty($additionalInlineStyles)):
+        $inlineStyles = is_array($additionalInlineStyles) ? $additionalInlineStyles : [$additionalInlineStyles];
+        foreach ($inlineStyles as $inlineStyle):
+            if (!empty($inlineStyle)):
+    ?>
+    <style><?= $inlineStyle ?></style>
+    <?php
+            endif;
+        endforeach;
+    endif;
+    ?>
 </head>
 <body class="<?= Auth::check() ? 'has-header' : '' ?>"><?php
 // Get user data if logged in
 $currentUser = Auth::check() ? Auth::user() : null;
 $appConfig = require __DIR__ . '/../../config/app.php';
-if (Auth::check() && $currentUser): ?><header class="app-header">
+// Check if current page is /mastercustomer/map to hide header
+$isMapPage = strpos($_SERVER['REQUEST_URI'] ?? '', '/mastercustomer/map') !== false;
+if (Auth::check() && $currentUser && !$isMapPage): ?><header class="app-header">
         <nav class="navbar">
             <div class="container-fluid">
                 <div class="header-content">
