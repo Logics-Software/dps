@@ -12,7 +12,7 @@ class PembelianController extends Controller {
     }
 
     public function index() {
-        Auth::requireRole(['admin', 'manajemen', 'operator']);
+        Auth::requireRole(['admin', 'manajemen', 'operator', 'sales']);
 
         $page = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
         $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
@@ -69,9 +69,12 @@ class PembelianController extends Controller {
     }
 
     public function create() {
-        Auth::requireRole(['admin', 'manajemen', 'operator']);
+        Auth::requireRole(['admin', 'manajemen', 'operator', 'sales']);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $user = Auth::user();
+            $isSales = ($user['role'] ?? '') === 'sales';
+            
             $data = [
                 'nopembelian' => trim($_POST['nopembelian'] ?? ''),
                 'tanggalpembelian' => $_POST['tanggalpembelian'] ?? date('Y-m-d'),
@@ -88,6 +91,13 @@ class PembelianController extends Controller {
                 empty($data['namasupplier']) || empty($data['kodebarang'])) {
                 Session::flash('error', 'Semua field wajib diisi');
                 $this->redirect('/pembelian/create');
+            }
+            
+            // For sales role, set price fields to 0 if not provided
+            if ($isSales) {
+                $data['harga'] = 0;
+                $data['discount'] = 0;
+                $data['totalharga'] = 0;
             }
 
             try {
@@ -112,7 +122,7 @@ class PembelianController extends Controller {
     }
 
     public function edit($id) {
-        Auth::requireRole(['admin', 'manajemen', 'operator']);
+        Auth::requireRole(['admin', 'manajemen', 'operator', 'sales']);
 
         $item = $this->pembelianModel->findById($id);
 
@@ -122,6 +132,9 @@ class PembelianController extends Controller {
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $user = Auth::user();
+            $isSales = ($user['role'] ?? '') === 'sales';
+            
             $data = [
                 'nopembelian' => trim($_POST['nopembelian'] ?? ''),
                 'tanggalpembelian' => $_POST['tanggalpembelian'] ?? date('Y-m-d'),
@@ -138,6 +151,13 @@ class PembelianController extends Controller {
                 empty($data['namasupplier']) || empty($data['kodebarang'])) {
                 Session::flash('error', 'Semua field wajib diisi');
                 $this->redirect('/pembelian/edit/' . $id);
+            }
+            
+            // For sales role, preserve existing price values (don't allow modification)
+            if ($isSales) {
+                $data['harga'] = (float)($item['harga'] ?? 0);
+                $data['discount'] = (float)($item['discount'] ?? 0);
+                $data['totalharga'] = (float)($item['totalharga'] ?? 0);
             }
 
             try {
@@ -163,7 +183,7 @@ class PembelianController extends Controller {
     }
 
     public function show($id) {
-        Auth::requireRole(['admin', 'manajemen', 'operator']);
+        Auth::requireRole(['admin', 'manajemen', 'operator', 'sales']);
 
         $item = $this->pembelianModel->findById($id);
 
@@ -176,7 +196,7 @@ class PembelianController extends Controller {
     }
 
     public function delete($id) {
-        Auth::requireRole(['admin', 'manajemen', 'operator']);
+        Auth::requireRole(['admin', 'manajemen', 'operator', 'sales']);
 
         $item = $this->pembelianModel->findById($id);
 

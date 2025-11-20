@@ -6,6 +6,16 @@ if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
     $baseUrl = '/';
 }
 
+$user = $user ?? Auth::user();
+$role = $role ?? ($user['role'] ?? '');
+$isSales = ($role === 'sales');
+
+// Load sticky column CSS dan JS
+$additionalStyles = $additionalStyles ?? [];
+$additionalStyles[] = $baseUrl . '/assets/css/sticky-column.css';
+$additionalScripts = $additionalScripts ?? [];
+$additionalScripts[] = $baseUrl . '/assets/js/sticky-column.js';
+
 // Helper function to generate sort URL
 if (!function_exists('getSortUrlPembelian')) {
     function getSortUrlPembelian($column, $currentSortBy, $currentSortOrder, $search, $dateFilter, $rawStartDate, $rawEndDate, $perPage) {
@@ -93,11 +103,11 @@ require __DIR__ . '/../layouts/header.php';
                         <input type="hidden" name="sort_order" value="<?= htmlspecialchars($sortOrder ?? 'DESC') ?>">
                     </form>
 
-                    <div class="table-responsive">
+                    <div class="table-responsive table-sticky-column">
                         <table class="table table-striped table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Nama Barang</th>
+                                    <th class="sticky-col" style="min-width: 150px;">Nama Barang</th>
                                     <th class="th-sortable <?= ($sortBy ?? 'tanggalpembelian') === 'nopembelian' ? (($sortOrder ?? 'DESC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
                                         <a href="<?= getSortUrlPembelian('nopembelian', $sortBy ?? 'tanggalpembelian', $sortOrder ?? 'DESC', $search ?? '', $dateFilter ?? 'today', $rawStartDate ?? '', $rawEndDate ?? '', $perPage ?? 10) ?>" class="text-decoration-none text-dark">
                                             No. Pembelian
@@ -114,27 +124,31 @@ require __DIR__ . '/../layouts/header.php';
                                         </a>
                                     </th>
                                     <th>Jumlah</th>
+                                    <?php if (!$isSales): ?>
                                     <th>Harga</th>
                                     <th>Disc</th>
                                     <th>Total Harga</th>
+                                    <?php endif; ?>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($items)): ?>
                                 <tr>
-                                    <td colspan="10" class="text-center text-muted py-4">Tidak ada data pembelian</td>
+                                    <td colspan="<?= $isSales ? '6' : '10' ?>" class="text-center text-muted py-4">Tidak ada data pembelian</td>
                                 </tr>
                                 <?php else: ?>
                                 <?php foreach ($items as $row): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($row['namabarang'] ?? '-') ?></td>
+                                    <td class="sticky-col"><?= htmlspecialchars($row['namabarang'] ?? '-') ?></td>
                                     <td class="fw-semibold"><?= htmlspecialchars($row['nopembelian']) ?></td>
                                     <td><?= $row['tanggalpembelian'] ? date('d/m/Y', strtotime($row['tanggalpembelian'])) : '-' ?></td>
                                     <td><?= htmlspecialchars($row['namasupplier'] ?? '-') ?></td>
                                     <td class="text-end"><?= number_format((float)$row['jumlah'], 2, ',', '.') ?></td>
+                                    <?php if (!$isSales): ?>
                                     <td class="text-end"><?= number_format((float)$row['harga'], 0, ',', '.') ?></td>
                                     <td class="text-end"><?= number_format((float)$row['discount'], 2, ',', '.') ?></td>
                                     <td class="text-end fw-semibold"><?= number_format((float)$row['totalharga'], 0, ',', '.') ?></td>
+                                    <?php endif; ?>
                                 </tr>
                                 <?php endforeach; ?>
                                 <?php endif; ?>

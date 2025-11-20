@@ -41,7 +41,7 @@ if (!isset($message) || empty($message)) {
 <div class="container">
 	<div class="breadcrumb-item">
 		<div class="col-12">
-			<nav aria-label="breadcrumb">
+			<nav aria-label="breadcrumb" data-breadcrumb-parent="/messages">
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
 					<li class="breadcrumb-item"><a href="/messages">Pesan Masuk</a></li>

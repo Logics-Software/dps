@@ -1,12 +1,15 @@
 <?php
 $title = 'Tambah Data Pembelian Barang';
+$user = $user ?? Auth::user();
+$role = $role ?? ($user['role'] ?? '');
+$isSales = ($role === 'sales');
 require __DIR__ . '/../layouts/header.php';
 ?>
 
 <div class="container">
     <div class="breadcrumb-item">
         <div class="col-12">
-            <nav aria-label="breadcrumb">
+            <nav aria-label="breadcrumb" data-breadcrumb-parent="/pembelian">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="/pembelian">Data Pembelian Barang</a></li>
@@ -58,10 +61,11 @@ require __DIR__ . '/../layouts/header.php';
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-3 mb-3">
+                            <div class="<?= $isSales ? 'col-md-12' : 'col-md-3' ?> mb-3">
                                 <label for="jumlah" class="form-label">Jumlah <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="jumlah" name="jumlah" required step="0.01" min="0" value="0" onchange="calculateTotal()">
+                                <input type="number" class="form-control" id="jumlah" name="jumlah" required step="0.01" min="0" value="0" <?= !$isSales ? 'onchange="calculateTotal()"' : '' ?>>
                             </div>
+                            <?php if (!$isSales): ?>
                             <div class="col-md-3 mb-3">
                                 <label for="harga" class="form-label">Harga <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="harga" name="harga" required step="0.01" min="0" value="0" onchange="calculateTotal()">
@@ -74,6 +78,11 @@ require __DIR__ . '/../layouts/header.php';
                                 <label for="totalharga" class="form-label">Total Harga</label>
                                 <input type="number" class="form-control" id="totalharga" name="totalharga" step="0.01" min="0" value="0" readonly>
                             </div>
+                            <?php else: ?>
+                            <input type="hidden" id="harga" name="harga" value="0">
+                            <input type="hidden" id="discount" name="discount" value="0">
+                            <input type="hidden" id="totalharga" name="totalharga" value="0">
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -93,14 +102,22 @@ require __DIR__ . '/../layouts/header.php';
 
 <script>
 function calculateTotal() {
+    const hargaEl = document.getElementById('harga');
+    const discountEl = document.getElementById('discount');
+    const totalhargaEl = document.getElementById('totalharga');
+    
+    if (!hargaEl || !discountEl || !totalhargaEl) {
+        return; // Fields hidden for sales role
+    }
+    
     const jumlah = parseFloat(document.getElementById('jumlah').value) || 0;
-    const harga = parseFloat(document.getElementById('harga').value) || 0;
-    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const harga = parseFloat(hargaEl.value) || 0;
+    const discount = parseFloat(discountEl.value) || 0;
     
     const subtotal = jumlah * harga;
     const total = subtotal - discount;
     
-    document.getElementById('totalharga').value = Math.max(0, total).toFixed(2);
+    totalhargaEl.value = Math.max(0, total).toFixed(2);
 }
 
 document.addEventListener('DOMContentLoaded', function() {

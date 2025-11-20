@@ -6,7 +6,7 @@ require __DIR__ . '/../layouts/header.php';
 <div class="container">
     <div class="breadcrumb-item">
         <div class="col-12">
-            <nav aria-label="breadcrumb">
+            <nav aria-label="breadcrumb" data-breadcrumb-parent="/perubahanharga">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="/perubahanharga">Data Perubahan Harga</a></li>

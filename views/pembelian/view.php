@@ -1,12 +1,15 @@
 <?php
 $title = 'Detail Pembelian Barang';
+$user = $user ?? Auth::user();
+$role = $role ?? ($user['role'] ?? '');
+$isSales = ($role === 'sales');
 require __DIR__ . '/../layouts/header.php';
 ?>
 
 <div class="container">
     <div class="breadcrumb-item">
         <div class="col-12">
-            <nav aria-label="breadcrumb">
+            <nav aria-label="breadcrumb" data-breadcrumb-parent="/pembelian">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="/pembelian">Data Pembelian Barang</a></li>
@@ -62,10 +65,11 @@ require __DIR__ . '/../layouts/header.php';
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-3 mb-3">
+                        <div class="<?= $isSales ? 'col-md-12' : 'col-md-3' ?> mb-3">
                             <label class="form-label fw-semibold">Jumlah</label>
                             <div class="form-control-plaintext"><?= number_format((float)$item['jumlah'], 2, ',', '.') ?></div>
                         </div>
+                        <?php if (!$isSales): ?>
                         <div class="col-md-3 mb-3">
                             <label class="form-label fw-semibold">Harga</label>
                             <div class="form-control-plaintext"><?= number_format((float)$item['harga'], 0, ',', '.') ?></div>
@@ -78,6 +82,7 @@ require __DIR__ . '/../layouts/header.php';
                             <label class="form-label fw-semibold">Total Harga</label>
                             <div class="form-control-plaintext fw-bold text-primary"><?= number_format((float)$item['totalharga'], 0, ',', '.') ?></div>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

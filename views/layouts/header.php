@@ -468,11 +468,32 @@ if (Auth::check() && $currentUser): ?><header class="app-header">
                 btn.setAttribute('aria-label', 'Kembali');
                 btn.innerHTML = '<img src="' + baseUrl + '/assets/icons/arrow-left.svg" alt="Kembali" width="20" height="20" class="icon-inline">';
                 btn.addEventListener('click', function() {
-                    // Check for custom back URL from data attribute
+                    // Priority 1: Check for custom back URL from card header data attribute
                     var customBackUrl = header.getAttribute('data-back-url');
                     if (customBackUrl) {
                         window.location.href = customBackUrl;
                         return;
+                    }
+                    
+                    // Priority 2: Check for breadcrumb parent URL
+                    var breadcrumbNav = document.querySelector('nav[aria-label="breadcrumb"][data-breadcrumb-parent]');
+                    if (breadcrumbNav) {
+                        var breadcrumbParent = breadcrumbNav.getAttribute('data-breadcrumb-parent');
+                        if (breadcrumbParent) {
+                            window.location.href = breadcrumbParent;
+                            return;
+                        }
+                    }
+                    
+                    // Priority 3: Try to get parent from breadcrumb links (second to last link)
+                    var breadcrumbLinks = document.querySelectorAll('nav[aria-label="breadcrumb"] .breadcrumb-item:not(.active) a');
+                    if (breadcrumbLinks.length > 0) {
+                        // Get the last non-active breadcrumb link (parent page)
+                        var parentLink = breadcrumbLinks[breadcrumbLinks.length - 1];
+                        if (parentLink && parentLink.href) {
+                            window.location.href = parentLink.href;
+                            return;
+                        }
                     }
                     
                     // Fallback to history.back() or dashboard

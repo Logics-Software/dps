@@ -6,6 +6,12 @@ if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
     $baseUrl = '/';
 }
 
+// Load sticky column CSS dan JS
+$additionalStyles = $additionalStyles ?? [];
+$additionalStyles[] = $baseUrl . '/assets/css/sticky-column.css';
+$additionalScripts = $additionalScripts ?? [];
+$additionalScripts[] = $baseUrl . '/assets/js/sticky-column.js';
+
 // Helper function to generate sort URL
 if (!function_exists('getSortUrlPerubahanharga')) {
     function getSortUrlPerubahanharga($column, $currentSortBy, $currentSortOrder, $search, $dateFilter, $rawStartDate, $rawEndDate, $perPage) {
@@ -94,11 +100,11 @@ require __DIR__ . '/../layouts/header.php';
                         <input type="hidden" name="sort_order" value="<?= htmlspecialchars($sortOrder ?? 'DESC') ?>">
                     </form>
 
-                    <div class="table-responsive">
+                    <div class="table-responsive table-sticky-column">
                         <table class="table table-striped table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="th-sortable <?= ($sortBy ?? 'tanggalperubahan') === 'namabarang' ? (($sortOrder ?? 'DESC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
+                                    <th class="sticky-col th-sortable <?= ($sortBy ?? 'tanggalperubahan') === 'namabarang' ? (($sortOrder ?? 'DESC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>" style="min-width: 150px;">
                                         <a href="<?= getSortUrlPerubahanharga('namabarang', $sortBy ?? 'tanggalperubahan', $sortOrder ?? 'DESC', $search ?? '', $dateFilter ?? 'today', $rawStartDate ?? '', $rawEndDate ?? '', $perPage ?? 10) ?>" class="text-decoration-none text-dark">
                                             Nama Barang
                                         </a>
@@ -124,7 +130,7 @@ require __DIR__ . '/../layouts/header.php';
                                 <?php else: ?>
                                 <?php foreach ($items as $row): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($row['namabarang'] ?? '-') ?></td>
+                                    <td class="sticky-col"><?= htmlspecialchars($row['namabarang'] ?? '-') ?></td>
                                     <td class="fw-semibold"><?= htmlspecialchars($row['noperubahan']) ?></td>
                                     <td><?= $row['tanggalperubahan'] ? date('d/m/Y', strtotime($row['tanggalperubahan'])) : '-' ?></td>
                                     <td><?= htmlspecialchars($row['keterangan'] ?? '-') ?></td>

@@ -6,7 +6,7 @@ require __DIR__ . '/../layouts/header.php';
 <div class="container">
 	<div class="breadcrumb-item">
 		<div class="col-12">
-			<nav aria-label="breadcrumb">
+			<nav aria-label="breadcrumb" data-breadcrumb-parent="/messages">
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
 					<li class="breadcrumb-item"><a href="/messages">Pesan Masuk</a></li>
@@ -202,6 +202,18 @@ require __DIR__ . '/../layouts/header.php';
 </script>
 
 <script>
+// Helper function to escape HTML attributes (must be defined before use)
+function escapeHtmlAttr(str) {
+	if (!str) return '';
+	return String(str)
+		.replace(/&/g, '&amp;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;')
+		.replace(/\n/g, ' ')
+		.replace(/\r/g, ' ')
+		.replace(/\t/g, ' ');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 	// Wait a bit for Quill to load if it's still loading
 	var quillCheckAttempts = 0;
@@ -216,10 +228,11 @@ document.addEventListener('DOMContentLoaded', function() {
 				return;
 			}
 			
-			console.error('Quill library is not loaded after ' + maxAttempts + ' attempts. File path: <?= htmlspecialchars($quillJs) ?>');
+			var quillJsPath = <?= json_encode(isset($quillJs) ? $quillJs : 'N/A', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+			console.error('Quill library is not loaded after ' + maxAttempts + ' attempts. File path: ' + quillJsPath);
 			var errorDiv = document.createElement('div');
 			errorDiv.className = 'alert alert-danger';
-			errorDiv.innerHTML = '<strong>Error:</strong> Editor tidak dapat dimuat. Silakan refresh halaman atau hubungi administrator.<br><small>Path: <?= htmlspecialchars($quillJs) ?></small>';
+			errorDiv.innerHTML = '<strong>Error:</strong> Editor tidak dapat dimuat. Silakan refresh halaman atau hubungi administrator.<br><small>Path: ' + escapeHtmlAttr(quillJsPath) + '</small>';
 			var editorContainer = document.getElementById('quill-editor');
 			if (editorContainer && editorContainer.parentElement) {
 				editorContainer.parentElement.insertBefore(errorDiv, editorContainer);
@@ -262,18 +275,31 @@ document.addEventListener('DOMContentLoaded', function() {
 	const forwardDate = <?= json_encode(date('d F Y, H:i', strtotime($forward_data['created_at'] ?? 'now')), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 	
 	setTimeout(() => {
-		const forwardMessage = `
-			<div style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; background-color: #f9f9f9;">
-				<div style="margin-bottom: 10px;">
-					<strong>Diteruskan dari:</strong> ${forwardSenderName} (${forwardSenderEmail})<br>
-					<strong>Tanggal:</strong> ${forwardDate}<br>
-					<strong>Subjek:</strong> ${forwardSubject}
-				</div>
-				<div style="border-top: 1px solid #ddd; padding-top: 10px;">
-					${forwardContent}
-				</div>
-			</div>
-		`;
+		// Use String.raw or create element to avoid template literal issues
+		const forwardMessageDiv = document.createElement('div');
+		forwardMessageDiv.style.border = '1px solid #ddd';
+		forwardMessageDiv.style.padding = '15px';
+		forwardMessageDiv.style.marginBottom = '15px';
+		forwardMessageDiv.style.backgroundColor = '#f9f9f9';
+		
+		const headerDiv = document.createElement('div');
+		headerDiv.style.marginBottom = '10px';
+		// Build HTML safely using string concatenation with escaped values
+		// forwardSenderName, forwardSenderEmail, forwardDate, forwardSubject are already JSON-encoded, so they're safe
+		headerDiv.innerHTML = '<strong>Diteruskan dari:</strong> ' + forwardSenderName + ' (' + forwardSenderEmail + ')<br>' +
+			'<strong>Tanggal:</strong> ' + forwardDate + '<br>' +
+			'<strong>Subjek:</strong> ' + forwardSubject;
+		
+		const contentDiv = document.createElement('div');
+		contentDiv.style.borderTop = '1px solid #ddd';
+		contentDiv.style.paddingTop = '10px';
+		// forwardContent is already JSON-encoded, so it's safe to use
+		contentDiv.innerHTML = forwardContent;
+		
+		forwardMessageDiv.appendChild(headerDiv);
+		forwardMessageDiv.appendChild(contentDiv);
+		
+		const forwardMessage = forwardMessageDiv.outerHTML;
 		
 		if (window.quill) {
 			try {
@@ -392,13 +418,14 @@ document.addEventListener('DOMContentLoaded', function() {
 					allUsers = Array.isArray(data.users) ? data.users : [];
 					displayUsers(allUsers);
 				} else {
-					const errorMsg = (data && data.message) ? data.message : 'Gagal memuat daftar pengguna';
+					const errorMsg = (data && data.message) ? escapeHtmlAttr(data.message) : 'Gagal memuat daftar pengguna';
 					usersList.innerHTML = '<div class="p-3 text-center text-danger">Error: ' + errorMsg + '</div>';
 				}
 			})
 			.catch(error => {
 				console.error('Error loading users:', error);
-				usersList.innerHTML = '<div class="p-3 text-center text-danger">Error memuat daftar pengguna: ' + error.message + '<br><small>Silakan refresh halaman atau coba lagi nanti.</small></div>';
+				const errorMsg = error.message ? escapeHtmlAttr(error.message) : 'Unknown error';
+				usersList.innerHTML = '<div class="p-3 text-center text-danger">Error memuat daftar pengguna: ' + errorMsg + '<br><small>Silakan refresh halaman atau coba lagi nanti.</small></div>';
 			});
 	}
 	
@@ -455,13 +482,19 @@ document.addEventListener('DOMContentLoaded', function() {
 			const config = <?= json_encode(require __DIR__ . '/../../config/app.php', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 			const uploadUrl = config.upload_url || '/uploads/';
 			const baseUrl = <?= json_encode(BASE_URL, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
-			const avatarInitial = user.namalengkap.charAt(0).toUpperCase();
+			const avatarInitial = user.namalengkap ? user.namalengkap.charAt(0).toUpperCase() : 'U';
 			let userPicture = '';
 			if (user.picture) {
-				userPicture = `<img src="${baseUrl}${uploadUrl}${user.picture}" alt="${user.namalengkap}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
+				const escapedNamalengkap = escapeHtmlAttr(user.namalengkap || '');
+				userPicture = `<img src="${baseUrl}${uploadUrl}${escapeHtmlAttr(user.picture)}" alt="${escapedNamalengkap}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
 			} else {
-				userPicture = `<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">${avatarInitial}</div>`;
+				userPicture = `<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">${escapeHtmlAttr(avatarInitial)}</div>`;
 			}
+			
+			const escapedNamalengkap = escapeHtmlAttr(user.namalengkap || '');
+			const escapedUsername = escapeHtmlAttr(user.username || '');
+			const escapedEmail = escapeHtmlAttr(user.email || '');
+			const escapedRole = escapeHtmlAttr(user.role || '');
 			
 			return `
 				<div class="col-xxl-2 col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-2">
@@ -474,10 +507,10 @@ document.addEventListener('DOMContentLoaded', function() {
 						<div class="card-body d-flex align-items-center" style="padding: 0.75rem; min-height: 60px;">
 							${userPicture}
 							<div class="flex-grow-1 ms-2" style="min-width: 0; overflow: hidden;">
-								<div class="fw-bold text-truncate" style="font-size: 0.875rem;" title="${user.namalengkap}">${user.namalengkap}</div>
-								<div class="text-muted text-truncate" style="font-size: 0.75rem;" title="${user.username}">${user.username}</div>
-								<div class="text-muted text-truncate" style="font-size: 0.7rem;" title="${user.email}">${user.email}</div>
-								<span class="badge bg-secondary" style="font-size: 0.65rem;">${user.role}</span>
+								<div class="fw-bold text-truncate" style="font-size: 0.875rem;" title="${escapedNamalengkap}">${escapedNamalengkap}</div>
+								<div class="text-muted text-truncate" style="font-size: 0.75rem;" title="${escapedUsername}">${escapedUsername}</div>
+								<div class="text-muted text-truncate" style="font-size: 0.7rem;" title="${escapedEmail}">${escapedEmail}</div>
+								<span class="badge bg-secondary" style="font-size: 0.65rem;">${escapedRole}</span>
 							</div>
 						</div>
 					</div>
@@ -538,9 +571,10 @@ document.addEventListener('DOMContentLoaded', function() {
 			selectedRecipientsList.innerHTML = '<span class="text-muted">Belum ada penerima yang dipilih</span>';
 			selectedRecipientsInput.value = '';
 		} else {
-			const recipientsHtml = selectedUsers.map(user => 
-				`<span class="badge bg-primary me-1 mb-1">${user.namalengkap} <span onclick="removeUser(${user.id})" style="cursor: pointer;">×</span></span>`
-			).join('');
+			const recipientsHtml = selectedUsers.map(user => {
+				const escapedName = escapeHtmlAttr(user.namalengkap || '');
+				return `<span class="badge bg-primary me-1 mb-1">${escapedName} <span onclick="removeUser(${user.id})" style="cursor: pointer;">×</span></span>`;
+			}).join('');
 			selectedRecipientsList.innerHTML = recipientsHtml;
 			selectedRecipientsInput.value = selectedUsers.map(u => u.id).join(',');
 		}
