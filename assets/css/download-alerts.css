@@ -1,377 +1,163 @@
 /**
- * Download Alerts CSS
- * Custom styling for download error and success messages
+ * Download Alert Styles
+ * Custom modal alerts for file download status
  */
 
-/* Download Alert Modal */
 .download-alert-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 9999;
-    animation: fadeIn 0.3s ease-out;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
 }
 
 .download-alert-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    backdrop-filter: blur(2px);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
 .download-alert-content {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    max-width: 500px;
-    width: 100%;
-    animation: slideIn 0.3s ease-out;
-    overflow: hidden;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 100%;
+  animation: slideIn 0.3s ease-out;
 }
 
 .download-alert-content.success {
-    border-top: 4px solid #28a745;
+  border-top: 4px solid #28a745;
 }
 
 .download-alert-content.error {
-    border-top: 4px solid #dc3545;
+  border-top: 4px solid #dc3545;
 }
 
 .download-alert-header {
-    display: flex;
-    align-items: center;
-    padding: 24px 24px 16px;
-    position: relative;
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  display: flex;
+  align-items: center;
+  padding: 20px 20px 10px;
+  position: relative;
 }
 
 .download-alert-icon {
-    margin-right: 16px;
-    flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
 }
 
 .download-alert-content.success .download-alert-icon {
-    background: rgba(40, 167, 69, 0.1);
-    color: #28a745;
+  color: #28a745;
 }
 
 .download-alert-content.error .download-alert-icon {
-    background: rgba(220, 53, 69, 0.1);
-    color: #dc3545;
+  color: #dc3545;
 }
 
 .download-alert-title {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-    flex-grow: 1;
-    color: #212529;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  flex-grow: 1;
 }
 
 .download-alert-close {
-    background: none;
-    border: none;
-    color: #6c757d;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
 }
 
 .download-alert-close:hover {
-    background: rgba(108, 117, 125, 0.1);
-    color: #495057;
-    transform: scale(1.1);
+  background: #f8f9fa;
+  color: #495057;
 }
 
 .download-alert-body {
-    padding: 0 24px 24px;
+  padding: 0 20px 20px;
 }
 
 .download-alert-body p {
-    margin: 0;
-    color: #6c757d;
-    line-height: 1.6;
-    font-size: 0.95rem;
+  margin: 0;
+  color: #6c757d;
+  line-height: 1.5;
 }
 
 .download-alert-footer {
-    padding: 0 24px 24px;
-    text-align: right;
-    background: #f8f9fa;
-    margin: 0 -24px -24px;
-    padding: 16px 24px;
-}
-
-.download-alert-footer .btn {
-    min-width: 80px;
-    font-weight: 500;
+  padding: 0 20px 20px;
+  text-align: right;
 }
 
 /* Animations */
 @keyframes fadeIn {
-    from { 
-        opacity: 0; 
-    }
-    to { 
-        opacity: 1; 
-    }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideIn {
-    from { 
-        opacity: 0;
-        transform: translateY(-30px) scale(0.9);
-    }
-    to { 
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-/* Loading state for download buttons */
-.download-link.downloading {
-    position: relative;
-    pointer-events: none;
-    opacity: 0.7;
+/* Loading state styles */
+.downloading {
+  position: relative;
 }
 
-.download-link.downloading::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 16px;
-    height: 16px;
-    margin: -8px 0 0 -8px;
-    border: 2px solid transparent;
-    border-top: 2px solid currentColor;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Toast-style notifications for quick feedback */
-.download-toast {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    padding: 16px 20px;
-    max-width: 400px;
-    z-index: 10000;
-    animation: slideInRight 0.3s ease-out;
-    border-left: 4px solid #28a745;
-}
-
-.download-toast.error {
-    border-left-color: #dc3545;
-}
-
-.download-toast-content {
-    display: flex;
-    align-items: center;
-}
-
-.download-toast-icon {
-    margin-right: 12px;
-    flex-shrink: 0;
-}
-
-.download-toast-message {
-    flex-grow: 1;
-    font-size: 0.9rem;
-    color: #495057;
-}
-
-.download-toast-close {
-    background: none;
-    border: none;
-    color: #6c757d;
-    cursor: pointer;
-    padding: 4px;
-    margin-left: 12px;
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.download-toast-close:hover {
-    background: #f8f9fa;
-    color: #495057;
-}
-
-@keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(100%);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-/* Progress indicator for large file downloads */
-.download-progress {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    padding: 16px 20px;
-    min-width: 300px;
-    z-index: 10000;
-    animation: slideInUp 0.3s ease-out;
-}
-
-.download-progress-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.download-progress-title {
-    flex-grow: 1;
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: #495057;
-}
-
-.download-progress-close {
-    background: none;
-    border: none;
-    color: #6c757d;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-}
-
-.download-progress-bar {
-    width: 100%;
-    height: 6px;
-    background: #e9ecef;
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.download-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #007bff, #0056b3);
-    border-radius: 3px;
-    transition: width 0.3s ease;
-    animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-    0% { background-position: -200px 0; }
-    100% { background-position: 200px 0; }
-}
-
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translateY(100%);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.downloading::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: inherit;
+  pointer-events: none;
 }
 
 /* Responsive design */
 @media (max-width: 576px) {
-    .download-alert-overlay {
-        padding: 16px;
-    }
-    
-    .download-alert-content {
-        max-width: none;
-        width: 100%;
-    }
-    
-    .download-alert-header {
-        padding: 20px 20px 12px;
-    }
-    
-    .download-alert-body {
-        padding: 0 20px 20px;
-    }
-    
-    .download-alert-footer {
-        padding: 12px 20px;
-        margin: 0 -20px -20px;
-    }
-    
-    .download-toast {
-        top: 16px;
-        right: 16px;
-        left: 16px;
-        max-width: none;
-    }
-    
-    .download-progress {
-        bottom: 16px;
-        right: 16px;
-        left: 16px;
-        min-width: auto;
-    }
-}
+  .download-alert-content {
+    margin: 10px;
+    max-width: calc(100% - 20px);
+  }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .download-alert-content {
-        background: #2d3748;
-        color: #e2e8f0;
-    }
-    
-    .download-alert-header {
-        background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-    }
-    
-    .download-alert-title {
-        color: #e2e8f0;
-    }
-    
-    .download-alert-body p {
-        color: #a0aec0;
-    }
-    
-    .download-alert-footer {
-        background: #1a202c;
-    }
-    
-    .download-toast {
-        background: #2d3748;
-        color: #e2e8f0;
-    }
-    
-    .download-progress {
-        background: #2d3748;
-        color: #e2e8f0;
-    }
+  .download-alert-header {
+    padding: 15px 15px 8px;
+  }
+
+  .download-alert-body {
+    padding: 0 15px 15px;
+  }
+
+  .download-alert-footer {
+    padding: 0 15px 15px;
+  }
+
+  .download-alert-title {
+    font-size: 1.1rem;
+  }
 }

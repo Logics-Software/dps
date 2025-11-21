@@ -269,8 +269,11 @@ class DownloadHandler {
    * Add CSS styles for alert modal
    */
   addAlertStyles() {
-    if (document.getElementById("download-alert-styles")) return;
+    // Check if external CSS is already loaded
+    const existingLink = document.querySelector('link[href*="download-alerts.css"]');
+    if (existingLink || document.getElementById("download-alert-styles")) return;
 
+    // Fallback to inline styles if external CSS is not loaded
     const styles = document.createElement("style");
     styles.id = "download-alert-styles";
     styles.textContent = `
