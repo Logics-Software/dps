@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.dhainako.app",
+      "sha256_cert_fingerprints": [
+        "GANTI_DENGAN_SHA256_DEBUG_ANDA",
+        "GANTI_DENGAN_SHA256_RELEASE_ANDA_JIKA_ADA"
+      ]
+    }
+  }
+]
