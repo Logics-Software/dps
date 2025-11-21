@@ -2,7 +2,30 @@
 class WebAuthnHelper {
     // Check if WebAuthn is supported
     static isSupported() {
-        return typeof window.PublicKeyCredential !== 'undefined';
+        return typeof window.PublicKeyCredential !== 'undefined' && !WebAuthnHelper.isAndroidWebView();
+    }
+
+    // Detect if running in Android WebView
+    static isAndroidWebView() {
+        const userAgent = navigator.userAgent;
+        // Check for Android WebView indicators
+        return /Android/.test(userAgent) && 
+               (/wv/.test(userAgent) || /Version\/\d+\.\d+/.test(userAgent)) &&
+               !/Chrome\/[.0-9]*/.test(userAgent);
+    }
+
+    // Check if running in any WebView (iOS or Android)
+    static isWebView() {
+        const userAgent = navigator.userAgent;
+        // Android WebView
+        if (WebAuthnHelper.isAndroidWebView()) {
+            return true;
+        }
+        // iOS WebView (WKWebView or UIWebView)
+        if (/iPhone|iPad/.test(userAgent)) {
+            return !userAgent.includes('Safari/') || userAgent.includes('WebKit') && !userAgent.includes('Version/');
+        }
+        return false;
     }
 
     // Convert base64url to ArrayBuffer
@@ -50,6 +73,16 @@ class WebAuthnHelper {
 
     // Start registration process
     static async registerBiometric() {
+        // Check if we're in WebView and try native biometric first
+        if (WebAuthnHelper.isWebView()) {
+            try {
+                return await WebAuthnHelper.registerNativeBiometric();
+            } catch (error) {
+                console.log('Native biometric registration failed, falling back to WebAuthn:', error.message);
+                // Fall through to WebAuthn if native fails
+            }
+        }
+
         if (!WebAuthnHelper.isSupported()) {
             throw new Error('WebAuthn tidak didukung di browser ini. Pastikan menggunakan browser modern (Chrome, Firefox, Edge, Safari)');
         }
@@ -134,6 +167,16 @@ class WebAuthnHelper {
 
     // Start authentication process
     static async authenticateBiometric(username) {
+        // Check if we're in WebView and try native biometric first
+        if (WebAuthnHelper.isWebView()) {
+            try {
+                return await WebAuthnHelper.authenticateNativeBiometric(username);
+            } catch (error) {
+                console.log('Native biometric failed, falling back to WebAuthn:', error.message);
+                // Fall through to WebAuthn if native fails
+            }
+        }
+
         if (!WebAuthnHelper.isSupported()) {
             throw new Error('WebAuthn tidak didukung di browser ini');
         }
@@ -267,5 +310,93 @@ class WebAuthnHelper {
 
         const data = await response.json();
         return data.success;
+    }
+
+    // Native biometric authentication for WebView
+    static async authenticateNativeBiometric(username) {
+        return new Promise((resolve, reject) => {
+            // Check if Android interface is available
+            if (typeof Android !== 'undefined' && Android.authenticateBiometric) {
+                try {
+                    // Call Android native biometric
+                    Android.authenticateBiometric(username, (result) => {
+                        if (result.success) {
+                            resolve(result);
+                        } else {
+                            reject(new Error(result.error || 'Native biometric authentication failed'));
+                        }
+                    });
+                } catch (error) {
+                    reject(new Error('Failed to call native biometric: ' + error.message));
+                }
+            }
+            // Check if iOS interface is available
+            else if (typeof webkit !== 'undefined' && webkit.messageHandlers && webkit.messageHandlers.biometric) {
+                try {
+                    // Setup callback for iOS
+                    window.biometricCallback = (result) => {
+                        if (result.success) {
+                            resolve(result);
+                        } else {
+                            reject(new Error(result.error || 'Native biometric authentication failed'));
+                        }
+                    };
+                    
+                    // Call iOS native biometric
+                    webkit.messageHandlers.biometric.postMessage({
+                        action: 'authenticate',
+                        username: username
+                    });
+                } catch (error) {
+                    reject(new Error('Failed to call native biometric: ' + error.message));
+                }
+            }
+            else {
+                reject(new Error('Native biometric interface not available'));
+            }
+        });
+    }
+
+    // Register native biometric for WebView
+    static async registerNativeBiometric() {
+        return new Promise((resolve, reject) => {
+            // Check if Android interface is available
+            if (typeof Android !== 'undefined' && Android.registerBiometric) {
+                try {
+                    Android.registerBiometric((result) => {
+                        if (result.success) {
+                            resolve(result);
+                        } else {
+                            reject(new Error(result.error || 'Native biometric registration failed'));
+                        }
+                    });
+                } catch (error) {
+                    reject(new Error('Failed to call native biometric registration: ' + error.message));
+                }
+            }
+            // Check if iOS interface is available
+            else if (typeof webkit !== 'undefined' && webkit.messageHandlers && webkit.messageHandlers.biometric) {
+                try {
+                    // Setup callback for iOS
+                    window.biometricRegisterCallback = (result) => {
+                        if (result.success) {
+                            resolve(result);
+                        } else {
+                            reject(new Error(result.error || 'Native biometric registration failed'));
+                        }
+                    };
+                    
+                    // Call iOS native biometric registration
+                    webkit.messageHandlers.biometric.postMessage({
+                        action: 'register'
+                    });
+                } catch (error) {
+                    reject(new Error('Failed to call native biometric registration: ' + error.message));
+                }
+            }
+            else {
+                reject(new Error('Native biometric interface not available'));
+            }
+        });
     }
 }
