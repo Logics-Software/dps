@@ -1,9 +1,10 @@
 RewriteEngine On
 RewriteBase /
 
-# Allow direct access to assets (CSS, JS, images)
+# Allow direct access to assets (CSS, JS, images) and .well-known
 RewriteCond %{REQUEST_URI} ^/assets/ [OR]
-RewriteCond %{REQUEST_URI} ^/uploads/
+RewriteCond %{REQUEST_URI} ^/uploads/ [OR]
+RewriteCond %{REQUEST_URI} ^/\.well-known/
 RewriteRule ^ - [L]
 
 # Redirect to index.php if file doesn't exist
