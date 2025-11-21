@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Browser WebAuthn</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        line-height: 1.6;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .test-section {
+        background: #f8f9fa;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        border-left: 4px solid #007bff;
+      }
+      .success {
+        border-left-color: #28a745;
+        background: #d4edda;
+      }
+      .error {
+        border-left-color: #dc3545;
+        background: #f8d7da;
+      }
+      .warning {
+        border-left-color: #ffc107;
+        background: #fff3cd;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        margin: 8px 4px;
+        font-size: 16px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+      .result {
+        margin-top: 15px;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 14px;
+        white-space: pre-wrap;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin: 20px 0;
+      }
+      .info-item {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 6px;
+        text-align: center;
+      }
+      .info-item.true {
+        background: #d4edda;
+        color: #155724;
+      }
+      .info-item.false {
+        background: #f8d7da;
+        color: #721c24;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🌐 Test Browser WebAuthn</h1>
+    <p>
+      Test halaman untuk memverifikasi WebAuthn bekerja di browser reguler
+      (Chrome, Firefox, Edge, Safari)
+    </p>
+
+    <div class="test-section">
+      <h3>📊 Environment Detection</h3>
+      <div class="info-grid">
+        <div class="info-item" id="isWebView">WebView: Loading...</div>
+        <div class="info-item" id="hasWebAuthn">WebAuthn: Loading...</div>
+        <div class="info-item" id="hasAndroid">
+          Android Interface: Loading...
+        </div>
+        <div class="info-item" id="isSupported">
+          WebAuthn Supported: Loading...
+        </div>
+      </div>
+      <div
+        id="userAgent"
+        style="font-size: 12px; color: #666; margin-top: 10px"
+      ></div>
+    </div>
+
+    <div class="test-section">
+      <h3>🧪 WebAuthn Tests</h3>
+      <button onclick="testRegisterBiometric()">Test Register Biometric</button>
+      <button onclick="testAuthenticateBiometric()">
+        Test Authenticate Biometric
+      </button>
+      <button onclick="testListCredentials()">Test List Credentials</button>
+      <button onclick="testHasCredentials()">Test Has Credentials</button>
+      <div id="testResult" class="result" style="display: none"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>ℹ️ Instructions</h3>
+      <ul>
+        <li><strong>Chrome/Edge:</strong> Pastikan HTTPS atau localhost</li>
+        <li><strong>Firefox:</strong> Enable WebAuthn di about:config</li>
+        <li><strong>Safari:</strong> Pastikan versi terbaru</li>
+        <li>
+          <strong>Hardware:</strong> Perlu authenticator (Windows Hello, Touch
+          ID, USB Security Key)
+        </li>
+      </ul>
+    </div>
+
+    <script src="assets/js/webauthn.js"></script>
+    <script>
+      function updateEnvironmentInfo() {
+        // Environment detection
+        const isWebView = WebAuthnHelper.isWebView();
+        const hasWebAuthn = typeof window.PublicKeyCredential !== "undefined";
+        const hasAndroid = typeof Android !== "undefined";
+        const isSupported = WebAuthnHelper.isSupported();
+
+        document.getElementById(
+          "isWebView"
+        ).textContent = `WebView: ${isWebView}`;
+        document.getElementById(
+          "isWebView"
+        ).className = `info-item ${isWebView}`;
+
+        document.getElementById(
+          "hasWebAuthn"
+        ).textContent = `WebAuthn API: ${hasWebAuthn}`;
+        document.getElementById(
+          "hasWebAuthn"
+        ).className = `info-item ${hasWebAuthn}`;
+
+        document.getElementById(
+          "hasAndroid"
+        ).textContent = `Android Interface: ${hasAndroid}`;
+        document.getElementById(
+          "hasAndroid"
+        ).className = `info-item ${hasAndroid}`;
+
+        document.getElementById(
+          "isSupported"
+        ).textContent = `Supported: ${isSupported}`;
+        document.getElementById(
+          "isSupported"
+        ).className = `info-item ${isSupported}`;
+
+        // User Agent
+        document.getElementById(
+          "userAgent"
+        ).textContent = `User Agent: ${navigator.userAgent}`;
+      }
+
+      function showResult(message, isSuccess = true) {
+        const resultDiv = document.getElementById("testResult");
+        resultDiv.textContent = message;
+        resultDiv.className = `result`;
+        resultDiv.style.display = "block";
+
+        // Update parent section class
+        const section = resultDiv.closest(".test-section");
+        section.className = `test-section ${isSuccess ? "success" : "error"}`;
+      }
+
+      async function testRegisterBiometric() {
+        showResult("🔄 Testing biometric registration...", true);
+
+        try {
+          const result = await WebAuthnHelper.registerBiometric();
+          showResult(
+            `✅ Registration successful!\n${JSON.stringify(result, null, 2)}`,
+            true
+          );
+        } catch (error) {
+          showResult(
+            `❌ Registration failed:\n${error.message}\n\nStack:\n${error.stack}`,
+            false
+          );
+        }
+      }
+
+      async function testAuthenticateBiometric() {
+        showResult("🔄 Testing biometric authentication...", true);
+
+        const username = prompt(
+          "Enter username for authentication:",
+          "testuser"
+        );
+        if (!username) {
+          showResult(
+            "❌ Authentication cancelled - no username provided",
+            false
+          );
+          return;
+        }
+
+        try {
+          const result = await WebAuthnHelper.authenticateBiometric(username);
+          showResult(
+            `✅ Authentication successful!\n${JSON.stringify(result, null, 2)}`,
+            true
+          );
+        } catch (error) {
+          showResult(
+            `❌ Authentication failed:\n${error.message}\n\nStack:\n${error.stack}`,
+            false
+          );
+        }
+      }
+
+      async function testListCredentials() {
+        showResult("🔄 Testing list credentials...", true);
+
+        try {
+          const credentials = await WebAuthnHelper.listCredentials();
+          showResult(
+            `✅ List credentials successful!\nFound ${
+              credentials.length
+            } credentials:\n${JSON.stringify(credentials, null, 2)}`,
+            true
+          );
+        } catch (error) {
+          showResult(`❌ List credentials failed:\n${error.message}`, false);
+        }
+      }
+
+      async function testHasCredentials() {
+        showResult("🔄 Testing has credentials...", true);
+
+        const username = prompt(
+          "Enter username to check credentials:",
+          "testuser"
+        );
+        if (!username) {
+          showResult("❌ Check cancelled - no username provided", false);
+          return;
+        }
+
+        try {
+          const hasCredentials = await WebAuthnHelper.hasCredentials(username);
+          showResult(
+            `✅ Has credentials check successful!\nUser "${username}" has credentials: ${hasCredentials}`,
+            true
+          );
+        } catch (error) {
+          showResult(
+            `❌ Has credentials check failed:\n${error.message}`,
+            false
+          );
+        }
+      }
+
+      // Initialize on load
+      document.addEventListener("DOMContentLoaded", function () {
+        updateEnvironmentInfo();
+
+        // Show warning if not HTTPS
+        if (
+          location.protocol !== "https:" &&
+          location.hostname !== "localhost"
+        ) {
+          const section = document.querySelector(".test-section");
+          section.className = "test-section warning";
+          showResult(
+            "⚠️ WebAuthn requires HTTPS or localhost. Current protocol: " +
+              location.protocol,
+            false
+          );
+        }
+      });
+    </script>
+  </body>
+</html>
