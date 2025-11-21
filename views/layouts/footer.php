@@ -10,6 +10,26 @@
     $jsVersion = file_exists(__DIR__ . '/../../assets/js/bootstrap.bundle.min.js') ? filemtime(__DIR__ . '/../../assets/js/bootstrap.bundle.min.js') : time();
     ?>
     <script src="<?= htmlspecialchars($baseUrl) ?>/assets/js/bootstrap.bundle.min.js?v=<?= $jsVersion ?>"></script>
+    
+    <?php
+    // Download handler script - load on pages with file downloads
+    $currentPath = $_SERVER['REQUEST_URI'] ?? '';
+    $downloadPages = ['/messages/', '/orders/', '/visits/'];
+    $needsDownloadHandler = false;
+    
+    foreach ($downloadPages as $page) {
+        if (strpos($currentPath, $page) !== false) {
+            $needsDownloadHandler = true;
+            break;
+        }
+    }
+    
+    if ($needsDownloadHandler) {
+        $downloadVersion = file_exists(__DIR__ . '/../../assets/js/download-handler.js') ? filemtime(__DIR__ . '/../../assets/js/download-handler.js') : time();
+        echo '<script src="' . htmlspecialchars($baseUrl) . '/assets/js/download-handler.js?v=' . $downloadVersion . '"></script>';
+    }
+    ?>
+    
     <?php
     if (!empty($additionalScripts)) {
         $scripts = is_array($additionalScripts) ? $additionalScripts : [$additionalScripts];

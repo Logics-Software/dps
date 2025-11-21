@@ -113,10 +113,11 @@ if (!isset($message) || empty($message)) {
 													<?= number_format($attachment['file_size'] / 1024, 1) ?> KB
 												</small>
 											</div>
-											<a href="<?= BASE_URL . $attachment['file_path'] ?>" 
-												class="btn btn-sm btn-outline-primary" 
-												target="_blank" 
-												download="<?= htmlspecialchars($attachment['original_name']) ?>">
+											<a href="<?= BASE_URL ?>/download/file?path=<?= urlencode($attachment['file_path']) ?>&name=<?= urlencode($attachment['original_name']) ?>" 
+												class="btn btn-sm btn-outline-primary download-link" 
+												download="<?= htmlspecialchars($attachment['original_name']) ?>"
+												data-filename="<?= htmlspecialchars($attachment['original_name']) ?>"
+												data-filesize="<?= $attachment['file_size'] ?>">
 												<?= icon('arrow-down', 'mb-0', 16) ?>
 											</a>
 										</div>

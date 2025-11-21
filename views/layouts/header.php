@@ -42,6 +42,25 @@ if (!function_exists('icon')) {
     ?>
     <link href="<?= htmlspecialchars($baseUrl) ?>/assets/css/bootstrap.min.css?v=<?= $bootstrapVersion ?>" rel="stylesheet" type="text/css">
     <link href="<?= htmlspecialchars($baseUrl) ?>/assets/css/style.css?v=<?= $cssVersion ?>" rel="stylesheet" type="text/css">
+    
+    <?php
+    // Load download alerts CSS on pages with file downloads
+    $currentPath = $_SERVER['REQUEST_URI'] ?? '';
+    $downloadPages = ['/messages/', '/orders/', '/visits/'];
+    $needsDownloadCSS = false;
+    
+    foreach ($downloadPages as $page) {
+        if (strpos($currentPath, $page) !== false) {
+            $needsDownloadCSS = true;
+            break;
+        }
+    }
+    
+    if ($needsDownloadCSS) {
+        $downloadCSSVersion = file_exists(__DIR__ . '/../../assets/css/download-alerts.css') ? filemtime(__DIR__ . '/../../assets/css/download-alerts.css') : time();
+        echo '<link href="' . htmlspecialchars($baseUrl) . '/assets/css/download-alerts.css?v=' . $downloadCSSVersion . '" rel="stylesheet" type="text/css">';
+    }
+    ?>
     <?php if (!empty($additionalStyles)):
         $styles = is_array($additionalStyles) ? $additionalStyles : [$additionalStyles];
         foreach ($styles as $styleHref):

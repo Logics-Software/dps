@@ -67,6 +67,10 @@ $router->post('/api/webauthn/authentication/complete', 'ApiWebAuthnController', 
 $router->get('/api/webauthn/credentials', 'ApiWebAuthnController', 'listCredentials');
 $router->post('/api/webauthn/credentials/delete', 'ApiWebAuthnController', 'deleteCredential');
 
+// Download routes with error handling
+$router->get('/download/file', 'DownloadController', 'file');
+$router->get('/download/check', 'DownloadController', 'check');
+
 // Dashboard routes
 $router->get('/dashboard', 'DashboardController', 'index');
 
