@@ -43,9 +43,51 @@ public class MainActivity extends AppCompatActivity {
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
+        webSettings.setAllowFileAccess(true);
+        webSettings.setAllowContentAccess(true);
+        webSettings.setAllowFileAccessFromFileURLs(true);
+        webSettings.setAllowUniversalAccessFromFileURLs(true);
 
-        // Add JavaScript interface
-        webView.addJavascriptInterface(new BiometricInterface(), "Android");
+        // IMPORTANT: Add JavaScript interface BEFORE loading URL
+        BiometricInterface biometricInterface = new BiometricInterface();
+        webView.addJavascriptInterface(biometricInterface, "Android");
+
+        // Enable debugging
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+            android.webkit.WebView.setWebContentsDebuggingEnabled(true);
+        }
+
+        // Add WebViewClient for debugging
+        webView.setWebViewClient(new android.webkit.WebViewClient() {
+            @Override
+            public void onPageFinished(android.webkit.WebView view, String url) {
+                super.onPageFinished(view, url);
+                android.util.Log.d("WebView", "Page finished loading: " + url);
+
+                // Test if interface is available
+                webView.evaluateJavascript(
+                    "console.log('Android interface available:', typeof Android !== 'undefined'); " +
+                    "console.log('Android methods:', Object.getOwnPropertyNames(Android || {}));",
+                    null
+                );
+            }
+
+            @Override
+            public void onReceivedError(android.webkit.WebView view, int errorCode, String description, String failingUrl) {
+                super.onReceivedError(view, errorCode, description, failingUrl);
+                android.util.Log.e("WebView", "Error loading page: " + description);
+            }
+        });
+
+        // Add WebChromeClient for console logging
+        webView.setWebChromeClient(new android.webkit.WebChromeClient() {
+            @Override
+            public boolean onConsoleMessage(android.webkit.ConsoleMessage consoleMessage) {
+                android.util.Log.d("WebView Console", consoleMessage.message() + " -- From line " +
+                    consoleMessage.lineNumber() + " of " + consoleMessage.sourceId());
+                return super.onConsoleMessage(consoleMessage);
+            }
+        });
 
         webView.loadUrl("https://dps.logics-ti.com");
     }
@@ -93,73 +135,105 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public class BiometricInterface {
+
+        // Test method to verify interface is working
+        @JavascriptInterface
+        public String test() {
+            return "Android interface is working!";
+        }
+
         @JavascriptInterface
         public void authenticateBiometric(String username, String callback) {
-            runOnUiThread(() -> {
-                BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
-                    .setTitle("Biometric Authentication")
-                    .setSubtitle("Login dengan sidik jari atau wajah")
-                    .setNegativeButtonText("Batal")
-                    .build();
+            android.util.Log.d("BiometricInterface", "authenticateBiometric called with username: " + username);
 
-                biometricPrompt.authenticate(promptInfo);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
+                            .setTitle("Biometric Authentication")
+                            .setSubtitle("Login dengan sidik jari atau wajah")
+                            .setNegativeButtonText("Batal")
+                            .build();
+
+                        biometricPrompt.authenticate(promptInfo);
+                    } catch (Exception e) {
+                        android.util.Log.e("BiometricInterface", "Error in authenticateBiometric", e);
+                        webView.evaluateJavascript(
+                            "if(window.biometricCallback) window.biometricCallback({success: false, error: 'Error: " + e.getMessage() + "'})",
+                            null
+                        );
+                    }
+                }
             });
         }
 
         @JavascriptInterface
         public void registerBiometric(String callback) {
-            runOnUiThread(() -> {
-                // Check if biometric hardware is available
-                BiometricManager biometricManager = BiometricManager.from(MainActivity.this);
-                int canAuthenticate = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK);
+            android.util.Log.d("BiometricInterface", "registerBiometric called");
 
-                switch (canAuthenticate) {
-                    case BiometricManager.BIOMETRIC_SUCCESS:
-                        // Biometric features are available and enrolled
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        // Check if biometric hardware is available
+                        BiometricManager biometricManager = BiometricManager.from(MainActivity.this);
+                        int canAuthenticate = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK);
+
+                        String jsCallback = "if(window.biometricRegisterCallback) window.biometricRegisterCallback";
+
+                        switch (canAuthenticate) {
+                            case BiometricManager.BIOMETRIC_SUCCESS:
+                                webView.evaluateJavascript(jsCallback + "({success: true})", null);
+                                break;
+                            case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
+                                webView.evaluateJavascript(jsCallback + "({success: false, error: 'No biometric hardware'})", null);
+                                break;
+                            case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
+                                webView.evaluateJavascript(jsCallback + "({success: false, error: 'Biometric hardware unavailable'})", null);
+                                break;
+                            case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
+                                webView.evaluateJavascript(jsCallback + "({success: false, error: 'No biometric enrolled'})", null);
+                                break;
+                            default:
+                                webView.evaluateJavascript(jsCallback + "({success: false, error: 'Biometric not available'})", null);
+                                break;
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.e("BiometricInterface", "Error in registerBiometric", e);
                         webView.evaluateJavascript(
-                            "window.biometricRegisterCallback({success: true})",
+                            "if(window.biometricRegisterCallback) window.biometricRegisterCallback({success: false, error: 'Error: " + e.getMessage() + "'})",
                             null
                         );
-                        break;
-                    case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
-                        webView.evaluateJavascript(
-                            "window.biometricRegisterCallback({success: false, error: 'No biometric hardware'})",
-                            null
-                        );
-                        break;
-                    case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
-                        webView.evaluateJavascript(
-                            "window.biometricRegisterCallback({success: false, error: 'Biometric hardware unavailable'})",
-                            null
-                        );
-                        break;
-                    case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
-                        webView.evaluateJavascript(
-                            "window.biometricRegisterCallback({success: false, error: 'No biometric enrolled'})",
-                            null
-                        );
-                        break;
-                    default:
-                        webView.evaluateJavascript(
-                            "window.biometricRegisterCallback({success: false, error: 'Biometric not available'})",
-                            null
-                        );
-                        break;
+                    }
                 }
             });
         }
 
         @JavascriptInterface
         public void hasCredentials(String username, String callback) {
-            runOnUiThread(() -> {
-                // Check if biometric is enrolled and available
-                BiometricManager biometricManager = BiometricManager.from(MainActivity.this);
-                boolean hasCredentials = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS;
+            android.util.Log.d("BiometricInterface", "hasCredentials called with username: " + username);
 
-                webView.evaluateJavascript(
-                    "window.hasCredentialsCallback({hasCredentials: " + hasCredentials + "})",
-                    null
-                );
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        // Check if biometric is enrolled and available
+                        BiometricManager biometricManager = BiometricManager.from(MainActivity.this);
+                        boolean hasCredentials = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS;
+
+                        webView.evaluateJavascript(
+                            "if(window.hasCredentialsCallback) window.hasCredentialsCallback({hasCredentials: " + hasCredentials + "})",
+                            null
+                        );
+                    } catch (Exception e) {
+                        android.util.Log.e("BiometricInterface", "Error in hasCredentials", e);
+                        webView.evaluateJavascript(
+                            "if(window.hasCredentialsCallback) window.hasCredentialsCallback({hasCredentials: false, error: '" + e.getMessage() + "'})",
+                            null
+                        );
+                    }
+                }
             });
         }
     }

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Android Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+            display: block;
+            width: 100%;
+            max-width: 300px;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Simple Android Interface Test</h1>
+    
+    <button onclick="testBasicInterface()">1. Test Basic Interface</button>
+    <button onclick="testMethods()">2. Test All Methods</button>
+    <button onclick="testHasCredentials()">3. Test Has Credentials</button>
+    <button onclick="testRegister()">4. Test Register</button>
+    <button onclick="testAuth()">5. Test Authentication</button>
+    
+    <div id="result" class="result">Click a button to start testing...</div>
+
+    <script>
+        function log(message, isError = false) {
+            const resultDiv = document.getElementById('result');
+            const timestamp = new Date().toLocaleTimeString();
+            resultDiv.textContent = `[${timestamp}] ${message}`;
+            resultDiv.className = `result ${isError ? 'error' : 'success'}`;
+        }
+        
+        function testBasicInterface() {
+            log('Testing basic Android interface...');
+            
+            if (typeof Android === 'undefined') {
+                log('❌ Android interface not found!', true);
+                return;
+            }
+            
+            log('✅ Android interface found!');
+            
+            // Test basic method
+            if (typeof Android.test === 'function') {
+                try {
+                    const result = Android.test();
+                    log(`✅ Android.test() result: ${result}`);
+                } catch (e) {
+                    log(`❌ Error calling Android.test(): ${e.message}`, true);
+                }
+            } else {
+                log('⚠️ Android.test method not found');
+            }
+        }
+        
+        function testMethods() {
+            log('Testing all Android methods...');
+            
+            if (typeof Android === 'undefined') {
+                log('❌ Android interface not found!', true);
+                return;
+            }
+            
+            const methods = ['test', 'authenticateBiometric', 'registerBiometric', 'hasCredentials'];
+            let result = '📋 Method availability:\n';
+            
+            methods.forEach(method => {
+                const available = typeof Android[method] === 'function';
+                result += `- ${method}: ${available ? '✅' : '❌'}\n`;
+            });
+            
+            log(result);
+        }
+        
+        function testHasCredentials() {
+            log('Testing hasCredentials...');
+            
+            if (typeof Android === 'undefined' || typeof Android.hasCredentials !== 'function') {
+                log('❌ Android.hasCredentials not available!', true);
+                return;
+            }
+            
+            // Setup callback
+            window.hasCredentialsCallback = function(result) {
+                log(`✅ hasCredentials result: ${JSON.stringify(result)}`);
+            };
+            
+            try {
+                Android.hasCredentials('testuser', 'callback');
+                log('⏳ Called hasCredentials, waiting for response...');
+            } catch (error) {
+                log(`❌ Error calling hasCredentials: ${error.message}`, true);
+            }
+        }
+        
+        function testRegister() {
+            log('Testing registerBiometric...');
+            
+            if (typeof Android === 'undefined' || typeof Android.registerBiometric !== 'function') {
+                log('❌ Android.registerBiometric not available!', true);
+                return;
+            }
+            
+            // Setup callback
+            window.biometricRegisterCallback = function(result) {
+                log(`✅ Register result: ${JSON.stringify(result)}`);
+            };
+            
+            try {
+                Android.registerBiometric('callback');
+                log('⏳ Called registerBiometric, waiting for response...');
+            } catch (error) {
+                log(`❌ Error calling registerBiometric: ${error.message}`, true);
+            }
+        }
+        
+        function testAuth() {
+            log('Testing authenticateBiometric...');
+            
+            if (typeof Android === 'undefined' || typeof Android.authenticateBiometric !== 'function') {
+                log('❌ Android.authenticateBiometric not available!', true);
+                return;
+            }
+            
+            // Setup callback
+            window.biometricCallback = function(result) {
+                log(`✅ Auth result: ${JSON.stringify(result)}`);
+            };
+            
+            try {
+                Android.authenticateBiometric('testuser', 'callback');
+                log('⏳ Called authenticateBiometric, waiting for response...');
+            } catch (error) {
+                log(`❌ Error calling authenticateBiometric: ${error.message}`, true);
+            }
+        }
+        
+        // Auto-test on load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(testBasicInterface, 1000);
+        });
+    </script>
+</body>
+</html>
