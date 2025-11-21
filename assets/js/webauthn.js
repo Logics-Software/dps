@@ -1,11 +1,33 @@
 // WebAuthn helper functions
 class WebAuthnHelper {
-  // Check if WebAuthn is supported
+  // Check if WebAuthn is supported (including native biometric in WebView)
   static isSupported() {
-    return (
-      typeof window.PublicKeyCredential !== "undefined" &&
-      !WebAuthnHelper.isAndroidWebView()
-    );
+    // If we're in WebView, check if native biometric interface is available
+    if (WebAuthnHelper.isWebView()) {
+      return WebAuthnHelper.isNativeBiometricAvailable();
+    }
+
+    // For regular browsers, check WebAuthn support
+    return typeof window.PublicKeyCredential !== "undefined";
+  }
+
+  // Check if native biometric interface is available
+  static isNativeBiometricAvailable() {
+    // Check Android interface
+    if (typeof Android !== "undefined" && Android.authenticateBiometric) {
+      return true;
+    }
+
+    // Check iOS interface
+    if (
+      typeof webkit !== "undefined" &&
+      webkit.messageHandlers &&
+      webkit.messageHandlers.biometric
+    ) {
+      return true;
+    }
+
+    return false;
   }
 
   // Detect if running in Android WebView
@@ -300,6 +322,11 @@ class WebAuthnHelper {
   // Check if user has biometric credentials
   static async hasCredentials(username) {
     try {
+      // For WebView, check if native biometric is enrolled
+      if (WebAuthnHelper.isWebView()) {
+        return await WebAuthnHelper.hasNativeCredentials(username);
+      }
+
       const response = await fetch("/api/webauthn/authentication/start", {
         method: "POST",
         headers: {
@@ -327,6 +354,47 @@ class WebAuthnHelper {
       console.error("Error checking credentials:", error);
       return false;
     }
+  }
+
+  // Check if user has native biometric credentials
+  static async hasNativeCredentials(username) {
+    return new Promise((resolve) => {
+      // Check if Android interface is available
+      if (typeof Android !== "undefined" && Android.hasCredentials) {
+        try {
+          Android.hasCredentials(username, (result) => {
+            resolve(result.hasCredentials || false);
+          });
+        } catch (error) {
+          console.error("Error checking native credentials:", error);
+          resolve(false);
+        }
+      }
+      // Check if iOS interface is available
+      else if (
+        typeof webkit !== "undefined" &&
+        webkit.messageHandlers &&
+        webkit.messageHandlers.biometric
+      ) {
+        try {
+          // Setup callback for iOS
+          window.hasCredentialsCallback = (result) => {
+            resolve(result.hasCredentials || false);
+          };
+
+          // Call iOS native check
+          webkit.messageHandlers.biometric.postMessage({
+            action: "hasCredentials",
+            username: username,
+          });
+        } catch (error) {
+          console.error("Error checking native credentials:", error);
+          resolve(false);
+        }
+      } else {
+        resolve(false);
+      }
+    });
   }
 
   // List user credentials
