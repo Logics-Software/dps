@@ -168,7 +168,9 @@ require __DIR__ . '/../layouts/header.php';
                                 </tr>
                                 <?php else: ?>
                                 <?php 
-                                $no = (($page ?? 1) - 1) * ($perPage ?? 10) + 1;
+                                $pageNum = isset($page) ? max((int)$page, 1) : 1;
+                                $perPageNum = isset($perPage) ? max((int)$perPage, 1) : 10;
+                                $no = ($pageNum - 1) * $perPageNum + 1;
                                 $tanggalSistem = new DateTime();
                                 foreach ($tagihans as $tagihan): 
                                     // Hitung umur (hari)
@@ -258,7 +260,7 @@ require __DIR__ . '/../layouts/header.php';
                             if ($currentPage > 1):
                             ?>
                             <li class="page-item">
-                                <a class="page-link" href="?page=<?= $currentPage - 1 ?><?= !empty($baseQuery) ? '&' . $baseQuery : '' ?>">Previous</a>
+                                <a class="page-link" href="?page=<?= (int)$currentPage - 1 ?><?= !empty($baseQuery) ? '&' . $baseQuery : '' ?>">Previous</a>
                             </li>
                             <?php else: ?>
                             <li class="page-item disabled">
@@ -268,8 +270,8 @@ require __DIR__ . '/../layouts/header.php';
                             
                             <?php
                             // Page numbers
-                            $startPage = max(1, $currentPage - 2);
-                            $endPage = min($totalPages, $currentPage + 2);
+                            $startPage = max(1, (int)$currentPage - 2);
+                            $endPage = min((int)$totalPages, (int)$currentPage + 2);
                             
                             if ($startPage > 1):
                             ?>
@@ -284,7 +286,7 @@ require __DIR__ . '/../layouts/header.php';
                             <?php endif; ?>
                             
                             <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
-                            <li class="page-item <?= $i == $currentPage ? 'active' : '' ?>">
+                            <li class="page-item <?= $i == (int)$currentPage ? 'active' : '' ?>">
                                 <a class="page-link" href="?page=<?= $i ?><?= !empty($baseQuery) ? '&' . $baseQuery : '' ?>"><?= $i ?></a>
                             </li>
                             <?php endfor; ?>
@@ -305,7 +307,7 @@ require __DIR__ . '/../layouts/header.php';
                             if ($currentPage < $totalPages):
                             ?>
                             <li class="page-item">
-                                <a class="page-link" href="?page=<?= $currentPage + 1 ?><?= !empty($baseQuery) ? '&' . $baseQuery : '' ?>">Next</a>
+                                <a class="page-link" href="?page=<?= (int)$currentPage + 1 ?><?= !empty($baseQuery) ? '&' . $baseQuery : '' ?>">Next</a>
                             </li>
                             <?php else: ?>
                             <li class="page-item disabled">

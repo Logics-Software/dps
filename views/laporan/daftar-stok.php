@@ -180,7 +180,9 @@ require __DIR__ . '/../layouts/header.php';
                                 </tr>
                                 <?php else: ?>
                                 <?php 
-                                $no = ($page - 1) * $perPage + 1;
+                                $pageNum = isset($page) ? max((int)$page, 1) : 1;
+                                $perPageNum = isset($perPage) ? max((int)$perPage, 1) : 10;
+                                $no = ($pageNum - 1) * $perPageNum + 1;
                                 foreach ($barangs as $barang): 
                                 ?>
                                 <tr>
@@ -210,13 +212,13 @@ require __DIR__ . '/../layouts/header.php';
                             $queryParams['per_page'] = $perPage;
                             $baseQuery = http_build_query($queryParams);
                             ?>
-                            <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=<?= $page - 1 ?>&<?= $baseQuery ?>">Previous</a>
+                            <li class="page-item <?= (int)$page <= 1 ? 'disabled' : '' ?>">
+                                <a class="page-link" href="?page=<?= (int)$page - 1 ?>&<?= $baseQuery ?>">Previous</a>
                             </li>
                             <?php
                             $maxLinks = 3;
                             $half = (int)floor($maxLinks / 2);
-                            $start = max(1, $page - $half);
+                            $start = max(1, (int)$page - $half);
                             $end = min($totalPages, $start + $maxLinks - 1);
                             if ($end - $start + 1 < $maxLinks) {
                                 $start = max(1, $end - $maxLinks + 1);
@@ -228,7 +230,7 @@ require __DIR__ . '/../layouts/header.php';
                                 }
                             }
                             for ($i = $start; $i <= $end; $i++) {
-                                $active = $page == $i ? 'active' : '';
+                                $active = (int)$page == $i ? 'active' : '';
                                 echo '<li class="page-item ' . $active . '"><a class="page-link" href="?page=' . $i . '&' . $baseQuery . '">' . $i . '</a></li>';
                             }
                             if ($end < $totalPages) {
@@ -238,8 +240,8 @@ require __DIR__ . '/../layouts/header.php';
                                 echo '<li class="page-item"><a class="page-link" href="?page=' . $totalPages . '&' . $baseQuery . '">' . $totalPages . '</a></li>';
                             }
                             ?>
-                            <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=<?= $page + 1 ?>&<?= $baseQuery ?>">Next</a>
+                            <li class="page-item <?= (int)$page >= (int)$totalPages ? 'disabled' : '' ?>">
+                                <a class="page-link" href="?page=<?= (int)$page + 1 ?>&<?= $baseQuery ?>">Next</a>
                             </li>
                         </ul>
                     </nav>

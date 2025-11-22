@@ -179,8 +179,8 @@ require __DIR__ . '/../layouts/header.php';
 
 						<!-- Pagination Info -->
 						<div class="text-center text-muted mt-2">
-							Menampilkan <?= (($pagination['current_page'] - 1) * $pagination['per_page']) + 1 ?> sampai 
-							<?= min($pagination['current_page'] * $pagination['per_page'], $pagination['total_items']) ?> 
+							Menampilkan <?= (((int)$pagination['current_page'] - 1) * (int)$pagination['per_page']) + 1 ?> sampai 
+							<?= min((int)$pagination['current_page'] * (int)$pagination['per_page'], (int)$pagination['total_items']) ?> 
 							dari <?= $pagination['total_items'] ?> pesan
 						</div>
 					</div>

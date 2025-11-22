@@ -300,7 +300,9 @@ $bulanNama = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
                                     </tr>
                                     <?php else: ?>
                                     <?php 
-                                    $no = ($page - 1) * $perPage + 1;
+                                    $pageNum = isset($page) ? max((int)$page, 1) : 1;
+                                    $perPageNum = isset($perPage) ? max((int)$perPage, 1) : 10;
+                                    $no = ($pageNum - 1) * $perPageNum + 1;
                                     foreach ($omset as $row): 
                                     ?>
                                     <tr>
@@ -346,13 +348,13 @@ $bulanNama = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
                         <?php if ($totalPages > 1): ?>
                         <nav>
                             <ul class="pagination justify-content-center">
-                                <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="?page=<?= $page - 1 ?>&per_page=<?= $perPage ?>&tahun=<?= urlencode($tahun) ?>&bulan=<?= urlencode($bulan) ?>">Previous</a>
+                                <li class="page-item <?= (int)$page <= 1 ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="?page=<?= (int)$page - 1 ?>&per_page=<?= $perPage ?>&tahun=<?= urlencode($tahun) ?>&bulan=<?= urlencode($bulan) ?>">Previous</a>
                                 </li>
                                 <?php
                                 $maxLinks = 3;
                                 $half = (int)floor($maxLinks / 2);
-                                $start = max(1, $page - $half);
+                                $start = max(1, (int)$page - $half);
                                 $end = min($totalPages, $start + $maxLinks - 1);
                                 if ($end - $start + 1 < $maxLinks) {
                                     $start = max(1, $end - $maxLinks + 1);
@@ -370,7 +372,7 @@ $bulanNama = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
                                     }
                                 }
                                 for ($i = $start; $i <= $end; $i++) {
-                                    echo '<li class="page-item ' . ($page == $i ? 'active' : '') . '"><a class="page-link" href="' . $buildLink($i) . '">' . $i . '</a></li>';
+                                    echo '<li class="page-item ' . ((int)$page == $i ? 'active' : '') . '"><a class="page-link" href="' . $buildLink($i) . '">' . $i . '</a></li>';
                                 }
                                 if ($end < $totalPages) {
                                     if ($end < $totalPages - 1) {
@@ -379,8 +381,8 @@ $bulanNama = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
                                     echo '<li class="page-item"><a class="page-link" href="' . $buildLink($totalPages) . '">' . $totalPages . '</a></li>';
                                 }
                                 ?>
-                                <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="?page=<?= $page + 1 ?>&per_page=<?= $perPage ?>&tahun=<?= urlencode($tahun) ?>&bulan=<?= urlencode($bulan) ?>">Next</a>
+                                <li class="page-item <?= (int)$page >= (int)$totalPages ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="?page=<?= (int)$page + 1 ?>&per_page=<?= $perPage ?>&tahun=<?= urlencode($tahun) ?>&bulan=<?= urlencode($bulan) ?>">Next</a>
                                 </li>
                             </ul>
                         </nav>
