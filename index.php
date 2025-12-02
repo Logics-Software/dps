@@ -161,6 +161,10 @@ $router->get('/visits/{id}/detail', 'VisitController', 'getVisitDetail');
 $router->get('/visits/{id}/files', 'VisitController', 'getVisitFiles');
 $router->post('/visits/{id}/activities', 'VisitController', 'createActivity');
 
+// API Health Check / Ping route (no authentication required - for VB bridging)
+$router->get('/api/health', 'ApiHealthController', 'index');
+$router->get('/api/ping', 'ApiHealthController', 'index');
+
 // API routes (no authentication required - for VB bridging)
 $router->get('/api/users', 'ApiController', 'users');
 $router->post('/api/users', 'ApiController', 'users');
