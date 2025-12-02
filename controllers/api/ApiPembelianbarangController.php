@@ -2,9 +2,23 @@
 class ApiPembelianbarangController extends Controller {
     public function index() {
         $method = $_SERVER['REQUEST_METHOD'];
-
-        if (isset($_POST['_method'])) {
-            $method = strtoupper($_POST['_method']);
+        
+        // Method override sudah ditangani di Router, tapi kita juga perlu handle JSON body
+        // (untuk kasus khusus jika Router belum menangani)
+        if ($method === 'POST') {
+            // Check form data first
+            if (isset($_POST['_method'])) {
+                $method = strtoupper($_POST['_method']);
+            }
+            // Also check JSON body for method override
+            elseif (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+                // Use stored raw input if available (from Router), otherwise read from php://input
+                $rawInput = $GLOBALS['_RAW_INPUT'] ?? file_get_contents('php://input');
+                $jsonInput = json_decode($rawInput, true);
+                if (isset($jsonInput['_method'])) {
+                    $method = strtoupper($jsonInput['_method']);
+                }
+            }
         }
 
         switch ($method) {
@@ -103,7 +117,9 @@ class ApiPembelianbarangController extends Controller {
     }
 
     private function createPembelianbarang() {
-        $input = json_decode(file_get_contents('php://input'), true);
+        // Use stored raw input if available (from Router), otherwise read from php://input
+        $rawInput = $GLOBALS['_RAW_INPUT'] ?? file_get_contents('php://input');
+        $input = json_decode($rawInput, true);
 
         if (!$input) {
             $input = $_POST;
@@ -141,10 +157,12 @@ class ApiPembelianbarangController extends Controller {
     }
 
     private function updatePembelianbarang() {
-        $input = json_decode(file_get_contents('php://input'), true);
+        // Use stored raw input if available (from Router), otherwise read from php://input
+        $rawInput = $GLOBALS['_RAW_INPUT'] ?? file_get_contents('php://input');
+        $input = json_decode($rawInput, true);
 
         if (!$input) {
-            parse_str(file_get_contents('php://input'), $parsedData);
+            parse_str($rawInput, $parsedData);
             $input = $parsedData ?: $_POST;
         }
 
@@ -209,15 +227,25 @@ class ApiPembelianbarangController extends Controller {
     }
 
     private function deletePembelianbarang() {
-        $input = json_decode(file_get_contents('php://input'), true);
-
-        if (!$input) {
-            parse_str(file_get_contents('php://input'), $parsedData);
-            $input = $parsedData ?: $_GET;
+        // For DELETE, check query string first (common for DELETE requests)
+        // Then check JSON body if available
+        $id = $_GET['id'] ?? null;
+        $nopembelian = $_GET['nopembelian'] ?? null;
+        
+        // If not in query string, try to read from request body (JSON or form data)
+        if (!$id && !$nopembelian) {
+            $rawInput = $GLOBALS['_RAW_INPUT'] ?? file_get_contents('php://input');
+            if (!empty($rawInput)) {
+                $input = json_decode($rawInput, true);
+                if (!$input) {
+                    parse_str($rawInput, $input);
+                }
+                if ($input) {
+                    $id = $input['id'] ?? null;
+                    $nopembelian = $input['nopembelian'] ?? null;
+                }
+            }
         }
-
-        $id = $input['id'] ?? $_GET['id'] ?? null;
-        $nopembelian = $input['nopembelian'] ?? $_GET['nopembelian'] ?? null;
 
         $pembelianModel = new Pembelianbarang();
 

@@ -23,7 +23,7 @@ class PenerimaanController extends Controller {
 		}
 
 		$search = trim($_GET['search'] ?? '');
-		$status = $_GET['status'] ?? null;
+		$status = $_GET['status'] ?? 'belumproses'; // Default filter: status = 'belumproses'
 		$dateFilter = $_GET['date_filter'] ?? 'today';
 		$startDate = $_GET['start_date'] ?? '';
 		$endDate = $_GET['end_date'] ?? '';

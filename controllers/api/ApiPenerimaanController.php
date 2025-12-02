@@ -63,7 +63,7 @@ class ApiPenerimaanController extends Controller {
         $page = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
         $perPage = isset($_GET['per_page']) ? max((int)$_GET['per_page'], 1) : 20;
         $search = $_GET['search'] ?? '';
-        $status = $_GET['status'] ?? null;
+        $status = $_GET['status'] ?? 'belumproses'; // Default filter: status = 'belumproses'
         $kodecustomer = $_GET['kodecustomer'] ?? null;
         $kodesales = $_GET['kodesales'] ?? null;
         $startDate = $_GET['start_date'] ?? null;

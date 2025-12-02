@@ -195,6 +195,7 @@ $router->delete('/api/mastersupplier', 'ApiMastersupplierController', 'index');
 $router->get('/api/masterbarang', 'ApiMasterbarangController', 'index');
 $router->post('/api/masterbarang', 'ApiMasterbarangController', 'index');
 $router->put('/api/masterbarang', 'ApiMasterbarangController', 'index');
+$router->patch('/api/masterbarang', 'ApiMasterbarangController', 'index');
 $router->delete('/api/masterbarang', 'ApiMasterbarangController', 'index');
 
 // API Penjualan routes
@@ -221,6 +222,12 @@ $router->get('/api/mastercustomer', 'ApiMastercustomerController', 'index');
 $router->post('/api/mastercustomer', 'ApiMastercustomerController', 'index');
 $router->put('/api/mastercustomer', 'ApiMastercustomerController', 'index');
 $router->delete('/api/mastercustomer', 'ApiMastercustomerController', 'index');
+
+// API Headerorder routes (for bridging)
+$router->get('/api/headerorder', 'ApiHeaderorderController', 'index');
+$router->post('/api/headerorder', 'ApiHeaderorderController', 'index');
+$router->put('/api/headerorder', 'ApiHeaderorderController', 'index');
+$router->patch('/api/headerorder', 'ApiHeaderorderController', 'index');
 
 // Pembelian Barang routes
 $router->get('/pembelian', 'PembelianController', 'index');

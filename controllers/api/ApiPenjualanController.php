@@ -6,7 +6,19 @@ class ApiPenjualanController extends Controller {
             $method = strtoupper($_POST['_method']);
         }
 
+        // Get action from POST, GET, or JSON body
         $action = $_POST['action'] ?? $_GET['action'] ?? null;
+        
+        // If action not found in POST/GET, try to read from JSON body
+        if (!$action && $method === 'POST') {
+            $rawInput = $GLOBALS['_RAW_INPUT'] ?? file_get_contents('php://input');
+            if (!empty($rawInput)) {
+                $jsonInput = json_decode($rawInput, true);
+                if ($jsonInput && isset($jsonInput['action'])) {
+                    $action = $jsonInput['action'];
+                }
+            }
+        }
 
         if ($action === 'update_saldo' && $method === 'POST') {
             $this->updateSaldo();

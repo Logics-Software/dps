@@ -216,11 +216,11 @@ class Mastercustomer {
             $data['alamatwp'] ?? null,
             $data['namaapoteker'] ?? null,
             $data['nosipa'] ?? null,
-            $data['tanggaledsipa'] ?? null,
+            $this->normalizeDateValue($data['tanggaledsipa'] ?? null),
             $data['noijinusaha'] ?? null,
-            $data['tanggaledijinusaha'] ?? null,
+            $this->normalizeDateValue($data['tanggaledijinusaha'] ?? null),
             $data['nocdob'] ?? null,
-            $data['tanggaledcdob'] ?? null,
+            $this->normalizeDateValue($data['tanggaledcdob'] ?? null),
             isset($data['latitude']) ? $data['latitude'] : null,
             isset($data['longitude']) ? $data['longitude'] : null,
             $data['userid'] ?? null,
@@ -266,6 +266,9 @@ class Mastercustomer {
                     $value = $this->normalizeStatusValue($data[$field], 'updated');
                 } elseif ($field === 'statuspkp') {
                     $value = $this->normalizeStatusPkp($data[$field], null);
+                } elseif (in_array($field, ['tanggaledsipa', 'tanggaledijinusaha', 'tanggaledcdob'])) {
+                    // Normalize date fields - empty string becomes null
+                    $value = $this->normalizeDateValue($data[$field]);
                 } else {
                     $value = $data[$field];
                 }
@@ -320,6 +323,12 @@ class Mastercustomer {
         }
 
         $value = strtolower(trim($status));
+        
+        // Limit length to prevent truncation (max 10 characters for safety)
+        if (strlen($value) > 10) {
+            $value = substr($value, 0, 10);
+        }
+        
         $allowed = ['baru', 'updated', 'aktif', 'nonaktif'];
 
         if (in_array($value, $allowed, true)) {
@@ -342,6 +351,33 @@ class Mastercustomer {
         }
 
         return $default;
+    }
+
+    /**
+     * Normalize date value - convert empty string to null, validate date format
+     */
+    private function normalizeDateValue($value) {
+        // If null or empty string, return null
+        if ($value === null || $value === '' || trim($value) === '') {
+            return null;
+        }
+
+        // If already a valid date string, return as is
+        $trimmed = trim($value);
+        
+        // Try to validate date format (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
+        if (preg_match('/^\d{4}-\d{2}-\d{2}(\s+\d{2}:\d{2}:\d{2})?$/', $trimmed)) {
+            return $trimmed;
+        }
+
+        // Try to parse and format date
+        try {
+            $date = new DateTime($trimmed);
+            return $date->format('Y-m-d');
+        } catch (Exception $e) {
+            // If invalid date format, return null
+            return null;
+        }
     }
 }
 

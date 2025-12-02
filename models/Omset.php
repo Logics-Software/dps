@@ -97,8 +97,8 @@ class Omset {
 
     public function deleteByTahunBulan($tahun, $bulan) {
         $sql = "DELETE FROM omset WHERE tahun = ? AND bulan = ?";
-        $this->db->query($sql, [$tahun, $bulan]);
-        return $this->db->rowCount();
+        $stmt = $this->db->query($sql, [$tahun, $bulan]);
+        return $stmt->rowCount();
     }
 
     public function getDistinctYears() {

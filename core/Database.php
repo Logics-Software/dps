@@ -37,10 +37,31 @@ class Database {
     public function query($sql, $params = []) {
         try {
             $stmt = $this->connection->prepare($sql);
+            
+            // Set error mode to exception to catch warnings as well
+            $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
             $stmt->execute($params);
+            
+            // Check for warnings
+            $errorInfo = $stmt->errorInfo();
+            if ($errorInfo[0] !== '00000' && $errorInfo[0] !== null) {
+                // If it's a warning (01xxx), log it but don't throw
+                if (substr($errorInfo[0], 0, 2) === '01') {
+                    error_log("Database warning: " . ($errorInfo[2] ?? 'Unknown warning') . " | SQL: " . substr($sql, 0, 200));
+                    // For data truncation warnings, throw exception
+                    if (strpos($errorInfo[2] ?? '', 'Data truncated') !== false) {
+                        throw new PDOException("Data truncated: " . ($errorInfo[2] ?? 'Unknown field'));
+                    }
+                } else {
+                    // For other errors, throw exception
+                    throw new PDOException($errorInfo[2] ?? 'Database error');
+                }
+            }
+            
             return $stmt;
         } catch(PDOException $e) {
-            error_log("Database query error: " . $e->getMessage());
+            error_log("Database query error: " . $e->getMessage() . " | SQL: " . substr($sql, 0, 200));
             throw $e;
         }
     }

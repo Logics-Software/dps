@@ -101,6 +101,11 @@ class ApiMastercustomerController extends Controller {
             return;
         }
 
+        // Normalize date fields - convert empty strings to null
+        $normalizeDate = function($value) {
+            return ($value === '' || $value === null) ? null : $value;
+        };
+
         $data = [
             'kodecustomer' => $input['kodecustomer'],
             'namacustomer' => $input['namacustomer'],
@@ -115,16 +120,32 @@ class ApiMastercustomerController extends Controller {
             'alamatwp' => $input['alamatwp'] ?? null,
             'namaapoteker' => $input['namaapoteker'] ?? null,
             'nosipa' => $input['nosipa'] ?? null,
-            'tanggaledsipa' => $input['tanggaledsipa'] ?? null,
+            'tanggaledsipa' => $normalizeDate($input['tanggaledsipa'] ?? null),
             'noijinusaha' => $input['noijinusaha'] ?? null,
-            'tanggaledijinusaha' => $input['tanggaledijinusaha'] ?? null,
+            'tanggaledijinusaha' => $normalizeDate($input['tanggaledijinusaha'] ?? null),
             'nocdob' => $input['nocdob'] ?? null,
-            'tanggaledcdob' => $input['tanggaledcdob'] ?? null,
+            'tanggaledcdob' => $normalizeDate($input['tanggaledcdob'] ?? null),
             'latitude' => $input['latitude'] ?? null,
             'longitude' => $input['longitude'] ?? null,
             'userid' => $input['userid'] ?? null,
             'status' => $input['status'] ?? 'baru'
         ];
+        
+        // Normalize status - ensure it's one of the allowed values and not too long
+        $statusValue = !empty($data['status']) ? trim($data['status']) : 'baru';
+        $statusValue = strtolower($statusValue);
+        
+        // Limit length to prevent truncation (max 10 characters)
+        if (strlen($statusValue) > 10) {
+            $statusValue = substr($statusValue, 0, 10);
+        }
+        
+        $allowedStatus = ['baru', 'updated', 'aktif', 'nonaktif'];
+        if (!in_array($statusValue, $allowedStatus, true)) {
+            $data['status'] = 'baru';
+        } else {
+            $data['status'] = $statusValue;
+        }
 
         $id = $mastercustomerModel->create($data);
         $customer = $mastercustomerModel->findById($id);
@@ -182,6 +203,14 @@ class ApiMastercustomerController extends Controller {
         }
 
         unset($data['_method']);
+
+        // Normalize date fields - convert empty strings to null
+        $dateFields = ['tanggaledsipa', 'tanggaledijinusaha', 'tanggaledcdob'];
+        foreach ($dateFields as $field) {
+            if (isset($data[$field]) && $data[$field] === '') {
+                $data[$field] = null;
+            }
+        }
 
         $mastercustomerModel->update($id, $data);
         $updated = $mastercustomerModel->findById($id);

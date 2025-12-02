@@ -337,6 +337,38 @@ class Headerorder {
 		$result = $this->db->fetchOne($sql, $params);
 		return (float)($result['total'] ?? 0);
 	}
+
+	public function updateFields($noorder, $data = []) {
+		if (empty($noorder) || empty($data)) {
+			return false;
+		}
+
+		$allowed = ['nopenjualan', 'status'];
+		$fields = [];
+		$params = [];
+
+		foreach ($allowed as $field) {
+			if (array_key_exists($field, $data)) {
+				$value = $data[$field];
+				if ($value === '' || $value === null) {
+					continue;
+				}
+				$fields[] = "{$field} = ?";
+				$params[] = $value;
+			}
+		}
+
+		if (empty($fields)) {
+			return false;
+		}
+
+		$fields[] = "updated_at = NOW()";
+		$params[] = $noorder;
+
+		$sql = "UPDATE headerorder SET " . implode(', ', $fields) . " WHERE noorder = ?";
+		$this->db->query($sql, $params);
+		return true;
+	}
 }
 
 

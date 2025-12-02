@@ -54,9 +54,28 @@ class Router {
             }
         }
         
-        // Handle method override for PUT/DELETE (browsers don't support these natively)
-        if ($method === 'POST' && isset($_POST['_method'])) {
-            $method = strtoupper($_POST['_method']);
+        // Handle method override for PUT/PATCH/DELETE (browsers don't support these natively)
+        // Store raw input for later use (php://input can only be read once)
+        $rawInput = null;
+        if ($method === 'POST') {
+            // Check form data first
+            if (isset($_POST['_method'])) {
+                $method = strtoupper($_POST['_method']);
+            }
+            // Also check JSON body for method override
+            elseif (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+                $rawInput = file_get_contents('php://input');
+                $jsonInput = json_decode($rawInput, true);
+                if (isset($jsonInput['_method'])) {
+                    $method = strtoupper($jsonInput['_method']);
+                }
+                // Store raw input for controllers to use
+                $GLOBALS['_RAW_INPUT'] = $rawInput;
+            }
+        } elseif (in_array($method, ['PUT', 'PATCH', 'DELETE'])) {
+            // Store raw input for PUT/PATCH/DELETE requests
+            $rawInput = file_get_contents('php://input');
+            $GLOBALS['_RAW_INPUT'] = $rawInput;
         }
         
         // Normalize URI - remove trailing slash except for root
