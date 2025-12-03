@@ -181,6 +181,7 @@ $router->delete('/api/mastersales', 'ApiMastersalesController', 'index');
 $router->get('/api/tabelpabrik', 'ApiTabelpabrikController', 'index');
 $router->post('/api/tabelpabrik', 'ApiTabelpabrikController', 'index');
 $router->put('/api/tabelpabrik', 'ApiTabelpabrikController', 'index');
+$router->patch('/api/tabelpabrik', 'ApiTabelpabrikController', 'index');
 $router->delete('/api/tabelpabrik', 'ApiTabelpabrikController', 'index');
 
 // API Tabelgolongan routes (no authentication required)

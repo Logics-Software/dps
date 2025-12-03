@@ -66,9 +66,10 @@ class Headerorder {
 
 		$whereClause = implode(' AND ', $where);
 
-		$sql = "SELECT ho.*, mc.namacustomer, mc.alamatcustomer, mc.kotacustomer AS kota, mc.namabadanusaha
+		$sql = "SELECT ho.*, mc.namacustomer, mc.alamatcustomer, mc.kotacustomer AS kota, mc.namabadanusaha, ms.namasales
 				FROM headerorder ho
 				LEFT JOIN mastercustomer mc ON ho.kodecustomer = mc.kodecustomer
+				LEFT JOIN mastersales ms ON ho.kodesales = ms.kodesales
 				WHERE {$whereClause}
 				ORDER BY {$sortColumn} {$sortOrder}
 				LIMIT ? OFFSET ?";

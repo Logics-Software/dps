@@ -1,9 +1,10 @@
 <?php
 class ApiTabelpabrikController extends Controller {
     public function index() {
-        $method = $_SERVER['REQUEST_METHOD'];
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
-        if (isset($_POST['_method'])) {
+        // Handle method override (Router already handles this, but keep for compatibility)
+        if ($method === 'POST' && isset($_POST['_method'])) {
             $method = strtoupper($_POST['_method']);
         }
 
@@ -24,6 +25,32 @@ class ApiTabelpabrikController extends Controller {
             default:
                 $this->json(['success' => false, 'message' => 'Method not allowed'], 405);
         }
+    }
+
+    /**
+     * Helper method to get input data from request
+     * Uses stored raw input from Router if available
+     */
+    private function getInputData() {
+        // Use stored raw input if available (from Router), otherwise read from php://input
+        $rawInput = $GLOBALS['_RAW_INPUT'] ?? file_get_contents('php://input');
+        
+        if ($rawInput) {
+            $json = json_decode($rawInput, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $json;
+            }
+            parse_str($rawInput, $parsed);
+            if (!empty($parsed)) {
+                return $parsed;
+            }
+        }
+
+        if (!empty($_POST)) {
+            return $_POST;
+        }
+
+        return null;
     }
 
     private function getTabelpabrik() {
@@ -74,8 +101,8 @@ class ApiTabelpabrikController extends Controller {
     }
 
     private function createTabelpabrik() {
-        $input = json_decode(file_get_contents('php://input'), true);
-
+        $input = $this->getInputData();
+        
         if (!$input) {
             $input = $_POST;
         }
@@ -108,11 +135,10 @@ class ApiTabelpabrikController extends Controller {
     }
 
     private function updateTabelpabrik() {
-        $input = json_decode(file_get_contents('php://input'), true);
-
+        $input = $this->getInputData();
+        
         if (!$input) {
-            parse_str(file_get_contents('php://input'), $parsedData);
-            $input = $parsedData ?: $_POST;
+            $input = $_POST;
         }
 
         $id = $input['id'] ?? $_GET['id'] ?? null;
@@ -168,11 +194,10 @@ class ApiTabelpabrikController extends Controller {
     }
 
     private function deleteTabelpabrik() {
-        $input = json_decode(file_get_contents('php://input'), true);
-
+        $input = $this->getInputData();
+        
         if (!$input) {
-            parse_str(file_get_contents('php://input'), $parsedData);
-            $input = $parsedData ?: $_GET;
+            $input = $_GET;
         }
 
         $id = $input['id'] ?? $_GET['id'] ?? null;
