@@ -152,40 +152,79 @@ require __DIR__ . '/../layouts/header.php';
                     </div>
 
                     <?php if ($totalPages > 1): ?>
+                    <?php
+                    // Get current page from URL (always use $_GET to ensure it's current)
+                    $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : (isset($page) ? (int)$page : 1);
+                    // Ensure currentPage is at least 1
+                    if ($currentPage < 1) {
+                        $currentPage = 1;
+                    }
+                    // Use currentPage for all calculations
+                    $page = $currentPage;
+                    $totalPages = (int)$totalPages;
+                    $perPage = (int)$perPage;
+                    
+                    // Build link function for pagination
+                    $buildLink = function ($p) use ($perPage, $search, $status, $sortBy, $sortOrder) {
+                        return '?page=' . $p
+                            . '&per_page=' . $perPage
+                            . '&search=' . urlencode($search)
+                            . '&status=' . urlencode($status)
+                            . '&sort_by=' . $sortBy
+                            . '&sort_order=' . $sortOrder;
+                    };
+                    $maxLinks = 3;
+                    $half = (int)floor($maxLinks / 2);
+                    $start = max(1, $page - $half);
+                    $end = min($totalPages, $start + $maxLinks - 1);
+                    if ($end - $start + 1 < $maxLinks) {
+                        $start = max(1, $end - $maxLinks + 1);
+                    }
+                    ?>
                     <nav>
                         <ul class="pagination justify-content-center">
                             <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=<?= $page - 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>">Previous</a>
+                                <?php
+                                // Calculate previous page, ensuring it's an integer
+                                $prevPage = (int)max(1, (int)$page - 1);
+                                // Ensure prevPage is at least 1
+                                if ($prevPage < 1) $prevPage = 1;
+                                ?>
+                                <a class="page-link" href="/mastersupplier<?php echo $buildLink($prevPage); ?>">Previous</a>
                             </li>
                             <?php
-                            $maxLinks = 3;
-                            $half = (int)floor($maxLinks / 2);
-                            $start = max(1, $page - $half);
-                            $end = min($totalPages, $start + $maxLinks - 1);
-                            if ($end - $start + 1 < $maxLinks) {
-                                $start = max(1, $end - $maxLinks + 1);
-                            }
-                            $buildLink = function ($p) use ($perPage, $search) {
-                                return '?page=' . $p . '&per_page=' . $perPage . '&search=' . urlencode($search);
-                            };
                             if ($start > 1) {
-                                echo '<li class="page-item"><a class="page-link" href="' . $buildLink(1) . '">1</a></li>';
+                                echo '<li class="page-item"><a class="page-link" href="/mastersupplier' . $buildLink(1) . '">1</a></li>';
                                 if ($start > 2) {
                                     echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
                                 }
                             }
                             for ($i = $start; $i <= $end; $i++) {
-                                echo '<li class="page-item ' . ($page == $i ? 'active' : '') . '"><a class="page-link" href="' . $buildLink($i) . '">' . $i . '</a></li>';
+                                echo '<li class="page-item ' . ($page == $i ? 'active' : '') . '"><a class="page-link" href="/mastersupplier' . $buildLink($i) . '">' . $i . '</a></li>';
                             }
                             if ($end < $totalPages) {
                                 if ($end < $totalPages - 1) {
                                     echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
                                 }
-                                echo '<li class="page-item"><a class="page-link" href="' . $buildLink($totalPages) . '">' . $totalPages . '</a></li>';
+                                echo '<li class="page-item"><a class="page-link" href="/mastersupplier' . $buildLink($totalPages) . '">' . $totalPages . '</a></li>';
                             }
                             ?>
                             <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=<?= $page + 1 ?>&per_page=<?= $perPage ?>&search=<?= urlencode($search) ?>">Next</a>
+                                <?php
+                                // Calculate next page: current page + 1 (increment)
+                                // $page is already cast to int and validated above
+                                // Simply increment current page
+                                $nextPage = $page + 1;
+                                
+                                // Only cap at totalPages if it exceeds (for disabled state)
+                                if ($nextPage > $totalPages) {
+                                    $nextPage = $totalPages;
+                                }
+                                
+                                // Ensure it's an integer
+                                $nextPage = (int)$nextPage;
+                                ?>
+                                <a class="page-link" href="/mastersupplier<?php echo $buildLink($nextPage); ?>">Next</a>
                             </li>
                         </ul>
                     </nav>

@@ -164,19 +164,38 @@ require __DIR__ . '/../layouts/header.php';
                     </div>
 
                     <?php if ($totalPages > 1): ?>
+                    <?php
+                    // Get current page from URL (always use $_GET to ensure it's current)
+                    $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : (isset($page) ? (int)$page : 1);
+                    // Ensure currentPage is at least 1
+                    if ($currentPage < 1) {
+                        $currentPage = 1;
+                    }
+                    // Use currentPage for all calculations
+                    $page = $currentPage;
+                    $totalPages = (int)$totalPages;
+                    $perPage = (int)$perPage;
+                    
+                    $maxLinks = 3;
+                    $half = (int)floor($maxLinks / 2);
+                    $start = max(1, $page - $half);
+                    $end = min($totalPages, $start + $maxLinks - 1);
+                    if ($end - $start + 1 < $maxLinks) {
+                        $start = max(1, $end - $maxLinks + 1);
+                    }
+                    ?>
                     <nav>
                         <ul class="pagination justify-content-center">
                             <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-                                <a class="page-link" href="<?= buildPenjualanQuery($page - 1, $perPage, $search, $periode, $startDate, $endDate, $statuspkp, $sortBy ?? 'tanggalpenjualan', $sortOrder ?? 'DESC') ?>">Previous</a>
+                                <?php
+                                // Calculate previous page, ensuring it's an integer
+                                $prevPage = (int)max(1, (int)$page - 1);
+                                // Ensure prevPage is at least 1
+                                if ($prevPage < 1) $prevPage = 1;
+                                ?>
+                                <a class="page-link" href="<?= buildPenjualanQuery($prevPage, $perPage, $search, $periode, $startDate, $endDate, $statuspkp, $sortBy ?? 'tanggalpenjualan', $sortOrder ?? 'DESC') ?>">Previous</a>
                             </li>
                             <?php
-                            $maxLinks = 3;
-                            $half = (int)floor($maxLinks / 2);
-                            $start = max(1, $page - $half);
-                            $end = min($totalPages, $start + $maxLinks - 1);
-                            if ($end - $start + 1 < $maxLinks) {
-                                $start = max(1, $end - $maxLinks + 1);
-                            }
                             if ($start > 1) {
                                 echo '<li class="page-item"><a class="page-link" href="' . buildPenjualanQuery(1, $perPage, $search, $periode, $startDate, $endDate, $statuspkp, $sortBy ?? 'tanggalpenjualan', $sortOrder ?? 'DESC') . '">1</a></li>';
                                 if ($start > 2) {
@@ -195,7 +214,21 @@ require __DIR__ . '/../layouts/header.php';
                             }
                             ?>
                             <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
-                                <a class="page-link" href="<?= buildPenjualanQuery($page + 1, $perPage, $search, $periode, $startDate, $endDate, $statuspkp, $sortBy ?? 'tanggalpenjualan', $sortOrder ?? 'DESC') ?>">Next</a>
+                                <?php
+                                // Calculate next page: current page + 1 (increment)
+                                // $page is already cast to int and validated above
+                                // Simply increment current page
+                                $nextPage = $page + 1;
+                                
+                                // Only cap at totalPages if it exceeds (for disabled state)
+                                if ($nextPage > $totalPages) {
+                                    $nextPage = $totalPages;
+                                }
+                                
+                                // Ensure it's an integer
+                                $nextPage = (int)$nextPage;
+                                ?>
+                                <a class="page-link" href="<?= buildPenjualanQuery($nextPage, $perPage, $search, $periode, $startDate, $endDate, $statuspkp, $sortBy ?? 'tanggalpenjualan', $sortOrder ?? 'DESC') ?>">Next</a>
                             </li>
                         </ul>
                     </nav>

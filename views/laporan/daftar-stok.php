@@ -199,49 +199,70 @@ require __DIR__ . '/../layouts/header.php';
                     </div>
 
                     <?php if ($totalPages > 1): ?>
+                    <?php
+                    // Ensure page is an integer from $_GET
+                    $currentPage = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
+                    if ($currentPage < 1) {
+                        $currentPage = 1;
+                    }
+                    $page = $currentPage;
+                    $totalPages = (int)$totalPages;
+                    $perPage = (int)$perPage;
+                    
+                    // Build link function for pagination
+                    $buildLink = function ($p) use ($perPage, $search, $kodepabrik, $kodegolongan, $kondisiStok, $sortBy, $sortOrder) {
+                        return '?page=' . $p
+                            . '&per_page=' . $perPage
+                            . '&search=' . urlencode($search)
+                            . '&kodepabrik=' . urlencode($kodepabrik)
+                            . '&kodegolongan=' . urlencode($kodegolongan)
+                            . '&kondisi_stok=' . urlencode($kondisiStok)
+                            . '&sort_by=' . $sortBy
+                            . '&sort_order=' . $sortOrder;
+                    };
+                    $maxLinks = 3;
+                    $half = (int)floor($maxLinks / 2);
+                    $start = max(1, $page - $half);
+                    $end = min($totalPages, $start + $maxLinks - 1);
+                    if ($end - $start + 1 < $maxLinks) {
+                        $start = max(1, $end - $maxLinks + 1);
+                    }
+                    ?>
                     <nav>
                         <ul class="pagination justify-content-center">
-                            <?php
-                            $queryParams = [];
-                            if (!empty($search)) $queryParams['search'] = $search;
-                            if (!empty($kodepabrik)) $queryParams['kodepabrik'] = $kodepabrik;
-                            if (!empty($kodegolongan)) $queryParams['kodegolongan'] = $kodegolongan;
-                            if (!empty($kondisiStok) && $kondisiStok !== 'semua') $queryParams['kondisi_stok'] = $kondisiStok;
-                            if (!empty($sortBy)) $queryParams['sort_by'] = $sortBy;
-                            if (!empty($sortOrder)) $queryParams['sort_order'] = $sortOrder;
-                            $queryParams['per_page'] = $perPage;
-                            $baseQuery = http_build_query($queryParams);
-                            ?>
-                            <li class="page-item <?= (int)$page <= 1 ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=<?= (int)$page - 1 ?>&<?= $baseQuery ?>">Previous</a>
+                            <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                                <?php
+                                $prevPage = (int)max(1, $page - 1);
+                                if ($prevPage < 1) $prevPage = 1;
+                                ?>
+                                <a class="page-link" href="/laporan/daftar-stok<?php echo $buildLink($prevPage); ?>">Previous</a>
                             </li>
                             <?php
-                            $maxLinks = 3;
-                            $half = (int)floor($maxLinks / 2);
-                            $start = max(1, (int)$page - $half);
-                            $end = min($totalPages, $start + $maxLinks - 1);
-                            if ($end - $start + 1 < $maxLinks) {
-                                $start = max(1, $end - $maxLinks + 1);
-                            }
                             if ($start > 1) {
-                                echo '<li class="page-item"><a class="page-link" href="?page=1&' . $baseQuery . '">1</a></li>';
+                                echo '<li class="page-item"><a class="page-link" href="/laporan/daftar-stok' . $buildLink(1) . '">1</a></li>';
                                 if ($start > 2) {
                                     echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
                                 }
                             }
                             for ($i = $start; $i <= $end; $i++) {
-                                $active = (int)$page == $i ? 'active' : '';
-                                echo '<li class="page-item ' . $active . '"><a class="page-link" href="?page=' . $i . '&' . $baseQuery . '">' . $i . '</a></li>';
+                                echo '<li class="page-item ' . ($page == $i ? 'active' : '') . '"><a class="page-link" href="/laporan/daftar-stok' . $buildLink($i) . '">' . $i . '</a></li>';
                             }
                             if ($end < $totalPages) {
                                 if ($end < $totalPages - 1) {
                                     echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
                                 }
-                                echo '<li class="page-item"><a class="page-link" href="?page=' . $totalPages . '&' . $baseQuery . '">' . $totalPages . '</a></li>';
+                                echo '<li class="page-item"><a class="page-link" href="/laporan/daftar-stok' . $buildLink($totalPages) . '">' . $totalPages . '</a></li>';
                             }
                             ?>
-                            <li class="page-item <?= (int)$page >= (int)$totalPages ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=<?= (int)$page + 1 ?>&<?= $baseQuery ?>">Next</a>
+                            <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
+                                <?php
+                                $nextPage = $page + 1;
+                                if ($nextPage > $totalPages) {
+                                    $nextPage = $totalPages;
+                                }
+                                $nextPage = (int)$nextPage;
+                                ?>
+                                <a class="page-link" href="/laporan/daftar-stok<?php echo $buildLink($nextPage); ?>">Next</a>
                             </li>
                         </ul>
                     </nav>
@@ -253,4 +274,5 @@ require __DIR__ . '/../layouts/header.php';
 </div>
 
 <?php require __DIR__ . '/../layouts/footer.php'; ?>
+
 

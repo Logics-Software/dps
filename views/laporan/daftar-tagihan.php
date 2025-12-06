@@ -241,79 +241,70 @@ require __DIR__ . '/../layouts/header.php';
                     </div>
 
                     <?php if (($totalPages ?? 1) > 1): ?>
+                    <?php
+                    // Ensure page is an integer from $_GET
+                    $currentPage = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
+                    if ($currentPage < 1) {
+                        $currentPage = 1;
+                    }
+                    $page = $currentPage;
+                    $totalPages = (int)($totalPages ?? 1);
+                    $perPage = (int)($perPage ?? 10);
+                    
+                    // Build link function for pagination
+                    $buildLink = function ($p) use ($perPage, $search, $kodecustomer, $statusJatuhTempo, $sortBy, $sortOrder) {
+                        return '?page=' . $p
+                            . '&per_page=' . $perPage
+                            . '&search=' . urlencode($search)
+                            . '&kodecustomer=' . urlencode($kodecustomer)
+                            . '&status_jatuh_tempo=' . urlencode($statusJatuhTempo)
+                            . '&sort_by=' . $sortBy
+                            . '&sort_order=' . $sortOrder;
+                    };
+                    $maxLinks = 3;
+                    $half = (int)floor($maxLinks / 2);
+                    $start = max(1, $page - $half);
+                    $end = min($totalPages, $start + $maxLinks - 1);
+                    if ($end - $start + 1 < $maxLinks) {
+                        $start = max(1, $end - $maxLinks + 1);
+                    }
+                    ?>
                     <nav aria-label="Page navigation">
                         <ul class="pagination justify-content-center">
+                            <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                                <?php
+                                $prevPage = (int)max(1, $page - 1);
+                                if ($prevPage < 1) $prevPage = 1;
+                                ?>
+                                <a class="page-link" href="/laporan/daftar-tagihan<?php echo $buildLink($prevPage); ?>">Previous</a>
+                            </li>
                             <?php
-                            $queryParams = [];
-                            if (!empty($search)) $queryParams['search'] = $search;
-                            if (!empty($kodecustomer)) $queryParams['kodecustomer'] = $kodecustomer;
-                            if (!empty($statusJatuhTempo) && $statusJatuhTempo !== 'semua') $queryParams['status_jatuh_tempo'] = $statusJatuhTempo;
-                            if (!empty($sortBy)) $queryParams['sort_by'] = $sortBy;
-                            if (!empty($sortOrder)) $queryParams['sort_order'] = $sortOrder;
-                            $queryParams['per_page'] = $perPage ?? 10;
-                            $baseQuery = http_build_query($queryParams);
-                            
-                            $currentPage = $page ?? 1;
-                            $totalPages = $totalPages ?? 1;
-                            
-                            // Previous button
-                            if ($currentPage > 1):
+                            if ($start > 1) {
+                                echo '<li class="page-item"><a class="page-link" href="/laporan/daftar-tagihan' . $buildLink(1) . '">1</a></li>';
+                                if ($start > 2) {
+                                    echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                                }
+                            }
+                            for ($i = $start; $i <= $end; $i++) {
+                                echo '<li class="page-item ' . ($page == $i ? 'active' : '') . '"><a class="page-link" href="/laporan/daftar-tagihan' . $buildLink($i) . '">' . $i . '</a></li>';
+                            }
+                            if ($end < $totalPages) {
+                                if ($end < $totalPages - 1) {
+                                    echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+                                }
+                                echo '<li class="page-item"><a class="page-link" href="/laporan/daftar-tagihan' . $buildLink($totalPages) . '">' . $totalPages . '</a></li>';
+                            }
                             ?>
-                            <li class="page-item">
-                                <a class="page-link" href="?page=<?= (int)$currentPage - 1 ?><?= !empty($baseQuery) ? '&' . $baseQuery : '' ?>">Previous</a>
+                            <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
+                                <?php
+                                $nextPage = $page + 1;
+                                if ($nextPage > $totalPages) {
+                                    $nextPage = $totalPages;
+                                }
+                                $nextPage = (int)$nextPage;
+                                ?>
+                                <a class="page-link" href="/laporan/daftar-tagihan<?php echo $buildLink($nextPage); ?>">Next</a>
                             </li>
-                            <?php else: ?>
-                            <li class="page-item disabled">
-                                <span class="page-link">Previous</span>
-                            </li>
-                            <?php endif; ?>
-                            
-                            <?php
-                            // Page numbers
-                            $startPage = max(1, (int)$currentPage - 2);
-                            $endPage = min((int)$totalPages, (int)$currentPage + 2);
-                            
-                            if ($startPage > 1):
-                            ?>
-                            <li class="page-item">
-                                <a class="page-link" href="?page=1<?= !empty($baseQuery) ? '&' . $baseQuery : '' ?>">1</a>
-                            </li>
-                            <?php if ($startPage > 2): ?>
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
-                            </li>
-                            <?php endif; ?>
-                            <?php endif; ?>
-                            
-                            <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
-                            <li class="page-item <?= $i == (int)$currentPage ? 'active' : '' ?>">
-                                <a class="page-link" href="?page=<?= $i ?><?= !empty($baseQuery) ? '&' . $baseQuery : '' ?>"><?= $i ?></a>
-                            </li>
-                            <?php endfor; ?>
-                            
-                            <?php if ($endPage < $totalPages): ?>
-                            <?php if ($endPage < $totalPages - 1): ?>
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
-                            </li>
-                            <?php endif; ?>
-                            <li class="page-item">
-                                <a class="page-link" href="?page=<?= $totalPages ?><?= !empty($baseQuery) ? '&' . $baseQuery : '' ?>"><?= $totalPages ?></a>
-                            </li>
-                            <?php endif; ?>
-                            
-                            <?php
-                            // Next button
-                            if ($currentPage < $totalPages):
-                            ?>
-                            <li class="page-item">
-                                <a class="page-link" href="?page=<?= (int)$currentPage + 1 ?><?= !empty($baseQuery) ? '&' . $baseQuery : '' ?>">Next</a>
-                            </li>
-                            <?php else: ?>
-                            <li class="page-item disabled">
-                                <span class="page-link">Next</span>
-                            </li>
-                            <?php endif; ?>
                         </ul>
                     </nav>
                     <?php endif; ?>

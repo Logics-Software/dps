@@ -17,7 +17,7 @@ class UserController extends Controller {
         $userModel = new User();
         $users = $userModel->getAll($page, $perPage, $search, $sortBy, $sortOrder);
         $total = $userModel->count($search);
-        $totalPages = ceil($total / $perPage);
+        $totalPages = $perPage > 0 ? (int)ceil($total / $perPage) : 1;
         
         $data = [
             'users' => $users,

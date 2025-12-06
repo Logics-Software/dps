@@ -346,43 +346,66 @@ $bulanNama = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
                         </div>
 
                         <?php if ($totalPages > 1): ?>
+                        <?php
+                        // Ensure page is an integer from $_GET
+                        $currentPage = isset($_GET['page']) ? max((int)$_GET['page'], 1) : 1;
+                        if ($currentPage < 1) {
+                            $currentPage = 1;
+                        }
+                        $page = $currentPage;
+                        $totalPages = (int)$totalPages;
+                        $perPage = (int)$perPage;
+                        
+                        // Build link function for pagination
+                        $buildLink = function ($p) use ($perPage, $tahun, $bulan) {
+                            return '?page=' . $p
+                                . '&per_page=' . $perPage
+                                . '&tahun=' . urlencode($tahun)
+                                . '&bulan=' . urlencode($bulan);
+                        };
+                        $maxLinks = 3;
+                        $half = (int)floor($maxLinks / 2);
+                        $start = max(1, $page - $half);
+                        $end = min($totalPages, $start + $maxLinks - 1);
+                        if ($end - $start + 1 < $maxLinks) {
+                            $start = max(1, $end - $maxLinks + 1);
+                        }
+                        ?>
                         <nav>
                             <ul class="pagination justify-content-center">
-                                <li class="page-item <?= (int)$page <= 1 ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="?page=<?= (int)$page - 1 ?>&per_page=<?= $perPage ?>&tahun=<?= urlencode($tahun) ?>&bulan=<?= urlencode($bulan) ?>">Previous</a>
+                                <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                                    <?php
+                                    $prevPage = (int)max(1, $page - 1);
+                                    if ($prevPage < 1) $prevPage = 1;
+                                    ?>
+                                    <a class="page-link" href="/laporan/omset<?php echo $buildLink($prevPage); ?>">Previous</a>
                                 </li>
                                 <?php
-                                $maxLinks = 3;
-                                $half = (int)floor($maxLinks / 2);
-                                $start = max(1, (int)$page - $half);
-                                $end = min($totalPages, $start + $maxLinks - 1);
-                                if ($end - $start + 1 < $maxLinks) {
-                                    $start = max(1, $end - $maxLinks + 1);
-                                }
-                                $buildLink = function ($p) use ($perPage, $tahun, $bulan) {
-                                    return '?page=' . $p
-                                        . '&per_page=' . $perPage
-                                        . '&tahun=' . urlencode($tahun)
-                                        . '&bulan=' . urlencode($bulan);
-                                };
                                 if ($start > 1) {
-                                    echo '<li class="page-item"><a class="page-link" href="' . $buildLink(1) . '">1</a></li>';
+                                    echo '<li class="page-item"><a class="page-link" href="/laporan/omset' . $buildLink(1) . '">1</a></li>';
                                     if ($start > 2) {
                                         echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
                                     }
                                 }
                                 for ($i = $start; $i <= $end; $i++) {
-                                    echo '<li class="page-item ' . ((int)$page == $i ? 'active' : '') . '"><a class="page-link" href="' . $buildLink($i) . '">' . $i . '</a></li>';
+                                    echo '<li class="page-item ' . ($page == $i ? 'active' : '') . '"><a class="page-link" href="/laporan/omset' . $buildLink($i) . '">' . $i . '</a></li>';
                                 }
                                 if ($end < $totalPages) {
                                     if ($end < $totalPages - 1) {
                                         echo '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
                                     }
-                                    echo '<li class="page-item"><a class="page-link" href="' . $buildLink($totalPages) . '">' . $totalPages . '</a></li>';
+                                    echo '<li class="page-item"><a class="page-link" href="/laporan/omset' . $buildLink($totalPages) . '">' . $totalPages . '</a></li>';
                                 }
                                 ?>
-                                <li class="page-item <?= (int)$page >= (int)$totalPages ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="?page=<?= (int)$page + 1 ?>&per_page=<?= $perPage ?>&tahun=<?= urlencode($tahun) ?>&bulan=<?= urlencode($bulan) ?>">Next</a>
+                                <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
+                                    <?php
+                                    $nextPage = $page + 1;
+                                    if ($nextPage > $totalPages) {
+                                        $nextPage = $totalPages;
+                                    }
+                                    $nextPage = (int)$nextPage;
+                                    ?>
+                                    <a class="page-link" href="/laporan/omset<?php echo $buildLink($nextPage); ?>">Next</a>
                                 </li>
                             </ul>
                         </nav>
@@ -395,4 +418,5 @@ $bulanNama = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
 </div>
 
 <?php require __DIR__ . '/../layouts/footer.php'; ?>
+
 

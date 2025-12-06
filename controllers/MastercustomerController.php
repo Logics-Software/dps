@@ -19,7 +19,7 @@ class MastercustomerController extends Controller {
         $mastercustomerModel = new Mastercustomer();
         $customers = $mastercustomerModel->getAll($page, $perPage, $search, $sortBy, $sortOrder, $status, $statuspkp);
         $total = $mastercustomerModel->count($search, $status, $statuspkp);
-        $totalPages = ceil($total / $perPage);
+        $totalPages = $perPage > 0 ? (int)ceil($total / $perPage) : 1;
         
         $data = [
             'customers' => $customers,
