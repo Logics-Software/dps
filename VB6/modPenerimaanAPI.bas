@@ -62,12 +62,16 @@ End Function
 ' UPDATE STATUS DAN NOINKASO (untuk bridging VB6)
 ' ============================================================
 
+' Update Status dan Noinkaso Penerimaan
+' Function ini akan update status dan noinkaso sekaligus
+' Parameter noinkaso: jika empty string, akan diupdate menjadi null (clear noinkaso)
+'                     jika ada nilai, akan diupdate dengan nilai tersebut
 Public Function UpdatePenerimaanStatus(nopenerimaan As String, status As String, Optional noinkaso As String = "") As String
     Dim payload As String
     payload = "{""action"":""update_status"",""nopenerimaan"":""" & Replace(nopenerimaan, """", "\""") & """,""status"":""" & Replace(status, """", "\""") & """"
-    If noinkaso <> "" Then
-        payload = payload & ",""noinkaso"":""" & Replace(noinkaso, """", "\""") & """"
-    End If
+    ' Selalu kirim noinkaso (termasuk empty string) agar PHP bisa update field ini
+    ' Empty string akan dikonversi menjadi null di PHP
+    payload = payload & ",""noinkaso"":""" & Replace(noinkaso, """", "\""") & """"
     payload = payload & "}"
     UpdatePenerimaanStatus = CallAPI("POST", API_BASE_URL_PENERIMAAN, payload)
 End Function

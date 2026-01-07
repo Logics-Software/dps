@@ -58,18 +58,26 @@ class Router {
         // Store raw input for later use (php://input can only be read once)
         $rawInput = null;
         if ($method === 'POST') {
+            // Read raw input first (before it's consumed)
+            $rawInput = file_get_contents('php://input');
+            
             // Check form data first
             if (isset($_POST['_method'])) {
                 $method = strtoupper($_POST['_method']);
+                // Store raw input for form-urlencoded data too (for manual parsing)
+                $GLOBALS['_RAW_INPUT'] = $rawInput;
             }
             // Also check JSON body for method override
             elseif (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
-                $rawInput = file_get_contents('php://input');
                 $jsonInput = json_decode($rawInput, true);
                 if (isset($jsonInput['_method'])) {
                     $method = strtoupper($jsonInput['_method']);
                 }
                 // Store raw input for controllers to use
+                $GLOBALS['_RAW_INPUT'] = $rawInput;
+            }
+            // For form-urlencoded without _method, also store raw input for manual parsing
+            elseif (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded') !== false) {
                 $GLOBALS['_RAW_INPUT'] = $rawInput;
             }
         } elseif (in_array($method, ['PUT', 'PATCH', 'DELETE'])) {

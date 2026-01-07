@@ -370,9 +370,11 @@ class Headerpenerimaan {
 		$fields = ["status = ?"];
 		$params = [$status];
 		
+		// Always update noinkaso if provided (even if empty string, convert to null)
 		if ($noinkaso !== null) {
 			$fields[] = "noinkaso = ?";
-			$params[] = $noinkaso;
+			// Convert empty string to null for database consistency
+			$params[] = ($noinkaso === '') ? null : $noinkaso;
 		}
 		
 		$params[] = $nopenerimaan;

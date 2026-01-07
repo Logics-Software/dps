@@ -78,8 +78,20 @@ class ApiMasterbarangController extends Controller {
                 continue;
             }
             
-            $key = rawurldecode($parts[0]);
-            $value = rawurldecode($parts[1]);
+            // Decode URL encoding
+            // rawurldecode decodes %XX but doesn't convert + to space
+            // urldecode converts + to space but may have issues with some encodings
+            // For form-urlencoded, we need to handle both: convert + to space first, then decode %XX
+            $keyEncoded = $parts[0];
+            $valueEncoded = $parts[1];
+            
+            // Convert + to space (form-urlencoded standard)
+            $keyEncoded = str_replace('+', ' ', $keyEncoded);
+            $valueEncoded = str_replace('+', ' ', $valueEncoded);
+            
+            // Then decode %XX encodings
+            $key = rawurldecode($keyEncoded);
+            $value = rawurldecode($valueEncoded);
             
             // Handle array notation (e.g., field[]=value)
             if (preg_match('/^(.+)\[\]$/', $key, $matches)) {
@@ -239,35 +251,67 @@ class ApiMasterbarangController extends Controller {
             }
         }
 
-        $id = $input['id'] ?? $_GET['id'] ?? null;
-        // Get kodebarang - prefer from input body, then from query string (handle plus sign correctly)
-        $kodebarang = $input['kodebarang'] ?? null;
-        if ($kodebarang === null) {
-            $kodebarang = $this->getKodebarangFromQuery();
-            if ($kodebarang === null) {
-                $kodebarang = $_GET['kodebarang'] ?? null;
-            }
+        // Get ID - convert to integer if present, handle empty string and null
+        $id = null;
+        if (isset($input['id']) && $input['id'] !== '' && $input['id'] !== null) {
+            $id = is_numeric($input['id']) ? (int)$input['id'] : null;
+        }
+        if (!$id && isset($_GET['id']) && $_GET['id'] !== '' && $_GET['id'] !== null) {
+            $id = is_numeric($_GET['id']) ? (int)$_GET['id'] : null;
+        }
+        
+        // Get kodebarang for searching (from query string or body)
+        // If kodebarang is in body and no ID, assume it's the OLD kodebarang to search with
+        $kodebarangToSearch = null;
+        
+        // First try from query string
+        $kodebarangToSearch = $this->getKodebarangFromQuery();
+        if (!$kodebarangToSearch) {
+            $kodebarangToSearch = $_GET['kodebarang'] ?? null;
+        }
+        
+        // If not in query and no ID provided, use kodebarang from body for searching
+        if (!$kodebarangToSearch && !$id && isset($input['kodebarang'])) {
+            $kodebarangToSearch = trim($input['kodebarang']);
         }
 
-        if (!$id && !$kodebarang) {
+        if (!$id && !$kodebarangToSearch) {
             $this->json(['success' => false, 'message' => 'ID or kodebarang is required'], 400);
             return;
         }
 
         $masterbarangModel = new Masterbarang();
+        $item = null;
 
+        // Try to find by ID first
         if ($id) {
             $item = $masterbarangModel->findById($id);
-        } else {
-            $item = $masterbarangModel->findByKodebarang($kodebarang);
-            if ($item) {
+        }
+        
+        // If not found by ID and kodebarang is provided, try by kodebarang
+        if (!$item && $kodebarangToSearch) {
+            $kodebarangToSearch = trim($kodebarangToSearch);
+            $item = $masterbarangModel->findByKodebarang($kodebarangToSearch);
+            if ($item && !$id) {
                 $id = $item['id'];
             }
         }
 
         if (!$item) {
-            $this->json(['success' => false, 'message' => 'Masterbarang not found'], 404);
+            $errorMsg = 'Masterbarang not found';
+            if ($id) {
+                $errorMsg .= ' (ID: ' . $id . ')';
+            }
+            if ($kodebarangToSearch) {
+                $errorMsg .= ' (kodebarang: ' . htmlspecialchars($kodebarangToSearch) . ')';
+            }
+            $this->json(['success' => false, 'message' => $errorMsg], 404);
             return;
+        }
+        
+        // Ensure we have ID for update operation
+        if (!$id && $item) {
+            $id = $item['id'];
         }
 
         $data = [];
@@ -295,7 +339,12 @@ class ApiMasterbarangController extends Controller {
 
         foreach ($allowedFields as $field) {
             if (isset($input[$field])) {
-                $data[$field] = $input[$field];
+                // Trim string values
+                $value = $input[$field];
+                if (is_string($value)) {
+                    $value = trim($value);
+                }
+                $data[$field] = $value;
             }
         }
 

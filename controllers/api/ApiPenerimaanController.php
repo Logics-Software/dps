@@ -9,7 +9,8 @@ class ApiPenerimaanController extends Controller {
         $input = $this->getInputData();
         $action = $input['action'] ?? $_POST['action'] ?? $_GET['action'] ?? null;
 
-        if ($action === 'update_status' && $method === 'POST') {
+        // Handle update_status action via POST, PUT, or PATCH (for VB6 compatibility)
+        if ($action === 'update_status' && in_array($method, ['POST', 'PUT', 'PATCH'])) {
             $this->updateStatus();
             return;
         }
@@ -242,7 +243,8 @@ class ApiPenerimaanController extends Controller {
         
         $nopenerimaan = $input['nopenerimaan'] ?? null;
         $status = $input['status'] ?? null;
-        $noinkaso = $input['noinkaso'] ?? null;
+        // Get noinkaso - if key exists, use it (even if empty string), otherwise null
+        $noinkaso = array_key_exists('noinkaso', $input) ? $input['noinkaso'] : null;
 
         if (!$nopenerimaan) {
             $this->json(['success' => false, 'message' => 'nopenerimaan is required'], 400);
@@ -261,6 +263,7 @@ class ApiPenerimaanController extends Controller {
         }
 
         try {
+            // Always pass noinkaso (will be normalized in the model)
             $headerModel->updateStatusAndNoinkaso($nopenerimaan, $status, $noinkaso);
             $updated = $headerModel->findByNopenerimaan($nopenerimaan);
             $this->json(['success' => true, 'message' => 'Status updated', 'data' => $updated]);
