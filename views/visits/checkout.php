@@ -131,7 +131,7 @@ require __DIR__ . '/../layouts/header.php';
                                             $isImage = in_array(strtolower(pathinfo($file['original_filename'], PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif']);
                                             if ($isImage): 
                                             ?>
-                                                <img src="<?= $baseUrl . '/uploads/' . htmlspecialchars($file['filename']) ?>" alt="<?= htmlspecialchars($file['original_filename']) ?>" class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                                <img src="<?= htmlspecialchars(url('/uploads/' . $file['filename'])) ?>" alt="<?= htmlspecialchars($file['original_filename']) ?>" class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
                                             <?php else: ?>
                                                 <span class="me-2">📄</span>
                                             <?php endif; ?>
@@ -140,7 +140,7 @@ require __DIR__ . '/../layouts/header.php';
                                                 <div class="small text-muted"><?= number_format($file['file_size'] / 1024, 2) ?> KB</div>
                                             </div>
                                         </div>
-                                        <a href="<?= $baseUrl . '/uploads/' . htmlspecialchars($file['filename']) ?>" target="_blank" class="btn btn-sm btn-outline-primary">Lihat</a>
+                                        <a href="<?= htmlspecialchars(url('/uploads/' . $file['filename'])) ?>" target="_blank" class="btn btn-sm btn-outline-primary">Lihat</a>
                                     </div>
                                 <?php endforeach; ?>
                             </div>

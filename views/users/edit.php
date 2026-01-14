@@ -96,7 +96,7 @@ require __DIR__ . '/../layouts/header.php';
                             <?php if ($user['picture'] && file_exists(__DIR__ . '/../../uploads/' . $user['picture'])): ?>
                             <div class="mb-3">
                                 <p class="mb-2"><strong>Foto Saat Ini:</strong></p>
-                                <img src="<?= htmlspecialchars($baseUrl) ?>/uploads/<?= htmlspecialchars($user['picture']) ?>" alt="Current Picture" class="img-thumbnail rounded" style="max-width: 200px;">
+                                <img src="<?= htmlspecialchars(url('/uploads/' . $user['picture'])) ?>" alt="Current Picture" class="img-thumbnail rounded" style="max-width: 200px;">
                             </div>
                             <?php else: ?>
                             <div class="mb-3">

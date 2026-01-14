@@ -371,7 +371,13 @@ class OrderController extends Controller {
 				continue;
 			}
 
-			$lineTotal = max(($qty * $price) - $disc, 0);
+			// Treat discount as percentage (frontend sends discount in percent, e.g., 5.00 means 5%)
+			$discountValue = 0;
+			if ($disc > 0) {
+				$discountValue = (($qty * $price) * ($disc / 100));
+			}
+
+			$lineTotal = max(($qty * $price) - $discountValue, 0);
 
 			$details[] = [
 				'kodebarang' => $kb,
@@ -404,7 +410,10 @@ class OrderController extends Controller {
 			$total = '';
 
 			if ($kb !== '' && $qty !== '' && $price !== '') {
-				$calcTotal = max(((float)$qty * (float)$price) - (float)$disc, 0);
+				// Interpret discount as percentage (frontend uses percent)
+				$discFloat = (float)str_replace(',', '', $disc);
+				$discountValue = ($discFloat > 0) ? (((float)$qty * (float)$price) * ($discFloat / 100)) : 0;
+				$calcTotal = max(((float)$qty * (float)$price) - $discountValue, 0);
 				$total = number_format($calcTotal, 2, '.', '');
 			}
 

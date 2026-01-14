@@ -97,7 +97,7 @@ require __DIR__ . '/../layouts/header.php';
                                 <tr>
                                     <td align="center">
                                         <?php if ($user['picture'] && file_exists(__DIR__ . '/../../uploads/' . $user['picture'])): ?>
-                                        <img src="<?= htmlspecialchars($baseUrl) ?>/uploads/<?= htmlspecialchars($user['picture']) ?>" alt="Profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                        <img src="<?= htmlspecialchars(url('/uploads/' . $user['picture'])) ?>" alt="Profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
                                         <?php else: ?>
                                         <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                             <span class="text-white fw-bold"><?= strtoupper(substr($user['namalengkap'], 0, 1)) ?></span>

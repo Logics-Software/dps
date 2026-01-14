@@ -8,6 +8,15 @@ if (empty($baseUrl) || $baseUrl === 'http://' || $baseUrl === 'https://') {
 // Define BASE_URL constant for compatibility
 define('BASE_URL', $baseUrl);
 
+// Helper function to combine baseUrl with path (avoid double slashes)
+if (!function_exists('url')) {
+    function url($path) {
+        $base = rtrim(BASE_URL, '/');
+        $path = ltrim($path, '/');
+        return $base . '/' . $path;
+    }
+}
+
 // Helper function to display icon
 if (!function_exists('icon')) {
     function icon($name, $class = '', $size = 16) {
@@ -328,7 +337,8 @@ if (Auth::check() && $currentUser && !$isMapPage): ?><header class="app-header">
                                     <?php if (!empty($currentUser['picture'])): ?>
                                         <?php 
                                         $config = require __DIR__ . '/../../config/app.php';
-                                        $pictureUrl = $baseUrl . $config['upload_url'] . htmlspecialchars($currentUser['picture']);
+                                        $uploadUrl = $config['upload_url'] ?? '/uploads/';
+                                        $pictureUrl = url($uploadUrl . htmlspecialchars($currentUser['picture']));
                                         $fallbackText = strtoupper(substr($currentUser['username'] ?? 'U', 0, 1));
                                         ?>
                                         <img src="<?= $pictureUrl ?>" alt="<?= htmlspecialchars($currentUser['namalengkap'] ?? $currentUser['username'] ?? 'User') ?>" class="user-avatar-img" data-fallback="<?= htmlspecialchars($fallbackText) ?>" onerror="this.style.display='none'; if(!this.parentElement.querySelector('.avatar-fallback')) { var span = document.createElement('span'); span.className='avatar-fallback'; span.textContent=this.getAttribute('data-fallback'); this.parentElement.appendChild(span); }">

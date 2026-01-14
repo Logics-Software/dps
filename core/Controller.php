@@ -83,8 +83,7 @@ class Controller {
             $isFromCamera = (stripos($pathFilename, 'camera_') === 0);
         }
         
-        // Log for debugging
-        error_log("Image compression check: originalFilename={$originalFilename}, filePath=" . basename($filePath) . ", isFromCamera=" . ($isFromCamera ? 'true' : 'false'));
+        // Image processing
         
         // Only process camera photos unless forced
         if (!$isFromCamera && !$forceProcess) {
@@ -96,7 +95,7 @@ class Controller {
             return ['success' => false, 'message' => 'Tidak dapat membaca ukuran file'];
         }
         
-        error_log("Starting image compression: originalSize={$originalSize} bytes, extension={$extension}");
+        // Starting image compression
         
         $maxWidth = 1920;
         $maxHeight = 1920;
@@ -134,7 +133,9 @@ class Controller {
                     return ['success' => false, 'message' => 'Format gambar tidak didukung'];
             }
             
-            if (!$image || !is_resource($image)) {
+            // Support both resource (PHP <8) and GdImage object (PHP 8+)
+            $isGdResource = is_resource($image) || (class_exists('GdImage') && $image instanceof GdImage);
+            if (!$image || !$isGdResource) {
                 return ['success' => false, 'message' => 'Gagal membuat resource gambar'];
             }
             
@@ -256,7 +257,7 @@ class Controller {
             $savedBytes = $originalSize - $newSize;
             $savedPercent = $originalSize > 0 ? round(($savedBytes / $originalSize) * 100, 2) : 0;
             
-            error_log("Image compression completed: originalSize={$originalSize}, newSize={$newSize}, savedPercent={$savedPercent}%");
+            // Image compression completed
             
             return [
                 'success' => true,

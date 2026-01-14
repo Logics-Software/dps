@@ -36,7 +36,7 @@ require __DIR__ . '/../layouts/header.php';
                             $userPicture = $user['picture'] ?? null;
                             $picturePath = null;
                             if ($userPicture && file_exists(__DIR__ . '/../../uploads/' . $userPicture)) {
-                                $picturePath = $baseUrl . '/uploads/' . htmlspecialchars($userPicture);
+                                $picturePath = url('/uploads/' . htmlspecialchars($userPicture));
                             }
                             ?>
                             <div id="profile-picture-preview">

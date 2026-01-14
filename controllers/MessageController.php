@@ -198,9 +198,11 @@ class MessageController extends Controller {
 	 * Show specific message
 	 */
 	public function show($id) {
-		// Debug: Ensure controller is called
 		if (empty($id)) {
-			die("ERROR: Controller show() called but ID is empty. REQUEST_URI: " . ($_SERVER['REQUEST_URI'] ?? 'N/A'));
+			error_log("MessageController::show called with empty ID. REQUEST_URI: " . ($_SERVER['REQUEST_URI'] ?? 'N/A'));
+			Session::flash('error', 'ID pesan tidak valid');
+			$this->redirect('/messages');
+			return;
 		}
 
 		Auth::requireAuth();
@@ -260,9 +262,12 @@ class MessageController extends Controller {
 			}
 		}
 
-		// Debug: Verify data before passing
+		// Verify data before passing
 		if (empty($message) || !is_array($message)) {
-			die("ERROR: Message is empty before passing to view. ID: {$messageId}, Message: " . print_r($message, true));
+			error_log("MessageController::show - message empty for ID: {$messageId}. Data: " . print_r($message, true));
+			Session::flash('error', 'Pesan tidak ditemukan');
+			$this->redirect('/messages');
+			return;
 		}
 
 		// Pass data to view

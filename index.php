@@ -2,9 +2,10 @@
 // Set timezone
 date_default_timezone_set('Asia/Jakarta');
 
-// Error reporting (disable in production)
+// Error reporting (production-safe defaults)
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
 
 // Override PHP upload settings if possible (only works if not disabled by server)
 // This helps when php.ini cannot be modified

@@ -8,6 +8,10 @@ RewriteCond %{REQUEST_URI} ^/\.well-known/
 RewriteRule ^ - [L]
 
 # Redirect to index.php if file doesn't exist
+# Don't check for files/directories - always route to index.php for non-asset paths
+RewriteCond %{REQUEST_URI} !^/assets/
+RewriteCond %{REQUEST_URI} !^/uploads/
+RewriteCond %{REQUEST_URI} !^/\.well-known/
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [QSA,L]

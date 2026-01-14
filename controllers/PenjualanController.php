@@ -70,11 +70,24 @@ class PenjualanController extends Controller {
 	public function show($nopenjualan) {
 		Auth::requireRole(['admin', 'manajemen', 'operator', 'sales']);
 
+		// Validasi parameter
+		if (empty($nopenjualan) || trim($nopenjualan) === '') {
+			Session::flash('error', 'Nomor penjualan tidak valid');
+			$this->redirect('/penjualan');
+			return;
+		}
+
 		$currentUser = Auth::user();
 		$header = $this->headerModel->findByNopenjualan($nopenjualan);
 		if (!$header) {
-			Session::flash('error', 'Data penjualan tidak ditemukan');
+			// Cek apakah ini format detail penjualan (dimulai dengan titik)
+			if (strpos($nopenjualan, '.') === 0) {
+				Session::flash('error', 'Nomor detail penjualan "' . htmlspecialchars($nopenjualan) . '" tidak ditemukan. Pastikan nomor penjualan yang dimasukkan benar.');
+			} else {
+				Session::flash('error', 'Nomor penjualan "' . htmlspecialchars($nopenjualan) . '" tidak ditemukan. Pastikan nomor penjualan yang dimasukkan benar.');
+			}
 			$this->redirect('/penjualan');
+			return;
 		}
 
 		// Jika role adalah sales, pastikan hanya bisa melihat penjualan mereka sendiri
@@ -86,6 +99,11 @@ class PenjualanController extends Controller {
 		}
 
 		$details = $this->detailModel->getByNopenjualan($nopenjualan);
+
+		// Jika detail penjualan kosong, tampilkan peringatan
+		if (empty($details)) {
+			Session::flash('warning', 'Data detail penjualan untuk nomor penjualan "' . htmlspecialchars($nopenjualan) . '" tidak ditemukan. Data header penjualan tersedia, namun detail barang tidak ditemukan dalam sistem.');
+		}
 
 		$data = [
 			'penjualan' => $header,

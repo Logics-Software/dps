@@ -19,7 +19,10 @@ class Database {
             // Set charset and collation
             $this->connection->exec("SET NAMES {$config['charset']} COLLATE {$config['collation']}");
         } catch(PDOException $e) {
-            die("Database connection failed: " . $e->getMessage());
+            error_log("Database connection failed: " . $e->getMessage());
+            http_response_code(500);
+            echo "Internal Server Error";
+            exit;
         }
     }
     
