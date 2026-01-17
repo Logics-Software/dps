@@ -55,25 +55,34 @@ require __DIR__ . '/../layouts/header.php';
                         <h4 class="mb-0 me-auto">Daftar Stok</h4>
                         <div class="d-flex gap-2">
                             <?php
-                            $exportParams = [];
-                            if (!empty($search)) $exportParams['search'] = $search;
-                            if (!empty($kodepabrik)) $exportParams['kodepabrik'] = $kodepabrik;
-                            if (!empty($kodegolongan)) $exportParams['kodegolongan'] = $kodegolongan;
-                            if (!empty($kondisiStok) && $kondisiStok !== 'semua') $exportParams['kondisi_stok'] = $kondisiStok;
-                            if (!empty($sortBy)) $exportParams['sort_by'] = $sortBy;
-                            if (!empty($sortOrder)) $exportParams['sort_order'] = $sortOrder;
-                            $exportQuery = http_build_query($exportParams);
+                            // Setup download parameters untuk Android/Browser
+                            $downloadParams = [
+                                'search' => $search ?? '',
+                                'kodepabrik' => $kodepabrik ?? '',
+                                'kodegolongan' => $kodegolongan ?? '',
+                                'kondisi_stok' => $kondisiStok ?? 'semua'
+                            ];
+                            $downloadParamsJson = htmlspecialchars(json_encode($downloadParams));
                             ?>
-                            <a href="/laporan/daftar-stok?export=excel<?= !empty($exportQuery) ? '&' . $exportQuery : '' ?>" class="btn btn-success btn-sm">
+                            <!-- Download Excel Button -->
+                            <button onclick="downloadLaporanExcel('/laporan/daftar-stok', <?php echo $downloadParamsJson; ?>, 'Daftar_Stok')" 
+                                    class="btn btn-success btn-sm" 
+                                    type="button"
+                                    title="Export laporan sebagai Excel">
                                 <?= icon('file-excel', 'mb-1 me-2', 16) ?>
                                 <span class="d-none d-md-inline">Export Excel</span>
                                 <span class="d-inline d-md-none">Excel</span>
-                            </a>
-                            <a href="/laporan/daftar-stok?export=pdf<?= !empty($exportQuery) ? '&' . $exportQuery : '' ?>" class="btn btn-danger btn-sm">
+                            </button>
+                            
+                            <!-- Download PDF Button (Support Android App) -->
+                            <button onclick="downloadReportWithFilters('/laporan/daftar-stok', <?php echo $downloadParamsJson; ?>, 'Daftar_Stok')" 
+                                    class="btn btn-danger btn-sm" 
+                                    type="button"
+                                    title="Download laporan sebagai PDF">
                                 <?= icon('file-pdf', 'mb-1 me-2', 16) ?>
                                 <span class="d-none d-md-inline">Download PDF</span>
                                 <span class="d-inline d-md-none">PDF</span>
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>
