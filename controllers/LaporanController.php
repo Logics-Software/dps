@@ -383,10 +383,24 @@ class LaporanController extends Controller {
 
     private function downloadAsHTML($html, $filename) {
         // Send as downloadable file
-        header('Content-Type: text/html; charset=utf-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '.html"');
+        // Detect if it's a PDF or HTML based on filename
+        $isPDF = strpos($filename, '.pdf') !== false;
+        
+        if ($isPDF) {
+            // For PDF files, use application/pdf MIME type
+            header('Content-Type: application/pdf; charset=utf-8');
+        } else {
+            // For HTML files, use text/html MIME type
+            header('Content-Type: text/html; charset=utf-8');
+        }
+        
+        // Don't append extension - filename already has it
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Pragma: no-cache');
         header('Expires: 0');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Cache-Control: post-check=0, pre-check=0', false);
+        
         echo $html;
     }
 

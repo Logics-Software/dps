@@ -22,25 +22,45 @@ const DPSDownload = (function () {
   function download(url, filename, action = "open", options = {}) {
     if (isAndroidApp()) {
       // Android app - use SDK
-      switch (action) {
-        case "open":
-          DhainakoDownload.downloadAndOpen(url, filename, options);
-          break;
-        case "share":
-          DhainakoDownload.downloadAndShare(url, filename, options);
-          break;
-        case "save":
-          DhainakoDownload.downloadAndSave(url, filename, options);
-          break;
-        default:
-          DhainakoDownload.downloadAndOpen(url, filename, options);
+      try {
+        switch (action) {
+          case "open":
+            DhainakoDownload.downloadAndOpen(url, filename, options);
+            break;
+          case "share":
+            DhainakoDownload.downloadAndShare(url, filename, options);
+            break;
+          case "save":
+            DhainakoDownload.downloadAndSave(url, filename, options);
+            break;
+          default:
+            DhainakoDownload.downloadAndOpen(url, filename, options);
+        }
+      } catch (e) {
+        console.error("DhainakoDownload error:", e);
+        // Fallback to browser download
+        console.warn("Falling back to browser download");
+        window.location.href = url;
+        if (options.onError) {
+          options.onError(e.message);
+        }
       }
     } else {
       // Browser - fallback to normal download
-      if (options.newTab) {
-        window.open(url, "_blank");
-      } else {
-        window.location.href = url;
+      try {
+        if (options.newTab) {
+          window.open(url, "_blank");
+        } else {
+          window.location.href = url;
+        }
+        if (options.onSuccess) {
+          options.onSuccess();
+        }
+      } catch (e) {
+        console.error("Browser download error:", e);
+        if (options.onError) {
+          options.onError(e.message);
+        }
       }
     }
   }

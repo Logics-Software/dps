@@ -30,7 +30,7 @@
     const queryString = new URLSearchParams(params).toString();
     const url = baseUrl + (queryString ? "?" + queryString : "");
 
-    // Generate filename
+    // Generate filename with timestamp
     const date = new Date();
     const dateStr =
       date.getFullYear() +
@@ -39,30 +39,41 @@
       "_" +
       String(date.getHours()).padStart(2, "0") +
       String(date.getMinutes()).padStart(2, "0");
-    const filename = `${reportName}_${dateStr}.pdf`;
+
+    // Clean up reportName - remove .pdf extension if present
+    const cleanReportName = reportName.replace(/\.pdf$/i, "");
+    const filename = `${cleanReportName}_${dateStr}.pdf`;
 
     console.log("Download PDF:", { url, filename, action });
 
     // Use DPSDownload helper if available
-    if (typeof DPSDownload !== "undefined") {
-      DPSDownload.download(url, filename, action, {
-        onProgress: (progress) => {
-          console.log(`Download progress: ${progress}%`);
-        },
-        onSuccess: () => {
-          console.log(`Successfully downloaded: ${filename}`);
-          // Optional: show toast notification
-          if (typeof showToast === "function") {
-            showToast(`${reportName} berhasil didownload`, "success");
-          }
-        },
-        onError: (error) => {
-          console.error(`Download error: ${error}`);
-          alert(`Gagal download ${reportName}: ${error}`);
-        },
-      });
+    if (typeof DPSDownload !== "undefined" && DPSDownload.download) {
+      try {
+        DPSDownload.download(url, filename, action, {
+          onProgress: (progress) => {
+            console.log(`Download progress: ${progress}%`);
+          },
+          onSuccess: () => {
+            console.log(`Successfully downloaded: ${filename}`);
+            // Optional: show toast notification
+            if (typeof showToast === "function") {
+              showToast(`${reportName} berhasil didownload`, "success");
+            }
+          },
+          onError: (error) => {
+            console.error(`Download error: ${error}`);
+            // Fallback to browser download on error
+            console.warn("DPSDownload failed, using browser fallback");
+            window.location.href = url;
+          },
+        });
+      } catch (e) {
+        console.error("DPSDownload exception:", e);
+        // Fallback to browser download
+        window.location.href = url;
+      }
     } else {
-      console.warn("DPSDownload not available, using fallback");
+      console.warn("DPSDownload not available, using browser fallback");
       // Fallback to direct link for browser
       window.location.href = url;
     }
