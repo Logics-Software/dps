@@ -260,25 +260,27 @@ class LaporanController extends Controller {
     }
 
     private function exportPDF($barangs) {
-        $html = '<!DOCTYPE html>
+        // Generate PDF using simple HTML to PDF conversion
+        $this->generateAndDownloadPDF('daftar-barang', $barangs);
+    }
+
+    private function generateAndDownloadPDF($reportType, $data) {
+        $html = '';
+        $filename = '';
+
+        if ($reportType === 'daftar-barang') {
+            $filename = 'Daftar_Barang_' . date('Y-m-d_H-i-s') . '.pdf';
+            
+            $html = '<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Laporan Daftar Barang</title>
     <style>
-        @media print {
-            @page {
-                size: A4 landscape;
-                margin: 1cm;
-            }
-            body {
-                margin: 0;
-            }
-        }
         body {
             font-family: Arial, sans-serif;
             font-size: 9pt;
-            margin: 20px;
+            margin: 15px;
         }
         h1 {
             text-align: center;
@@ -322,21 +324,21 @@ class LaporanController extends Controller {
         }
         .footer {
             margin-top: 20px;
-            text-align: right;
-            font-size: 9pt;
             padding-top: 10px;
-            border-top: 1px solid #333;
+            border-top: 1px solid #ccc;
+            font-size: 9pt;
+            color: #666;
         }
-        .no-print {
-            display: none;
+        .footer p {
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
-    <h1>LAPORAN DAFTAR BARANG</h1>
+    <h1>📋 Laporan Daftar Barang</h1>
     <div class="header-info">
-        <p><strong>Tanggal Cetak:</strong> ' . date('d/m/Y H:i:s') . '</p>
-        <p><strong>Total Data:</strong> ' . number_format(count($barangs)) . ' barang</p>
+        <p><strong>Tanggal Laporan:</strong> ' . date('d F Y, H:i:s') . '</p>
+        <p><strong>Total Barang:</strong> ' . count($data) . '</p>
     </div>
     <table>
         <thead>
@@ -352,35 +354,39 @@ class LaporanController extends Controller {
         </thead>
         <tbody>';
 
-        $no = 1;
-        foreach ($barangs as $barang) {
-            $html .= '<tr>
-                <td style="text-align: center;">' . $no++ . '</td>
-                <td>' . htmlspecialchars($barang['kodebarang'] ?? '-') . '</td>
-                <td>' . htmlspecialchars($barang['namabarang'] ?? '-') . '</td>
-                <td style="text-align: center;">' . htmlspecialchars($barang['satuan'] ?? '-') . '</td>
-                <td>' . htmlspecialchars($barang['pabrik'] ?? '-') . '</td>
-                <td>' . htmlspecialchars($barang['golongan'] ?? '-') . '</td>
-                <td>' . htmlspecialchars($barang['kandungan'] ?? '-') . '</td>
-            </tr>';
+            $no = 1;
+            foreach ($data as $barang) {
+                $html .= '<tr>
+                    <td style="text-align: center;">' . $no++ . '</td>
+                    <td>' . htmlspecialchars($barang['kodebarang'] ?? '-') . '</td>
+                    <td>' . htmlspecialchars($barang['namabarang'] ?? '-') . '</td>
+                    <td style="text-align: center;">' . htmlspecialchars($barang['satuan'] ?? '-') . '</td>
+                    <td>' . htmlspecialchars($barang['pabrik'] ?? '-') . '</td>
+                    <td>' . htmlspecialchars($barang['golongan'] ?? '-') . '</td>
+                    <td>' . htmlspecialchars($barang['kandungan'] ?? '-') . '</td>
+                </tr>';
+            }
+
+            $html .= '</tbody>
+        </table>
+        <div class="footer">
+            <p><strong>Dicetak oleh:</strong> ' . htmlspecialchars(Auth::user()['namalengkap'] ?? 'System') . '</p>
+            <p><strong>Tanggal:</strong> ' . date('d F Y, H:i:s') . '</p>
+        </div>
+    </body>
+</html>';
         }
 
-        $html .= '</tbody>
-    </table>
-    <div class="footer">
-        <p><strong>Dicetak oleh:</strong> ' . htmlspecialchars(Auth::user()['namalengkap'] ?? 'System') . '</p>
-        <p><strong>Tanggal:</strong> ' . date('d F Y, H:i:s') . '</p>
-    </div>
-    <script>
-        window.onload = function() {
-            window.print();
-        };
-    </script>
-</body>
-</html>';
+        // Fallback: Create downloadable HTML that can be printed as PDF in browser
+        $this->downloadAsHTML($html, $filename);
+    }
 
-        // Output HTML that can be printed as PDF by browser
+    private function downloadAsHTML($html, $filename) {
+        // Send as downloadable file
         header('Content-Type: text/html; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '.html"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
         echo $html;
     }
 
@@ -471,7 +477,7 @@ class LaporanController extends Controller {
         }
 
         // Validate sort column
-        $validSortColumns = ['namabarang', 'satuan', 'pabrik', 'stok'];
+        $validSortColumns = ['namabarang', 'satuan', 'hargajual', 'discountjual', 'kondisi', 'stok'];
         $sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'namabarang';
         $sortOrder = strtoupper($sortOrder) === 'DESC' ? 'DESC' : 'ASC';
 
@@ -479,7 +485,9 @@ class LaporanController extends Controller {
         $sortColumnMap = [
             'namabarang' => 'mb.namabarang',
             'satuan' => 'mb.satuan',
-            'pabrik' => 'tp.namapabrik',
+            'hargajual' => 'mb.hargajual',
+            'discountjual' => 'mb.discountjual',
+            'kondisi' => 'mb.kondisi',
             'stok' => 'mb.stokakhir'
         ];
         $orderByColumn = $sortColumnMap[$sortBy] ?? 'mb.namabarang';
@@ -489,7 +497,9 @@ class LaporanController extends Controller {
         $sql = "SELECT 
                     mb.namabarang,
                     mb.satuan,
-                    tp.namapabrik AS pabrik,
+                    mb.hargajual,
+                    mb.discountjual,
+                    mb.kondisi,
                     mb.stokakhir AS stok
                 FROM masterbarang mb
                 LEFT JOIN tabelpabrik tp ON mb.kodepabrik = tp.kodepabrik
@@ -532,7 +542,7 @@ class LaporanController extends Controller {
         }
 
         // Validate sort column
-        $validSortColumns = ['namabarang', 'satuan', 'pabrik', 'stok'];
+        $validSortColumns = ['namabarang', 'satuan', 'hargajual', 'discountjual', 'kondisi', 'stok'];
         $sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'namabarang';
         $sortOrder = strtoupper($sortOrder) === 'DESC' ? 'DESC' : 'ASC';
 
@@ -540,7 +550,9 @@ class LaporanController extends Controller {
         $sortColumnMap = [
             'namabarang' => 'mb.namabarang',
             'satuan' => 'mb.satuan',
-            'pabrik' => 'tp.namapabrik',
+            'hargajual' => 'mb.hargajual',
+            'discountjual' => 'mb.discountjual',
+            'kondisi' => 'mb.kondisi',
             'stok' => 'mb.stokakhir'
         ];
         $orderByColumn = $sortColumnMap[$sortBy] ?? 'mb.namabarang';
@@ -550,7 +562,9 @@ class LaporanController extends Controller {
         $sql = "SELECT 
                     mb.namabarang,
                     mb.satuan,
-                    tp.namapabrik AS pabrik,
+                    mb.hargajual,
+                    mb.discountjual,
+                    mb.kondisi,
                     mb.stokakhir AS stok
                 FROM masterbarang mb
                 LEFT JOIN tabelpabrik tp ON mb.kodepabrik = tp.kodepabrik
@@ -611,14 +625,16 @@ class LaporanController extends Controller {
         $output = fopen('php://output', 'w');
 
         // Header
-        fputcsv($output, ['Nama Barang', 'Satuan', 'Pabrik', 'Stok'], ';');
+        fputcsv($output, ['Nama Barang', 'Satuan', 'Harga Jual', 'Discount', 'Kondisi', 'Stok'], ';');
 
         // Data
         foreach ($barangs as $barang) {
             fputcsv($output, [
                 $barang['namabarang'] ?? '',
                 $barang['satuan'] ?? '',
-                $barang['pabrik'] ?? '',
+                $barang['hargajual'] ?? '0',
+                $barang['discountjual'] ?? '0',
+                $barang['kondisi'] ?? '-',
                 $barang['stok'] ?? '0'
             ], ';');
         }
@@ -627,25 +643,22 @@ class LaporanController extends Controller {
     }
 
     private function exportPDFStok($barangs) {
+        $this->generateAndDownloadPDFStok($barangs);
+    }
+
+    private function generateAndDownloadPDFStok($data) {
+        $filename = 'Daftar_Stok_' . date('Y-m-d_H-i-s') . '.pdf';
+        
         $html = '<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Laporan Daftar Stok</title>
     <style>
-        @media print {
-            @page {
-                size: A4 portrait;
-                margin: 1cm;
-            }
-            body {
-                margin: 0;
-            }
-        }
         body {
             font-family: Arial, sans-serif;
             font-size: 9pt;
-            margin: 20px;
+            margin: 15px;
         }
         h1 {
             text-align: center;
@@ -689,41 +702,45 @@ class LaporanController extends Controller {
         }
         .footer {
             margin-top: 20px;
-            text-align: right;
-            font-size: 9pt;
             padding-top: 10px;
-            border-top: 1px solid #333;
+            border-top: 1px solid #ccc;
+            font-size: 9pt;
+            color: #666;
         }
-        .no-print {
-            display: none;
+        .footer p {
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
-    <h1>LAPORAN DAFTAR STOK</h1>
+    <h1>📋 Laporan Daftar Stok</h1>
     <div class="header-info">
-        <p><strong>Tanggal Cetak:</strong> ' . date('d/m/Y H:i:s') . '</p>
-        <p><strong>Total Data:</strong> ' . number_format(count($barangs)) . ' barang</p>
+        <p><strong>Tanggal Laporan:</strong> ' . date('d F Y, H:i:s') . '</p>
+        <p><strong>Total Barang:</strong> ' . count($data) . '</p>
     </div>
     <table>
         <thead>
             <tr>
-                <th style="width: 5%;">No</th>
-                <th style="width: 40%;">Nama Barang</th>
-                <th style="width: 15%;">Satuan</th>
-                <th style="width: 25%;">Pabrik</th>
-                <th style="width: 15%;">Stok</th>
+                <th style="width: 4%;">No</th>
+                <th style="width: 30%;">Nama Barang</th>
+                <th style="width: 10%;">Satuan</th>
+                <th style="width: 15%;">Harga Jual</th>
+                <th style="width: 12%;">Discount</th>
+                <th style="width: 12%;">Kondisi</th>
+                <th style="width: 12%;">Stok</th>
             </tr>
         </thead>
         <tbody>';
 
         $no = 1;
-        foreach ($barangs as $barang) {
+        foreach ($data as $barang) {
             $html .= '<tr>
                 <td style="text-align: center;">' . $no++ . '</td>
                 <td>' . htmlspecialchars($barang['namabarang'] ?? '-') . '</td>
                 <td style="text-align: center;">' . htmlspecialchars($barang['satuan'] ?? '-') . '</td>
-                <td>' . htmlspecialchars($barang['pabrik'] ?? '-') . '</td>
+                <td style="text-align: right;">' . number_format((float)($barang['hargajual'] ?? 0), 0, ',', '.') . '</td>
+                <td style="text-align: right;">' . number_format((float)($barang['discountjual'] ?? 0), 2, ',', '.') . '%</td>
+                <td style="text-align: left;">' . htmlspecialchars($barang['kondisi'] ?? '-') . '</td>
                 <td style="text-align: right;">' . number_format((float)($barang['stok'] ?? 0), 0, ',', '.') . '</td>
             </tr>';
         }
@@ -734,17 +751,10 @@ class LaporanController extends Controller {
         <p><strong>Dicetak oleh:</strong> ' . htmlspecialchars(Auth::user()['namalengkap'] ?? 'System') . '</p>
         <p><strong>Tanggal:</strong> ' . date('d F Y, H:i:s') . '</p>
     </div>
-    <script>
-        window.onload = function() {
-            window.print();
-        };
-    </script>
 </body>
 </html>';
 
-        // Output HTML that can be printed as PDF by browser
-        header('Content-Type: text/html; charset=utf-8');
-        echo $html;
+        $this->downloadAsHTML($html, $filename);
     }
 
     public function daftarHarga() {
@@ -1001,25 +1011,22 @@ class LaporanController extends Controller {
     }
 
     private function exportPDFHarga($barangs) {
+        $this->generateAndDownloadPDFHarga($barangs);
+    }
+
+    private function generateAndDownloadPDFHarga($data) {
+        $filename = 'Daftar_Harga_' . date('Y-m-d_H-i-s') . '.pdf';
+        
         $html = '<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Laporan Daftar Harga</title>
     <style>
-        @media print {
-            @page {
-                size: A4 portrait;
-                margin: 1cm;
-            }
-            body {
-                margin: 0;
-            }
-        }
         body {
             font-family: Arial, sans-serif;
             font-size: 9pt;
-            margin: 20px;
+            margin: 15px;
         }
         h1 {
             text-align: center;
@@ -1063,21 +1070,21 @@ class LaporanController extends Controller {
         }
         .footer {
             margin-top: 20px;
-            text-align: right;
-            font-size: 9pt;
             padding-top: 10px;
-            border-top: 1px solid #333;
+            border-top: 1px solid #ccc;
+            font-size: 9pt;
+            color: #666;
         }
-        .no-print {
-            display: none;
+        .footer p {
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
-    <h1>LAPORAN DAFTAR HARGA</h1>
+    <h1>📋 Laporan Daftar Harga</h1>
     <div class="header-info">
-        <p><strong>Tanggal Cetak:</strong> ' . date('d/m/Y H:i:s') . '</p>
-        <p><strong>Total Data:</strong> ' . number_format(count($barangs)) . ' barang</p>
+        <p><strong>Tanggal Laporan:</strong> ' . date('d F Y, H:i:s') . '</p>
+        <p><strong>Total Barang:</strong> ' . count($data) . '</p>
     </div>
     <table>
         <thead>
@@ -1095,7 +1102,7 @@ class LaporanController extends Controller {
         <tbody>';
 
         $no = 1;
-        foreach ($barangs as $barang) {
+        foreach ($data as $barang) {
             $html .= '<tr>
                 <td style="text-align: center;">' . $no++ . '</td>
                 <td>' . htmlspecialchars($barang['namabarang'] ?? '-') . '</td>
@@ -1114,17 +1121,10 @@ class LaporanController extends Controller {
         <p><strong>Dicetak oleh:</strong> ' . htmlspecialchars(Auth::user()['namalengkap'] ?? 'System') . '</p>
         <p><strong>Tanggal:</strong> ' . date('d F Y, H:i:s') . '</p>
     </div>
-    <script>
-        window.onload = function() {
-            window.print();
-        };
-    </script>
 </body>
 </html>';
 
-        // Output HTML that can be printed as PDF by browser
-        header('Content-Type: text/html; charset=utf-8');
-        echo $html;
+        $this->downloadAsHTML($html, $filename);
     }
 
     public function daftarTagihan() {
@@ -1133,7 +1133,7 @@ class LaporanController extends Controller {
         $search = trim($_GET['search'] ?? '');
         $kodecustomer = trim($_GET['kodecustomer'] ?? '');
         $statusJatuhTempo = $_GET['status_jatuh_tempo'] ?? 'semua'; // 'semua', 'sudah', 'belum'
-        $sortBy = $_GET['sort_by'] ?? 'tanggalpenjualan';
+        $sortBy = $_GET['sort_by'] ?? 'umur';
         $sortOrder = $_GET['sort_order'] ?? 'DESC';
         $export = $_GET['export'] ?? ''; // 'excel' or 'pdf'
 
@@ -1224,12 +1224,20 @@ class LaporanController extends Controller {
         }
 
         // Validate sort column
-        $validSortColumns = ['nopenjualan', 'tanggalpenjualan', 'tanggaljatuhtempo', 'namacustomer', 'nilaipenjualan', 'saldopenjualan'];
-        $sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'tanggalpenjualan';
+        $validSortColumns = ['nopenjualan', 'tanggalpenjualan', 'tanggaljatuhtempo', 'namacustomer', 'nilaipenjualan', 'saldopenjualan', 'umur'];
+        $sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'umur';
         $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
 
         $whereClause = implode(' AND ', $where);
-        $orderByColumn = $sortBy === 'namacustomer' ? 'mc.namacustomer' : "hp.{$sortBy}";
+        
+        // Determine order by column
+        if ($sortBy === 'namacustomer') {
+            $orderByColumn = 'mc.namacustomer';
+        } elseif ($sortBy === 'umur') {
+            $orderByColumn = 'DATEDIFF(CURDATE(), hp.tanggalpenjualan)';
+        } else {
+            $orderByColumn = "hp.{$sortBy}";
+        }
 
         $sql = "SELECT 
                     hp.nopenjualan,
@@ -1239,7 +1247,8 @@ class LaporanController extends Controller {
                     hp.saldopenjualan,
                     mc.namacustomer,
                     mc.namabadanusaha,
-                    mc.alamatcustomer
+                    mc.alamatcustomer,
+                    DATEDIFF(CURDATE(), hp.tanggalpenjualan) AS umur
                 FROM headerpenjualan hp
                 LEFT JOIN mastercustomer mc ON hp.kodecustomer = mc.kodecustomer
                 WHERE {$whereClause}
@@ -1331,7 +1340,7 @@ class LaporanController extends Controller {
         ];
     }
 
-    private function getAllTagihansForReport($search = '', $kodecustomer = '', $statusJatuhTempo = 'semua', $sortBy = 'tanggalpenjualan', $sortOrder = 'DESC') {
+    private function getAllTagihansForReport($search = '', $kodecustomer = '', $statusJatuhTempo = 'semua', $sortBy = 'umur', $sortOrder = 'DESC') {
         $tanggalSistem = date('Y-m-d');
         
         $where = ["hp.saldopenjualan > 0"];
@@ -1358,12 +1367,20 @@ class LaporanController extends Controller {
         }
 
         // Validate sort column
-        $validSortColumns = ['nopenjualan', 'tanggalpenjualan', 'tanggaljatuhtempo', 'namacustomer', 'nilaipenjualan', 'saldopenjualan'];
-        $sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'tanggalpenjualan';
+        $validSortColumns = ['nopenjualan', 'tanggalpenjualan', 'tanggaljatuhtempo', 'namacustomer', 'nilaipenjualan', 'saldopenjualan', 'umur'];
+        $sortBy = in_array($sortBy, $validSortColumns) ? $sortBy : 'umur';
         $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
 
         $whereClause = implode(' AND ', $where);
-        $orderByColumn = $sortBy === 'namacustomer' ? 'mc.namacustomer' : "hp.{$sortBy}";
+        
+        // Determine order by column
+        if ($sortBy === 'namacustomer') {
+            $orderByColumn = 'mc.namacustomer';
+        } elseif ($sortBy === 'umur') {
+            $orderByColumn = 'DATEDIFF(CURDATE(), hp.tanggalpenjualan)';
+        } else {
+            $orderByColumn = "hp.{$sortBy}";
+        }
 
         $sql = "SELECT 
                     hp.nopenjualan,
@@ -1373,7 +1390,8 @@ class LaporanController extends Controller {
                     hp.saldopenjualan,
                     mc.namacustomer,
                     mc.namabadanusaha,
-                    mc.alamatcustomer
+                    mc.alamatcustomer,
+                    DATEDIFF(CURDATE(), hp.tanggalpenjualan) AS umur
                 FROM headerpenjualan hp
                 LEFT JOIN mastercustomer mc ON hp.kodecustomer = mc.kodecustomer
                 WHERE {$whereClause}
@@ -1435,25 +1453,22 @@ class LaporanController extends Controller {
     }
 
     private function exportPDFTagihan($tagihans) {
+        $this->generateAndDownloadPDFTagihan($tagihans);
+    }
+
+    private function generateAndDownloadPDFTagihan($data) {
+        $filename = 'Daftar_Tagihan_' . date('Y-m-d_H-i-s') . '.pdf';
+        
         $html = '<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Laporan Daftar Tagihan</title>
     <style>
-        @media print {
-            @page {
-                size: A4 landscape;
-                margin: 1cm;
-            }
-            body {
-                margin: 0;
-            }
-        }
         body {
             font-family: Arial, sans-serif;
-            font-size: 8pt;
-            margin: 20px;
+            font-size: 9pt;
+            margin: 15px;
         }
         h1 {
             text-align: center;
@@ -1484,34 +1499,38 @@ class LaporanController extends Controller {
             text-align: left;
         }
         th {
-            background-color: #f8f9fa;
+            background-color: #343a40;
+            color: #fff;
             font-weight: bold;
             text-align: center;
         }
         td {
-            text-align: left;
+            background-color: #fff;
         }
-        td.text-center {
-            text-align: center;
-        }
-        td.text-end {
-            text-align: right;
-        }
-        tr:nth-child(even) {
+        tr:nth-child(even) td {
             background-color: #f8f9fa;
+        }
+        tr.total-row {
+            background-color: #fff3cd;
+            font-weight: bold;
         }
         .footer {
             margin-top: 20px;
             padding-top: 10px;
-            border-top: 1px solid #333;
+            border-top: 1px solid #ccc;
             font-size: 9pt;
+            color: #666;
+        }
+        .footer p {
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
-    <h1>Laporan Daftar Tagihan</h1>
+    <h1>📋 Laporan Daftar Tagihan</h1>
     <div class="header-info">
-        <p><strong>Tanggal Cetak:</strong> ' . date('d F Y, H:i:s') . '</p>
+        <p><strong>Tanggal Laporan:</strong> ' . date('d F Y, H:i:s') . '</p>
+        <p><strong>Total Transaksi:</strong> ' . count($data) . '</p>
     </div>
     <table>
         <thead>
@@ -1522,7 +1541,7 @@ class LaporanController extends Controller {
                 <th style="width: 6%;">Umur</th>
                 <th style="width: 10%;">Jatuh Tempo</th>
                 <th style="width: 20%;">Customer</th>
-                <th style="width: 18%;">Alamat Customer</th>
+                <th style="width: 18%;">Alamat</th>
                 <th style="width: 10%;">Nilai Penjualan</th>
                 <th style="width: 10%;">Saldo Tagihan</th>
             </tr>
@@ -1534,7 +1553,7 @@ class LaporanController extends Controller {
         $totalNilaiPenjualan = 0;
         $totalSaldoTagihan = 0;
 
-        foreach ($tagihans as $tagihan) {
+        foreach ($data as $tagihan) {
             // Hitung umur
             $umur = '-';
             if (!empty($tagihan['tanggalpenjualan'])) {
@@ -1547,7 +1566,6 @@ class LaporanController extends Controller {
                 }
             }
 
-            // Format customer dengan namabadanusaha
             $customerDisplay = $tagihan['namacustomer'] ?? '';
             if ($customerDisplay && !empty($tagihan['namabadanusaha'])) {
                 $customerDisplay .= ', ' . $tagihan['namabadanusaha'];
@@ -1562,7 +1580,7 @@ class LaporanController extends Controller {
                 <td style="text-align: center;">' . $no++ . '</td>
                 <td>' . htmlspecialchars($tagihan['nopenjualan'] ?? '-') . '</td>
                 <td style="text-align: center;">' . ($tagihan['tanggalpenjualan'] ? date('d/m/Y', strtotime($tagihan['tanggalpenjualan'])) : '-') . '</td>
-                <td style="text-align: center;">' . ($umur !== '-' ? $umur . ' hari' : '-') . '</td>
+                <td style="text-align: center;">' . ($umur !== '-' ? $umur . ' h' : '-') . '</td>
                 <td style="text-align: center;">' . ($tagihan['tanggaljatuhtempo'] ? date('d/m/Y', strtotime($tagihan['tanggaljatuhtempo'])) : '-') . '</td>
                 <td>' . htmlspecialchars($customerDisplay ?: '-') . '</td>
                 <td>' . htmlspecialchars($tagihan['alamatcustomer'] ?? '-') . '</td>
@@ -1572,7 +1590,7 @@ class LaporanController extends Controller {
         }
 
         // Grand Total
-        $html .= '<tr style="background-color: #fff3cd; font-weight: bold;">
+        $html .= '<tr class="total-row">
             <td colspan="8" style="text-align: center;">GRAND TOTAL</td>
             <td style="text-align: right;">' . number_format($totalNilaiPenjualan, 0, ',', '.') . '</td>
             <td style="text-align: right;">' . number_format($totalSaldoTagihan, 0, ',', '.') . '</td>
@@ -1584,17 +1602,10 @@ class LaporanController extends Controller {
         <p><strong>Dicetak oleh:</strong> ' . htmlspecialchars(Auth::user()['namalengkap'] ?? 'System') . '</p>
         <p><strong>Tanggal:</strong> ' . date('d F Y, H:i:s') . '</p>
     </div>
-    <script>
-        window.onload = function() {
-            window.print();
-        };
-    </script>
 </body>
 </html>';
 
-        // Output HTML that can be printed as PDF by browser
-        header('Content-Type: text/html; charset=utf-8');
-        echo $html;
+        $this->downloadAsHTML($html, $filename);
     }
 }
 

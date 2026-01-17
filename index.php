@@ -93,6 +93,10 @@ $router->get('/profile/change-password', 'ProfileController', 'changePassword');
 $router->post('/profile/change-password', 'ProfileController', 'changePassword');
 $router->get('/settings', 'ProfileController', 'settings');
 
+// System Setting routes (admin only)
+$router->get('/setting', 'SettingController', 'index');
+$router->post('/setting', 'SettingController', 'index');
+
 // Master Barang routes
 $router->get('/masterbarang', 'MasterbarangController', 'index');
 $router->get('/masterbarang/view/{id}', 'MasterbarangController', 'show');

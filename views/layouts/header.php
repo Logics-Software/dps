@@ -97,6 +97,24 @@ if (!function_exists('icon')) {
 // Get user data if logged in
 $currentUser = Auth::check() ? Auth::user() : null;
 $appConfig = require __DIR__ . '/../../config/app.php';
+
+// Get system settings for menu visibility
+$showOrderMenu = true;
+$showInkasoMenu = true;
+if (Auth::check()) {
+    try {
+        $settingModel = new Setting();
+        $setting = $settingModel->getMainSetting();
+        if ($setting) {
+            $showOrderMenu = ($setting['order_online'] === 'aktif');
+            $showInkasoMenu = ($setting['inkaso_online'] === 'aktif');
+        }
+    } catch (Exception $e) {
+        // Default to true if error
+        error_log("Error loading settings: " . $e->getMessage());
+    }
+}
+
 // Check if current page is /mastercustomer/map to hide header
 $isMapPage = strpos($_SERVER['REQUEST_URI'] ?? '', '/mastercustomer/map') !== false;
 if (Auth::check() && $currentUser && !$isMapPage): ?><header class="app-header">
@@ -126,19 +144,24 @@ if (Auth::check() && $currentUser && !$isMapPage): ?><header class="app-header">
                         <!-- Menu untuk Role Sales -->
                         <a href="/mastercustomer" class="nav-link <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/mastercustomer') !== false ? 'active' : '' ?>">Data Customer</a>
                         <a href="/visits" class="nav-link <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/visits') !== false ? 'active' : '' ?>">Kunjungan</a>
-                        <div class="nav-dropdown">
-                            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
-                                Transaksi
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
-                                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
-                            <div class="nav-dropdown-menu">
-                                <a href="/orders" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/orders') !== false ? 'active' : '' ?>">Order</a>
-                                <a href="/penerimaan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penerimaan') !== false ? 'active' : '' ?>">Inkaso</a>
-                                <a href="/perubahanharga" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/perubahanharga') !== false ? 'active' : '' ?>">Perubahan Harga</a>
+                        <?php if ($showOrderMenu || $showOrderMenu): ?>
+                            <div class="nav-dropdown">
+                                <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
+                                    Transaksi
+                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
+                                        <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </button>
+                                <div class="nav-dropdown-menu">
+                                    <?php if ($showOrderMenu): ?>
+                                    <a href="/orders" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/orders') !== false ? 'active' : '' ?>">Order Penjualan</a>
+                                    <?php endif; ?>
+                                    <?php if ($showInkasoMenu): ?>
+                                    <a href="/penerimaan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penerimaan') !== false ? 'active' : '' ?>">Inkaso</a>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
                         <div class="nav-dropdown">
                             <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
                                 Laporan
@@ -156,6 +179,11 @@ if (Auth::check() && $currentUser && !$isMapPage): ?><header class="app-header">
                         </div>
                         <?php else: ?>
                         <!-- Menu untuk Role Admin, Manajemen, Operator -->
+                        <!-- Menu Setting untuk Role Admin -->
+                        <?php if (Auth::isAdmin()): ?>
+                        <a href="/setting" class="nav-link <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/setting') !== false ? 'active' : '' ?>">Setting</a>
+                        <?php endif; ?>
+
                         <?php if (Auth::isManajemen()): ?>
                         <div class="nav-dropdown">
                             <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
@@ -217,9 +245,13 @@ if (Auth::check() && $currentUser && !$isMapPage): ?><header class="app-header">
                                 </svg>
                             </button>
                             <div class="nav-dropdown-menu">
+                                <?php if ($showOrderMenu): ?>
                                 <a href="/orders" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/orders') !== false ? 'active' : '' ?>">Order Penjualan</a>
+                                <?php endif; ?>
                                 <a href="/penjualan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penjualan') !== false ? 'active' : '' ?>">Penjualan</a>
+                                <?php if ($showInkasoMenu): ?>
                                 <a href="/penerimaan" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/penerimaan') !== false ? 'active' : '' ?>">Inkaso</a>
+                                <?php endif; ?>
                                 <a href="/pembelian" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/pembelian') !== false ? 'active' : '' ?>">Pembelian</a>
                                 <a href="/perubahanharga" class="nav-dropdown-item <?= strpos($_SERVER['REQUEST_URI'] ?? '', '/perubahanharga') !== false ? 'active' : '' ?>">Perubahan Harga</a>
                             </div>

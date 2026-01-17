@@ -68,9 +68,9 @@ require __DIR__ . '/../layouts/header.php';
                                 <span class="d-none d-md-inline">Export Excel</span>
                                 <span class="d-inline d-md-none">Excel</span>
                             </a>
-                            <a href="/laporan/daftar-tagihan?export=pdf<?= !empty($exportQuery) ? '&' . $exportQuery : '' ?>" class="btn btn-danger btn-sm" target="_blank">
+                            <a href="/laporan/daftar-tagihan?export=pdf<?= !empty($exportQuery) ? '&' . $exportQuery : '' ?>" class="btn btn-danger btn-sm">
                                 <?= icon('file-pdf', 'mb-1 me-2', 16) ?>
-                                <span class="d-none d-md-inline">Export PDF</span>
+                                <span class="d-none d-md-inline">Download PDF</span>
                                 <span class="d-inline d-md-none">PDF</span>
                             </a>
                         </div>
@@ -149,7 +149,11 @@ require __DIR__ . '/../layouts/header.php';
                                             Tanggal
                                         </a>
                                     </th>
-                                    <th>Umur</th>
+                                    <th class="th-sortable text-center <?= ($sortBy ?? 'tanggalpenjualan') === 'umur' ? (($sortOrder ?? 'DESC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
+                                        <a href="<?= getSortUrlTagihan('umur', $sortBy ?? 'tanggalpenjualan', $sortOrder ?? 'DESC', $search ?? '', $perPage ?? 10, $kodecustomer ?? '', $statusJatuhTempo ?? 'semua') ?>" class="text-decoration-none text-dark">
+                                            Umur
+                                        </a>
+                                    </th>
                                     <th>Jatuh Tempo</th>
                                     <th class="th-sortable <?= ($sortBy ?? 'tanggalpenjualan') === 'namacustomer' ? (($sortOrder ?? 'DESC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>" style="min-width: 250px;">
                                         <a href="<?= getSortUrlTagihan('namacustomer', $sortBy ?? 'tanggalpenjualan', $sortOrder ?? 'DESC', $search ?? '', $perPage ?? 10, $kodecustomer ?? '', $statusJatuhTempo ?? 'semua') ?>" class="text-decoration-none text-dark">

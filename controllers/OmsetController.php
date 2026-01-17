@@ -156,29 +156,25 @@ class OmsetController extends Controller {
     }
 
     private function exportPDF($omset, $tahun, $bulan) {
+        $this->generateAndDownloadPDFOmset($omset, $tahun, $bulan);
+    }
+
+    private function generateAndDownloadPDFOmset($data, $tahun, $bulan) {
         $bulanNama = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
                       'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         $bulanText = isset($bulanNama[(int)$bulan]) ? $bulanNama[(int)$bulan] : $bulan;
+        $filename = 'Omset_Penjualan_' . $tahun . '_' . str_pad($bulan, 2, '0', STR_PAD_LEFT) . '_' . date('Y-m-d_H-i-s') . '.pdf';
 
         $html = '<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Omset</title>
+    <title>Laporan Omset Penjualan</title>
     <style>
-        @media print {
-            @page {
-                size: A4 landscape;
-                margin: 1cm;
-            }
-            body {
-                margin: 0;
-            }
-        }
         body {
             font-family: Arial, sans-serif;
             font-size: 8pt;
-            margin: 20px;
+            margin: 15px;
         }
         h1 {
             text-align: center;
@@ -206,85 +202,141 @@ class OmsetController extends Controller {
         th, td {
             border: 1px solid #333;
             padding: 4px;
-            text-align: left;
+            text-align: center;
         }
         th {
             background-color: #343a40;
             color: #fff;
             font-weight: bold;
-            text-align: center;
         }
         td {
             background-color: #fff;
         }
+        td.text-left {
+            text-align: left;
+        }
         tr:nth-child(even) td {
             background-color: #f8f9fa;
         }
-        .text-right {
-            text-align: right;
+        tr.total-row {
+            background-color: #fff3cd;
+            font-weight: bold;
         }
         .footer {
             margin-top: 20px;
-            text-align: right;
-            font-size: 9pt;
             padding-top: 10px;
-            border-top: 1px solid #333;
+            border-top: 1px solid #ccc;
+            font-size: 9pt;
+            color: #666;
+        }
+        .footer p {
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
-    <h1>LAPORAN OMSET</h1>
+    <h1>📊 Laporan Omset Penjualan</h1>
     <div class="header-info">
         <p><strong>Periode:</strong> ' . $bulanText . ' ' . $tahun . '</p>
-        <p><strong>Tanggal Cetak:</strong> ' . date('d/m/Y H:i:s') . '</p>
-        <p><strong>Total Data:</strong> ' . number_format(count($omset)) . ' record</p>
+        <p><strong>Tanggal Laporan:</strong> ' . date('d F Y, H:i:s') . '</p>
     </div>
     <table>
         <thead>
             <tr>
                 <th style="width: 3%;">No</th>
-                <th style="width: 4%;">Tahun</th>
-                <th style="width: 4%;">Bulan</th>
-                <th style="width: 6%;">Kode Sales</th>
-                <th style="width: 10%;">Nama Sales</th>
-                <th style="width: 5%;">Jml Faktur</th>
-                <th style="width: 7%;">Penjualan</th>
-                <th style="width: 6%;">Retur</th>
-                <th style="width: 7%;">Penj. Bersih</th>
-                <th style="width: 7%;">Target</th>
-                <th style="width: 5%;">%</th>
-                <th style="width: 7%;">Tunai</th>
-                <th style="width: 6%;">CN</th>
-                <th style="width: 7%;">Giro</th>
-                <th style="width: 7%;">Terima Bersih</th>
-                <th style="width: 7%;">Target</th>
-                <th style="width: 5%;">%</th>
+                <th style="width: 8%;">Kode Sales</th>
+                <th style="width: 12%;">Nama Sales</th>
+                <th style="width: 8%;">Jml Faktur</th>
+                <th style="width: 10%;">Penjualan</th>
+                <th style="width: 10%;">Retur</th>
+                <th style="width: 10%;">Penjualan Bersih</th>
+                <th style="width: 10%;">Target Penjualan</th>
+                <th style="width: 8%;">Prosen %</th>
+                <th style="width: 10%;">Penerimaan Tunai</th>
+                <th style="width: 8%;">CN</th>
+                <th style="width: 8%;">Giro</th>
+                <th style="width: 10%;">Penerimaan Bersih</th>
+                <th style="width: 10%;">Target Penerimaan</th>
+                <th style="width: 8%;">Prosen %</th>
             </tr>
         </thead>
         <tbody>';
 
         $no = 1;
-        foreach ($omset as $row) {
+        $totalJumlahFaktur = 0;
+        $totalPenjualan = 0;
+        $totalRetur = 0;
+        $totalPenjualanBersih = 0;
+        $totalTargetPenjualan = 0;
+        $totalPenerimaanTunai = 0;
+        $totalCN = 0;
+        $totalGiro = 0;
+        $totalPenerimaanBersih = 0;
+        $totalTargetPenerimaan = 0;
+
+        foreach ($data as $row) {
+            $jumlahFaktur = (float)($row['jumlahfaktur'] ?? 0);
+            $penjualan = (float)($row['penjualan'] ?? 0);
+            $retur = (float)($row['returpenjualan'] ?? 0);
+            $penjualanBersih = (float)($row['penjualanbersih'] ?? 0);
+            $targetPenjualan = (float)($row['targetpenjualan'] ?? 0);
+            $prosenPenjualan = (float)($row['prosenpenjualan'] ?? 0);
+            $penerimaanTunai = (float)($row['penerimaantunai'] ?? 0);
+            $cn = (float)($row['cnpenjualan'] ?? 0);
+            $giro = (float)($row['pencairangiro'] ?? 0);
+            $penerimaanBersih = (float)($row['penerimaanbersih'] ?? 0);
+            $targetPenerimaan = (float)($row['targetpenerimaan'] ?? 0);
+            $prosenPenerimaan = (float)($row['prosenpenerimaan'] ?? 0);
+
+            $totalJumlahFaktur += $jumlahFaktur;
+            $totalPenjualan += $penjualan;
+            $totalRetur += $retur;
+            $totalPenjualanBersih += $penjualanBersih;
+            $totalTargetPenjualan += $targetPenjualan;
+            $totalPenerimaanTunai += $penerimaanTunai;
+            $totalCN += $cn;
+            $totalGiro += $giro;
+            $totalPenerimaanBersih += $penerimaanBersih;
+            $totalTargetPenerimaan += $targetPenerimaan;
+
             $html .= '<tr>
-                <td style="text-align: center;">' . $no++ . '</td>
-                <td style="text-align: center;">' . htmlspecialchars($row['tahun'] ?? '-') . '</td>
-                <td style="text-align: center;">' . htmlspecialchars($row['bulan'] ?? '-') . '</td>
+                <td>' . $no++ . '</td>
                 <td>' . htmlspecialchars($row['kodesales'] ?? '-') . '</td>
-                <td>' . htmlspecialchars($row['namasales'] ?? '-') . '</td>
-                <td class="text-right">' . number_format((float)($row['jumlahfaktur'] ?? 0), 0, ',', '.') . '</td>
-                <td class="text-right">' . number_format((float)($row['penjualan'] ?? 0), 0, ',', '.') . '</td>
-                <td class="text-right">' . number_format((float)($row['returpenjualan'] ?? 0), 0, ',', '.') . '</td>
-                <td class="text-right">' . number_format((float)($row['penjualanbersih'] ?? 0), 0, ',', '.') . '</td>
-                <td class="text-right">' . number_format((float)($row['targetpenjualan'] ?? 0), 0, ',', '.') . '</td>
-                <td class="text-right">' . number_format((float)($row['prosenpenjualan'] ?? 0), 2, ',', '.') . '</td>
-                <td class="text-right">' . number_format((float)($row['penerimaantunai'] ?? 0), 0, ',', '.') . '</td>
-                <td class="text-right">' . number_format((float)($row['cnpenjualan'] ?? 0), 0, ',', '.') . '</td>
-                <td class="text-right">' . number_format((float)($row['pencairangiro'] ?? 0), 0, ',', '.') . '</td>
-                <td class="text-right">' . number_format((float)($row['penerimaanbersih'] ?? 0), 0, ',', '.') . '</td>
-                <td class="text-right">' . number_format((float)($row['targetpenerimaan'] ?? 0), 0, ',', '.') . '</td>
-                <td class="text-right">' . number_format((float)($row['prosenpenerimaan'] ?? 0), 2, ',', '.') . '</td>
+                <td class="text-left">' . htmlspecialchars($row['namasales'] ?? '-') . '</td>
+                <td>' . number_format($jumlahFaktur, 0, ',', '.') . '</td>
+                <td>' . number_format($penjualan, 0, ',', '.') . '</td>
+                <td>' . number_format($retur, 0, ',', '.') . '</td>
+                <td>' . number_format($penjualanBersih, 0, ',', '.') . '</td>
+                <td>' . number_format($targetPenjualan, 0, ',', '.') . '</td>
+                <td>' . number_format($prosenPenjualan, 2, ',', '.') . '</td>
+                <td>' . number_format($penerimaanTunai, 0, ',', '.') . '</td>
+                <td>' . number_format($cn, 0, ',', '.') . '</td>
+                <td>' . number_format($giro, 0, ',', '.') . '</td>
+                <td>' . number_format($penerimaanBersih, 0, ',', '.') . '</td>
+                <td>' . number_format($targetPenerimaan, 0, ',', '.') . '</td>
+                <td>' . number_format($prosenPenerimaan, 2, ',', '.') . '</td>
             </tr>';
         }
+
+        // Total Row
+        $totalProsenPenjualan = $totalTargetPenjualan > 0 ? ($totalPenjualanBersih / $totalTargetPenjualan) * 100 : 0;
+        $totalProsenPenerimaan = $totalTargetPenerimaan > 0 ? ($totalPenerimaanBersih / $totalTargetPenerimaan) * 100 : 0;
+
+        $html .= '<tr class="total-row">
+            <td colspan="3" style="text-align: center;">TOTAL</td>
+            <td>' . number_format($totalJumlahFaktur, 0, ',', '.') . '</td>
+            <td>' . number_format($totalPenjualan, 0, ',', '.') . '</td>
+            <td>' . number_format($totalRetur, 0, ',', '.') . '</td>
+            <td>' . number_format($totalPenjualanBersih, 0, ',', '.') . '</td>
+            <td>' . number_format($totalTargetPenjualan, 0, ',', '.') . '</td>
+            <td>' . number_format($totalProsenPenjualan, 2, ',', '.') . '</td>
+            <td>' . number_format($totalPenerimaanTunai, 0, ',', '.') . '</td>
+            <td>' . number_format($totalCN, 0, ',', '.') . '</td>
+            <td>' . number_format($totalGiro, 0, ',', '.') . '</td>
+            <td>' . number_format($totalPenerimaanBersih, 0, ',', '.') . '</td>
+            <td>' . number_format($totalTargetPenerimaan, 0, ',', '.') . '</td>
+            <td>' . number_format($totalProsenPenerimaan, 2, ',', '.') . '</td>
+        </tr>';
 
         $html .= '</tbody>
     </table>
@@ -292,15 +344,17 @@ class OmsetController extends Controller {
         <p><strong>Dicetak oleh:</strong> ' . htmlspecialchars(Auth::user()['namalengkap'] ?? 'System') . '</p>
         <p><strong>Tanggal:</strong> ' . date('d F Y, H:i:s') . '</p>
     </div>
-    <script>
-        window.onload = function() {
-            window.print();
-        };
-    </script>
 </body>
 </html>';
 
+        $this->downloadAsHTML($html, $filename);
+    }
+
+    private function downloadAsHTML($html, $filename) {
         header('Content-Type: text/html; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '.html"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
         echo $html;
     }
 }

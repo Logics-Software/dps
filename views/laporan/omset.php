@@ -55,9 +55,9 @@ $bulanNama = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
                                 <span class="d-none d-md-inline">Export Excel</span>
                                 <span class="d-inline d-md-none">Excel</span>
                             </a>
-                            <a href="/laporan/omset?export=pdf<?= !empty($exportQuery) ? '&' . $exportQuery : '' ?>" class="btn btn-danger btn-sm" target="_blank">
+                            <a href="/laporan/omset?export=pdf<?= !empty($exportQuery) ? '&' . $exportQuery : '' ?>" class="btn btn-danger btn-sm">
                                 <?= icon('file-pdf', 'mb-1 me-2', 16) ?>
-                                <span class="d-none d-md-inline">Export PDF</span>
+                                <span class="d-none d-md-inline">Download PDF</span>
                                 <span class="d-inline d-md-none">PDF</span>
                             </a>
                         </div>

@@ -69,9 +69,9 @@ require __DIR__ . '/../layouts/header.php';
                                 <span class="d-none d-md-inline">Export Excel</span>
                                 <span class="d-inline d-md-none">Excel</span>
                             </a>
-                            <a href="/laporan/daftar-stok?export=pdf<?= !empty($exportQuery) ? '&' . $exportQuery : '' ?>" class="btn btn-danger btn-sm" target="_blank">
+                            <a href="/laporan/daftar-stok?export=pdf<?= !empty($exportQuery) ? '&' . $exportQuery : '' ?>" class="btn btn-danger btn-sm">
                                 <?= icon('file-pdf', 'mb-1 me-2', 16) ?>
-                                <span class="d-none d-md-inline">Export PDF</span>
+                                <span class="d-none d-md-inline">Download PDF</span>
                                 <span class="d-inline d-md-none">PDF</span>
                             </a>
                         </div>
@@ -161,9 +161,19 @@ require __DIR__ . '/../layouts/header.php';
                                         Satuan
                                     </a>
                                 </th>
-                                <th class="th-sortable <?= ($sortBy ?? 'namabarang') === 'pabrik' ? (($sortOrder ?? 'ASC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
-                                    <a href="<?= getSortUrlLaporanStok('pabrik', $sortBy ?? 'namabarang', $sortOrder ?? 'ASC', $search ?? '', $perPage ?? 10, $kodepabrik ?? '', $kodegolongan ?? '', $kondisiStok ?? 'semua') ?>" class="text-decoration-none text-dark">
-                                        Pabrik
+                                <th class="th-sortable text-center <?= ($sortBy ?? 'namabarang') === 'hargajual' ? (($sortOrder ?? 'ASC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
+                                    <a href="<?= getSortUrlLaporanStok('hargajual', $sortBy ?? 'namabarang', $sortOrder ?? 'ASC', $search ?? '', $perPage ?? 10, $kodepabrik ?? '', $kodegolongan ?? '', $kondisiStok ?? 'semua') ?>" class="text-decoration-none text-dark">
+                                        Harga Jual
+                                    </a>
+                                </th>
+                                <th class="th-sortable text-center <?= ($sortBy ?? 'namabarang') === 'discountjual' ? (($sortOrder ?? 'ASC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
+                                    <a href="<?= getSortUrlLaporanStok('discountjual', $sortBy ?? 'namabarang', $sortOrder ?? 'ASC', $search ?? '', $perPage ?? 10, $kodepabrik ?? '', $kodegolongan ?? '', $kondisiStok ?? 'semua') ?>" class="text-decoration-none text-dark">
+                                        Disc
+                                    </a>
+                                </th>
+                                <th class="th-sortable text-center <?= ($sortBy ?? 'namabarang') === 'kondisi' ? (($sortOrder ?? 'ASC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>">
+                                    <a href="<?= getSortUrlLaporanStok('kondisi', $sortBy ?? 'namabarang', $sortOrder ?? 'ASC', $search ?? '', $perPage ?? 10, $kodepabrik ?? '', $kodegolongan ?? '', $kondisiStok ?? 'semua') ?>" class="text-decoration-none text-dark">
+                                        Kondisi
                                     </a>
                                 </th>
                                 <th class="th-sortable text-center <?= ($sortBy ?? 'namabarang') === 'stok' ? (($sortOrder ?? 'ASC') === 'ASC' ? 'sorted-asc' : 'sorted-desc') : '' ?>" style="max-width: 50px;">
@@ -176,7 +186,7 @@ require __DIR__ . '/../layouts/header.php';
                             <tbody>
                                 <?php if (empty($barangs)): ?>
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">Tidak ada data barang</td>
+                                    <td colspan="7" class="text-center text-muted py-4">Tidak ada data barang</td>
                                 </tr>
                                 <?php else: ?>
                                 <?php 
@@ -189,7 +199,9 @@ require __DIR__ . '/../layouts/header.php';
                                     <td align="center"><?= $no++ ?></td>
                                     <td class="sticky-col"><?= htmlspecialchars($barang['namabarang'] ?? '-') ?></td>
                                     <td><?= htmlspecialchars($barang['satuan'] ?? '-') ?></td>
-                                    <td><?= htmlspecialchars($barang['pabrik'] ?? '-') ?></td>
+                                    <td class="text-end"><?= number_format((float)($barang['hargajual'] ?? 0), 0, ',', '.') ?></td>
+                                    <td class="text-end"><?= number_format((float)($barang['discountjual'] ?? 0), 2, ',', '.') ?>%</td>
+                                    <td><?= htmlspecialchars($barang['kondisi'] ?? '-') ?></td>
                                     <td class="text-end"><?= number_format((float)($barang['stok'] ?? 0), 0, ',', '.') ?></td>
                                 </tr>
                                 <?php endforeach; ?>
