@@ -6,6 +6,7 @@ class LaporanController extends Controller {
 
     public function __construct() {
         parent::__construct();
+        require_once __DIR__ . '/../core/LaporanPDF.php';
         $this->barangModel = new Masterbarang();
         $this->pabrikModel = new Tabelpabrik();
         $this->golonganModel = new Tabelgolongan();
@@ -265,120 +266,35 @@ class LaporanController extends Controller {
     }
 
     private function generateAndDownloadPDF($reportType, $data) {
-        $html = '';
-        $filename = '';
+        $filename = 'Daftar_Barang_' . date('Y-m-d_H-i-s') . '.pdf';
+        
+        $pdf = new LaporanPDF('P', 'mm', 'A4');
+        $pdf->reportTitle = 'Laporan Daftar Barang';
+        $pdf->reportSubtitle = "Tanggal Laporan: " . date('d F Y') . "\nTotal Barang: " . count($data);
+        $pdf->printedBy = Auth::user()['namalengkap'] ?? 'System';
+        $pdf->AliasNbPages();
+        $pdf->AddPage();
 
-        if ($reportType === 'daftar-barang') {
-            $filename = 'Daftar_Barang_' . date('Y-m-d_H-i-s') . '.pdf';
-            
-            $html = '<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Laporan Daftar Barang</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 9pt;
-            margin: 15px;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: 18pt;
-            color: #333;
-        }
-        .header-info {
-            margin-bottom: 15px;
-            text-align: center;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-        .header-info p {
-            margin: 5px 0;
-            font-size: 10pt;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 8pt;
-        }
-        th, td {
-            border: 1px solid #333;
-            padding: 5px;
-            text-align: left;
-        }
-        th {
-            background-color: #343a40;
-            color: #fff;
-            font-weight: bold;
-            text-align: center;
-        }
-        td {
-            background-color: #fff;
-        }
-        tr:nth-child(even) td {
-            background-color: #f8f9fa;
-        }
-        .footer {
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ccc;
-            font-size: 9pt;
-            color: #666;
-        }
-        .footer p {
-            margin: 5px 0;
-        }
-    </style>
-</head>
-<body>
-    <h1>📋 Laporan Daftar Barang</h1>
-    <div class="header-info">
-        <p><strong>Tanggal Laporan:</strong> ' . date('d F Y, H:i:s') . '</p>
-        <p><strong>Total Barang:</strong> ' . count($data) . '</p>
-    </div>
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 5%;">No</th>
-                <th style="width: 12%;">Kode Barang</th>
-                <th style="width: 25%;">Nama Barang</th>
-                <th style="width: 8%;">Satuan</th>
-                <th style="width: 15%;">Pabrik</th>
-                <th style="width: 15%;">Golongan</th>
-                <th style="width: 20%;">Kandungan</th>
-            </tr>
-        </thead>
-        <tbody>';
+        $header = ['No', 'Kode', 'Nama Barang', 'Satuan', 'Pabrik', 'Golongan', 'Kandungan'];
+        $widths = [10, 25, 50, 15, 30, 30, 30];
 
-            $no = 1;
-            foreach ($data as $barang) {
-                $html .= '<tr>
-                    <td style="text-align: center;">' . $no++ . '</td>
-                    <td>' . htmlspecialchars($barang['kodebarang'] ?? '-') . '</td>
-                    <td>' . htmlspecialchars($barang['namabarang'] ?? '-') . '</td>
-                    <td style="text-align: center;">' . htmlspecialchars($barang['satuan'] ?? '-') . '</td>
-                    <td>' . htmlspecialchars($barang['pabrik'] ?? '-') . '</td>
-                    <td>' . htmlspecialchars($barang['golongan'] ?? '-') . '</td>
-                    <td>' . htmlspecialchars($barang['kandungan'] ?? '-') . '</td>
-                </tr>';
-            }
+        $pdf->TableHeader($header, $widths);
 
-            $html .= '</tbody>
-        </table>
-        <div class="footer">
-            <p><strong>Dicetak oleh:</strong> ' . htmlspecialchars(Auth::user()['namalengkap'] ?? 'System') . '</p>
-            <p><strong>Tanggal:</strong> ' . date('d F Y, H:i:s') . '</p>
-        </div>
-    </body>
-</html>';
+        $pdf->SetFont('Helvetica', '', 8);
+        $no = 1;
+
+        foreach ($data as $d) {
+            $pdf->Cell($widths[0], 6, $no++, 1, 0, 'C');
+            $pdf->Cell($widths[1], 6, $d['kodebarang'] ?? '-', 1, 0, 'L');
+            $pdf->Cell($widths[2], 6, substr($d['namabarang'] ?? '-', 0, 35), 1, 0, 'L');
+            $pdf->Cell($widths[3], 6, $d['satuan'] ?? '-', 1, 0, 'C');
+            $pdf->Cell($widths[4], 6, substr($d['pabrik'] ?? '-', 0, 15), 1, 0, 'L');
+            $pdf->Cell($widths[5], 6, substr($d['golongan'] ?? '-', 0, 15), 1, 0, 'L');
+            $pdf->Cell($widths[6], 6, substr($d['kandungan'] ?? '-', 0, 18), 1, 0, 'L');
+            $pdf->Ln();
         }
 
-        // Fallback: Create downloadable HTML that can be printed as PDF in browser
-        $this->downloadAsHTML($html, $filename);
+        $pdf->Output('D', $filename);
     }
 
     private function downloadAsHTML($html, $filename) {
@@ -663,112 +579,33 @@ class LaporanController extends Controller {
     private function generateAndDownloadPDFStok($data) {
         $filename = 'Daftar_Stok_' . date('Y-m-d_H-i-s') . '.pdf';
         
-        $html = '<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Laporan Daftar Stok</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 9pt;
-            margin: 15px;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: 18pt;
-            color: #333;
-        }
-        .header-info {
-            margin-bottom: 15px;
-            text-align: center;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-        .header-info p {
-            margin: 5px 0;
-            font-size: 10pt;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 8pt;
-        }
-        th, td {
-            border: 1px solid #333;
-            padding: 5px;
-            text-align: left;
-        }
-        th {
-            background-color: #343a40;
-            color: #fff;
-            font-weight: bold;
-            text-align: center;
-        }
-        td {
-            background-color: #fff;
-        }
-        tr:nth-child(even) td {
-            background-color: #f8f9fa;
-        }
-        .footer {
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ccc;
-            font-size: 9pt;
-            color: #666;
-        }
-        .footer p {
-            margin: 5px 0;
-        }
-    </style>
-</head>
-<body>
-    <h1>📋 Laporan Daftar Stok</h1>
-    <div class="header-info">
-        <p><strong>Tanggal Laporan:</strong> ' . date('d F Y, H:i:s') . '</p>
-        <p><strong>Total Barang:</strong> ' . count($data) . '</p>
-    </div>
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 4%;">No</th>
-                <th style="width: 30%;">Nama Barang</th>
-                <th style="width: 10%;">Satuan</th>
-                <th style="width: 15%;">Harga Jual</th>
-                <th style="width: 12%;">Discount</th>
-                <th style="width: 12%;">Kondisi</th>
-                <th style="width: 12%;">Stok</th>
-            </tr>
-        </thead>
-        <tbody>';
+        $pdf = new LaporanPDF('P', 'mm', 'A4');
+        $pdf->reportTitle = 'Laporan Daftar Stok';
+        $pdf->reportSubtitle = "Tanggal Laporan: " . date('d F Y') . "\nTotal Barang: " . count($data);
+        $pdf->printedBy = Auth::user()['namalengkap'] ?? 'System';
+        $pdf->AliasNbPages();
+        $pdf->AddPage();
 
+        $header = ['No', 'Nama Barang', 'Satuan', 'Harga Jual', 'Disc', 'Kondisi', 'Stok'];
+        $widths = [10, 75, 20, 20, 15, 25, 15];
+
+        $pdf->TableHeader($header, $widths);
+
+        $pdf->SetFont('Helvetica', '', 8);
         $no = 1;
-        foreach ($data as $barang) {
-            $html .= '<tr>
-                <td style="text-align: center;">' . $no++ . '</td>
-                <td>' . htmlspecialchars($barang['namabarang'] ?? '-') . '</td>
-                <td style="text-align: center;">' . htmlspecialchars($barang['satuan'] ?? '-') . '</td>
-                <td style="text-align: right;">' . number_format((float)($barang['hargajual'] ?? 0), 0, ',', '.') . '</td>
-                <td style="text-align: right;">' . number_format((float)($barang['discountjual'] ?? 0), 2, ',', '.') . '%</td>
-                <td style="text-align: left;">' . htmlspecialchars($barang['kondisi'] ?? '-') . '</td>
-                <td style="text-align: right;">' . number_format((float)($barang['stok'] ?? 0), 0, ',', '.') . '</td>
-            </tr>';
+
+        foreach ($data as $d) {
+            $pdf->Cell($widths[0], 6, $no++, 1, 0, 'C');
+            $pdf->Cell($widths[1], 6, substr($d['namabarang'] ?? '-', 0, 40), 1, 0, 'L');
+            $pdf->Cell($widths[2], 6, $d['satuan'] ?? '-', 1, 0, 'C');
+            $pdf->Cell($widths[3], 6, number_format((float)($d['hargajual'] ?? 0), 0, ',', '.'), 1, 0, 'R');
+            $pdf->Cell($widths[4], 6, number_format((float)($d['discountjual'] ?? 0), 2, ',', '.') . '%', 1, 0, 'R');
+            $pdf->Cell($widths[5], 6, substr($d['kondisi'] ?? '-', 0, 15), 1, 0, 'L');
+            $pdf->Cell($widths[6], 6, number_format((float)($d['stok'] ?? 0), 0, ',', '.'), 1, 0, 'R');
+            $pdf->Ln();
         }
 
-        $html .= '</tbody>
-    </table>
-    <div class="footer">
-        <p><strong>Dicetak oleh:</strong> ' . htmlspecialchars(Auth::user()['namalengkap'] ?? 'System') . '</p>
-        <p><strong>Tanggal:</strong> ' . date('d F Y, H:i:s') . '</p>
-    </div>
-</body>
-</html>';
-
-        $this->downloadAsHTML($html, $filename);
+        $pdf->Output('D', $filename);
     }
 
     public function daftarHarga() {
@@ -1031,114 +868,34 @@ class LaporanController extends Controller {
     private function generateAndDownloadPDFHarga($data) {
         $filename = 'Daftar_Harga_' . date('Y-m-d_H-i-s') . '.pdf';
         
-        $html = '<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Laporan Daftar Harga</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 9pt;
-            margin: 15px;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: 18pt;
-            color: #333;
-        }
-        .header-info {
-            margin-bottom: 15px;
-            text-align: center;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-        .header-info p {
-            margin: 5px 0;
-            font-size: 10pt;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 8pt;
-        }
-        th, td {
-            border: 1px solid #333;
-            padding: 5px;
-            text-align: left;
-        }
-        th {
-            background-color: #343a40;
-            color: #fff;
-            font-weight: bold;
-            text-align: center;
-        }
-        td {
-            background-color: #fff;
-        }
-        tr:nth-child(even) td {
-            background-color: #f8f9fa;
-        }
-        .footer {
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ccc;
-            font-size: 9pt;
-            color: #666;
-        }
-        .footer p {
-            margin: 5px 0;
-        }
-    </style>
-</head>
-<body>
-    <h1>📋 Laporan Daftar Harga</h1>
-    <div class="header-info">
-        <p><strong>Tanggal Laporan:</strong> ' . date('d F Y, H:i:s') . '</p>
-        <p><strong>Total Barang:</strong> ' . count($data) . '</p>
-    </div>
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 4%;">No</th>
-                <th style="width: 25%;">Nama Barang</th>
-                <th style="width: 8%;">Satuan</th>
-                <th style="width: 15%;">Pabrik</th>
-                <th style="width: 12%;">Kondisi</th>
-                <th style="width: 10%;">ED</th>
-                <th style="width: 13%;">Harga Jual</th>
-                <th style="width: 13%;">Discount</th>
-            </tr>
-        </thead>
-        <tbody>';
+        $pdf = new LaporanPDF('P', 'mm', 'A4');
+        $pdf->reportTitle = 'Laporan Daftar Harga';
+        $pdf->reportSubtitle = "Tanggal Laporan: " . date('d F Y') . "\nTotal Barang: " . count($data);
+        $pdf->printedBy = Auth::user()['namalengkap'] ?? 'System';
+        $pdf->AliasNbPages();
+        $pdf->AddPage();
 
+        $header = ['No', 'Nama Barang', 'Satuan', 'Pabrik', 'Kondisi', 'ED', 'Harga Jual', 'Disc'];
+        $widths = [10, 50, 15, 25, 20, 20, 25, 15];
+
+        $pdf->TableHeader($header, $widths);
+
+        $pdf->SetFont('Helvetica', '', 8);
         $no = 1;
-        foreach ($data as $barang) {
-            $html .= '<tr>
-                <td style="text-align: center;">' . $no++ . '</td>
-                <td>' . htmlspecialchars($barang['namabarang'] ?? '-') . '</td>
-                <td style="text-align: center;">' . htmlspecialchars($barang['satuan'] ?? '-') . '</td>
-                <td>' . htmlspecialchars($barang['pabrik'] ?? '-') . '</td>
-                <td>' . htmlspecialchars($barang['kondisi'] ?? '-') . '</td>
-                <td>' . htmlspecialchars($barang['ed'] ?? '-') . '</td>
-                <td style="text-align: right;">' . number_format((float)($barang['hargajual'] ?? 0), 0, ',', '.') . '</td>
-                <td style="text-align: right;">' . number_format((float)($barang['discountjual'] ?? 0), 2, ',', '.') . '</td>
-            </tr>';
+
+        foreach ($data as $d) {
+            $pdf->Cell($widths[0], 6, $no++, 1, 0, 'C');
+            $pdf->Cell($widths[1], 6, substr($d['namabarang'] ?? '-', 0, 35), 1, 0, 'L');
+            $pdf->Cell($widths[2], 6, $d['satuan'] ?? '-', 1, 0, 'C');
+            $pdf->Cell($widths[3], 6, substr($d['pabrik'] ?? '-', 0, 15), 1, 0, 'L');
+            $pdf->Cell($widths[4], 6, substr($d['kondisi'] ?? '-', 0, 12), 1, 0, 'L');
+            $pdf->Cell($widths[5], 6, $d['ed'] ?? '-', 1, 0, 'C');
+            $pdf->Cell($widths[6], 6, number_format((float)($d['hargajual'] ?? 0), 0, ',', '.'), 1, 0, 'R');
+            $pdf->Cell($widths[7], 6, number_format((float)($d['discountjual'] ?? 0), 2, ',', '.') . '%', 1, 0, 'R');
+            $pdf->Ln();
         }
 
-        $html .= '</tbody>
-    </table>
-    <div class="footer">
-        <p><strong>Dicetak oleh:</strong> ' . htmlspecialchars(Auth::user()['namalengkap'] ?? 'System') . '</p>
-        <p><strong>Tanggal:</strong> ' . date('d F Y, H:i:s') . '</p>
-    </div>
-</body>
-</html>';
-
-        $this->downloadAsHTML($html, $filename);
+        $pdf->Output('D', $filename);
     }
 
     public function daftarTagihan() {
@@ -1473,153 +1230,61 @@ class LaporanController extends Controller {
     private function generateAndDownloadPDFTagihan($data) {
         $filename = 'Daftar_Tagihan_' . date('Y-m-d_H-i-s') . '.pdf';
         
-        $html = '<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Laporan Daftar Tagihan</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 9pt;
-            margin: 15px;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: 18pt;
-            color: #333;
-        }
-        .header-info {
-            margin-bottom: 15px;
-            text-align: center;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-        .header-info p {
-            margin: 5px 0;
-            font-size: 10pt;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 7pt;
-        }
-        th, td {
-            border: 1px solid #333;
-            padding: 4px;
-            text-align: left;
-        }
-        th {
-            background-color: #343a40;
-            color: #fff;
-            font-weight: bold;
-            text-align: center;
-        }
-        td {
-            background-color: #fff;
-        }
-        tr:nth-child(even) td {
-            background-color: #f8f9fa;
-        }
-        tr.total-row {
-            background-color: #fff3cd;
-            font-weight: bold;
-        }
-        .footer {
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ccc;
-            font-size: 9pt;
-            color: #666;
-        }
-        .footer p {
-            margin: 5px 0;
-        }
-    </style>
-</head>
-<body>
-    <h1>📋 Laporan Daftar Tagihan</h1>
-    <div class="header-info">
-        <p><strong>Tanggal Laporan:</strong> ' . date('d F Y, H:i:s') . '</p>
-        <p><strong>Total Transaksi:</strong> ' . count($data) . '</p>
-    </div>
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 4%;">No</th>
-                <th style="width: 12%;">No.Faktur</th>
-                <th style="width: 10%;">Tanggal</th>
-                <th style="width: 6%;">Umur</th>
-                <th style="width: 10%;">Jatuh Tempo</th>
-                <th style="width: 20%;">Customer</th>
-                <th style="width: 18%;">Alamat</th>
-                <th style="width: 10%;">Nilai Penjualan</th>
-                <th style="width: 10%;">Saldo Tagihan</th>
-            </tr>
-        </thead>
-        <tbody>';
+        $pdf = new LaporanPDF('P', 'mm', 'A4');
+        $pdf->reportTitle = 'Laporan Daftar Tagihan';
+        $pdf->reportSubtitle = "Tanggal Laporan: " . date('d F Y') . "\nTotal Transaksi: " . count($data);
+        $pdf->printedBy = Auth::user()['namalengkap'] ?? 'System';
+        $pdf->AliasNbPages();
+        $pdf->AddPage();
 
+        $header = ['No', 'No.Faktur', 'Tanggal', 'Umur', 'Jatuh Tempo', 'Customer', 'Nilai', 'Saldo'];
+        $widths = [8, 25, 20, 10, 20, 57, 25, 25];
+
+        $pdf->TableHeader($header, $widths);
+
+        $pdf->SetFont('Helvetica', '', 7);
         $no = 1;
         $tanggalSistem = new DateTime();
-        $totalNilaiPenjualan = 0;
-        $totalSaldoTagihan = 0;
+        $totalNilai = 0;
+        $totalSaldo = 0;
 
-        foreach ($data as $tagihan) {
-            // Hitung umur
+        foreach ($data as $d) {
             $umur = '-';
-            if (!empty($tagihan['tanggalpenjualan'])) {
+            if (!empty($d['tanggalpenjualan'])) {
                 try {
-                    $tanggalPenjualan = new DateTime($tagihan['tanggalpenjualan']);
-                    $diff = $tanggalSistem->diff($tanggalPenjualan);
+                    $tgl = new DateTime($d['tanggalpenjualan']);
+                    $diff = $tanggalSistem->diff($tgl);
                     $umur = $diff->days;
-                } catch (Exception $e) {
-                    $umur = '-';
-                }
+                } catch (Exception $e) {}
             }
 
-            $customerDisplay = $tagihan['namacustomer'] ?? '';
-            if ($customerDisplay && !empty($tagihan['namabadanusaha'])) {
-                $customerDisplay .= ', ' . $tagihan['namabadanusaha'];
+            $customer = $d['namacustomer'] ?? '';
+            if ($customer && !empty($d['namabadanusaha'])) {
+                $customer .= ', ' . $d['namabadanusaha'];
             }
 
-            $nilaipenjualan = (float)($tagihan['nilaipenjualan'] ?? 0);
-            $saldopenjualan = (float)($tagihan['saldopenjualan'] ?? 0);
-            $totalNilaiPenjualan += $nilaipenjualan;
-            $totalSaldoTagihan += $saldopenjualan;
+            $nilai = (float)($d['nilaipenjualan'] ?? 0);
+            $saldo = (float)($d['saldopenjualan'] ?? 0);
+            $totalNilai += $nilai;
+            $totalSaldo += $saldo;
 
-            $html .= '<tr>
-                <td style="text-align: center;">' . $no++ . '</td>
-                <td>' . htmlspecialchars($tagihan['nopenjualan'] ?? '-') . '</td>
-                <td style="text-align: center;">' . ($tagihan['tanggalpenjualan'] ? date('d/m/Y', strtotime($tagihan['tanggalpenjualan'])) : '-') . '</td>
-                <td style="text-align: center;">' . ($umur !== '-' ? $umur . ' h' : '-') . '</td>
-                <td style="text-align: center;">' . ($tagihan['tanggaljatuhtempo'] ? date('d/m/Y', strtotime($tagihan['tanggaljatuhtempo'])) : '-') . '</td>
-                <td>' . htmlspecialchars($customerDisplay ?: '-') . '</td>
-                <td>' . htmlspecialchars($tagihan['alamatcustomer'] ?? '-') . '</td>
-                <td style="text-align: right;">' . number_format($nilaipenjualan, 0, ',', '.') . '</td>
-                <td style="text-align: right;">' . number_format($saldopenjualan, 0, ',', '.') . '</td>
-            </tr>';
+            $pdf->Cell($widths[0], 6, $no++, 1, 0, 'C');
+            $pdf->Cell($widths[1], 6, $d['nopenjualan'] ?? '-', 1, 0, 'L');
+            $pdf->Cell($widths[2], 6, $d['tanggalpenjualan'] ? date('d/m/Y', strtotime($d['tanggalpenjualan'])) : '-', 1, 0, 'C');
+            $pdf->Cell($widths[3], 6, ($umur !== '-' ? $umur . ' h' : '-'), 1, 0, 'C');
+            $pdf->Cell($widths[4], 6, $d['tanggaljatuhtempo'] ? date('d/m/Y', strtotime($d['tanggaljatuhtempo'])) : '-', 1, 0, 'C');
+            $pdf->Cell($widths[5], 6, substr($customer, 0, 40), 1, 0, 'L');
+            $pdf->Cell($widths[6], 6, number_format($nilai, 0, ',', '.'), 1, 0, 'R');
+            $pdf->Cell($widths[7], 6, number_format($saldo, 0, ',', '.'), 1, 0, 'R');
+            $pdf->Ln();
         }
 
-        // Grand Total
-        $html .= '<tr class="total-row">
-            <td colspan="8" style="text-align: center;">GRAND TOTAL</td>
-            <td style="text-align: right;">' . number_format($totalNilaiPenjualan, 0, ',', '.') . '</td>
-            <td style="text-align: right;">' . number_format($totalSaldoTagihan, 0, ',', '.') . '</td>
-        </tr>';
+        // Total row
+        $pdf->SetFont('Helvetica', 'B', 7);
+        $pdf->Cell($widths[0] + $widths[1] + $widths[2] + $widths[3] + $widths[4] + $widths[5], 6, 'TOTAL', 1, 0, 'R');
+        $pdf->Cell($widths[6], 6, number_format($totalNilai, 0, ',', '.'), 1, 0, 'R');
+        $pdf->Cell($widths[7], 6, number_format($totalSaldo, 0, ',', '.'), 1, 0, 'R');
 
-        $html .= '</tbody>
-    </table>
-    <div class="footer">
-        <p><strong>Dicetak oleh:</strong> ' . htmlspecialchars(Auth::user()['namalengkap'] ?? 'System') . '</p>
-        <p><strong>Tanggal:</strong> ' . date('d F Y, H:i:s') . '</p>
-    </div>
-</body>
-</html>';
-
-        $this->downloadAsHTML($html, $filename);
+        $pdf->Output('D', $filename);
     }
 }
-
