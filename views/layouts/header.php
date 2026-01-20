@@ -589,11 +589,6 @@ if (Auth::check() && $currentUser && !$isMapPage): ?><header class="app-header">
         });
     });
     </script><?php endif; ?>
-    
-    <!-- Android Download Support Scripts -->
-    <script src="<?= htmlspecialchars($baseUrl) ?>/assets/js/dhainako-download-sdk.js"></script>
-    <script src="<?= htmlspecialchars($baseUrl) ?>/assets/js/dps-download-helper.js"></script>
-    <script src="<?= htmlspecialchars($baseUrl) ?>/assets/js/dps-laporan-download.js"></script>
-    
+        
     <?php require __DIR__ . '/../partials/alerts.php'; ?>
 
