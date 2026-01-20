@@ -589,9 +589,13 @@ if (Auth::check() && $currentUser && !$isMapPage): ?><header class="app-header">
         });
     });
 <<<<<<< HEAD
+<<<<<<< HEAD
     </script><?php endif; ?>
         
     <?php require __DIR__ . '/../partials/alerts.php'; ?>
+=======
+    </script><?php endif; ?><?php require __DIR__ . '/../partials/alerts.php'; ?>
+>>>>>>> parent of a021453 (Update download)
 =======
     </script><?php endif; ?><?php require __DIR__ . '/../partials/alerts.php'; ?>
 >>>>>>> parent of a021453 (Update download)
