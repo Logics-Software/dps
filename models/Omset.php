@@ -28,7 +28,7 @@ class Omset {
 
         $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
-        $sql = "SELECT * FROM omset {$whereClause} ORDER BY tahun DESC, bulan DESC, kodesales ASC LIMIT ? OFFSET ?";
+        $sql = "SELECT * FROM omset {$whereClause} ORDER BY tahun DESC, bulan DESC, namasales ASC LIMIT ? OFFSET ?";
         
         $paramsWithLimit = array_merge($params, [$perPage, $offset]);
         return $this->db->fetchAll($sql, $paramsWithLimit);
