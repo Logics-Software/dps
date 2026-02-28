@@ -355,7 +355,13 @@ class ApiPenjualanController extends Controller {
                 if ($value === '' && $partial) {
                     continue;
                 }
-                $result[$field] = $value;
+                
+                // Handle URL encoding if found in keterangan (common from VB6 bridging)
+                if ($field === 'keterangan' && is_string($value) && (strpos($value, '%') !== false || strpos($value, '+') !== false)) {
+                    $result[$field] = urldecode($value);
+                } else {
+                    $result[$field] = $value;
+                }
             }
         }
 

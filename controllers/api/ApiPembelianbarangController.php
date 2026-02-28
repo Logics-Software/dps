@@ -40,10 +40,11 @@ class ApiPembelianbarangController extends Controller {
         }
     }
 
+
     private function getPembelianbarang() {
         $id = $_GET['id'] ?? null;
         $nopembelian = $_GET['nopembelian'] ?? null;
-        $kodebarang = $_GET['kodebarang'] ?? null;
+        $kodebarang = $this->getFromQuery('kodebarang');
 
         $pembelianModel = new Pembelianbarang();
 
@@ -122,7 +123,13 @@ class ApiPembelianbarangController extends Controller {
         $input = json_decode($rawInput, true);
 
         if (!$input) {
-            $input = $_POST;
+            // Check if it's form-urlencoded (VB6 might send this way)
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+            if (strpos($contentType, 'application/x-www-form-urlencoded') !== false) {
+                $input = $this->parseFormUrlencoded($rawInput);
+            } else {
+                $input = $_POST;
+            }
         }
 
         $required = ['nopembelian', 'tanggalpembelian', 'namasupplier', 'kodebarang'];
@@ -139,7 +146,7 @@ class ApiPembelianbarangController extends Controller {
             'nopembelian' => trim($input['nopembelian']),
             'tanggalpembelian' => $input['tanggalpembelian'],
             'namasupplier' => trim($input['namasupplier']),
-            'kodebarang' => trim($input['kodebarang']),
+            'kodebarang' => is_string($input['kodebarang']) ? trim($input['kodebarang']) : $input['kodebarang'],
             'jumlah' => isset($input['jumlah']) ? (float)$input['jumlah'] : 0,
             'harga' => isset($input['harga']) ? (float)$input['harga'] : 0,
             'discount' => isset($input['discount']) ? (float)$input['discount'] : 0,
@@ -162,13 +169,18 @@ class ApiPembelianbarangController extends Controller {
         $input = json_decode($rawInput, true);
 
         if (!$input) {
-            parse_str($rawInput, $parsedData);
-            $input = $parsedData ?: $_POST;
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+            if (strpos($contentType, 'application/x-www-form-urlencoded') !== false) {
+                $input = $this->parseFormUrlencoded($rawInput);
+            } else {
+                parse_str($rawInput, $parsedData);
+                $input = $parsedData ?: $_POST;
+            }
         }
 
         $id = $input['id'] ?? $_GET['id'] ?? null;
         $nopembelian = $input['nopembelian'] ?? $_GET['nopembelian'] ?? null;
-        $kodebarang = $input['kodebarang'] ?? $_GET['kodebarang'] ?? null;
+        $kodebarang = $input['kodebarang'] ?? $this->getFromQuery('kodebarang');
 
         $pembelianModel = new Pembelianbarang();
 

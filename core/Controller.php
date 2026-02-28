@@ -275,5 +275,63 @@ class Controller {
             return ['success' => false, 'message' => 'Fatal Error: ' . $e->getMessage()];
         }
     }
+
+    /**
+     * Get value from query string, handling plus sign correctly
+     */
+    protected function getFromQuery($name) {
+        if (!isset($_SERVER['QUERY_STRING'])) {
+            return $_GET[$name] ?? null;
+        }
+        
+        $queryString = $_SERVER['QUERY_STRING'];
+        
+        // Extract value directly from raw query string to preserve + signs
+        if (preg_match('/[&?]' . preg_quote($name, '/') . '=([^&]*)/', $queryString, $matches)) {
+            $value = $matches[1];
+            // Decode URL encoding but preserve + signs
+            return rawurldecode($value);
+        }
+        
+        return $_GET[$name] ?? null;
+    }
+
+    /**
+     * Parse form-urlencoded data correctly, handling plus sign
+     */
+    protected function parseFormUrlencoded($rawInput) {
+        if (empty($rawInput)) {
+            return [];
+        }
+        
+        $result = [];
+        $pairs = explode('&', $rawInput);
+        
+        foreach ($pairs as $pair) {
+            if (empty($pair)) continue;
+            
+            $parts = explode('=', $pair, 2);
+            if (count($parts) !== 2) continue;
+            
+            $keyEncoded = $parts[0];
+            $valueEncoded = $parts[1];
+            
+            // Standard form-urlencoded decodes + as space
+            // But we use rawurldecode to preserve + if it was intended as literal
+            // and only decode %XX symbols
+            $key = rawurldecode(str_replace('+', ' ', $keyEncoded));
+            $value = rawurldecode(str_replace('+', ' ', $valueEncoded));
+            
+            if (preg_match('/^(.+)\[\]$/', $key, $matches)) {
+                $arrayKey = $matches[1];
+                if (!isset($result[$arrayKey])) $result[$arrayKey] = [];
+                $result[$arrayKey][] = $value;
+            } else {
+                $result[$key] = $value;
+            }
+        }
+        
+        return $result;
+    }
 }
 

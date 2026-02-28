@@ -27,92 +27,12 @@ class ApiMasterbarangController extends Controller {
         }
     }
 
-    /**
-     * Get kodebarang from query string, handling plus sign correctly
-     * PHP converts + to space in query strings, so we need to parse manually
-     * Extract directly from raw query string and decode properly
-     */
-    private function getKodebarangFromQuery() {
-        if (!isset($_SERVER['QUERY_STRING'])) {
-            return null;
-        }
-        
-        $queryString = $_SERVER['QUERY_STRING'];
-        
-        // Extract kodebarang value directly from raw query string
-        // This preserves + signs that haven't been converted to spaces yet
-        if (preg_match('/[&?]kodebarang=([^&]*)/', $queryString, $matches)) {
-            $value = $matches[1];
-            // Decode URL encoding (%XX) but preserve + signs
-            // rawurldecode only decodes %XX, doesn't convert + to space
-            $value = rawurldecode($value);
-            return $value;
-        }
-        
-        // Fallback to $_GET (but this will have + converted to space)
-        return $_GET['kodebarang'] ?? null;
-    }
-
-    /**
-     * Parse form-urlencoded data correctly, handling plus sign
-     * PHP's parse_str() converts + to space, so we need to parse manually
-     */
-    private function parseFormUrlencoded($rawInput) {
-        if (empty($rawInput)) {
-            return [];
-        }
-        
-        $result = [];
-        
-        // Split by & to get key-value pairs
-        $pairs = explode('&', $rawInput);
-        
-        foreach ($pairs as $pair) {
-            if (empty($pair)) {
-                continue;
-            }
-            
-            // Split key and value
-            $parts = explode('=', $pair, 2);
-            if (count($parts) !== 2) {
-                continue;
-            }
-            
-            // Decode URL encoding
-            // rawurldecode decodes %XX but doesn't convert + to space
-            // urldecode converts + to space but may have issues with some encodings
-            // For form-urlencoded, we need to handle both: convert + to space first, then decode %XX
-            $keyEncoded = $parts[0];
-            $valueEncoded = $parts[1];
-            
-            // Convert + to space (form-urlencoded standard)
-            $keyEncoded = str_replace('+', ' ', $keyEncoded);
-            $valueEncoded = str_replace('+', ' ', $valueEncoded);
-            
-            // Then decode %XX encodings
-            $key = rawurldecode($keyEncoded);
-            $value = rawurldecode($valueEncoded);
-            
-            // Handle array notation (e.g., field[]=value)
-            if (preg_match('/^(.+)\[\]$/', $key, $matches)) {
-                $arrayKey = $matches[1];
-                if (!isset($result[$arrayKey])) {
-                    $result[$arrayKey] = [];
-                }
-                $result[$arrayKey][] = $value;
-            } else {
-                $result[$key] = $value;
-            }
-        }
-        
-        return $result;
-    }
 
     private function getMasterbarang() {
         $id = $_GET['id'] ?? null;
         // Get kodebarang from query string - handle plus sign correctly
         // Try manual parsing first, then fallback to $_GET
-        $kodebarang = $this->getKodebarangFromQuery();
+        $kodebarang = $this->getFromQuery('kodebarang');
         if ($kodebarang === null) {
             $kodebarang = $_GET['kodebarang'] ?? null;
         }
@@ -265,7 +185,7 @@ class ApiMasterbarangController extends Controller {
         $kodebarangToSearch = null;
         
         // First try from query string
-        $kodebarangToSearch = $this->getKodebarangFromQuery();
+        $kodebarangToSearch = $this->getFromQuery('kodebarang');
         if (!$kodebarangToSearch) {
             $kodebarangToSearch = $_GET['kodebarang'] ?? null;
         }
@@ -389,7 +309,7 @@ class ApiMasterbarangController extends Controller {
         // Get kodebarang - prefer from input body, then from query string (handle plus sign correctly)
         $kodebarang = $input['kodebarang'] ?? null;
         if ($kodebarang === null) {
-            $kodebarang = $this->getKodebarangFromQuery();
+            $kodebarang = $this->getFromQuery('kodebarang');
             if ($kodebarang === null) {
                 $kodebarang = $_GET['kodebarang'] ?? null;
             }

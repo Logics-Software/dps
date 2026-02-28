@@ -29,7 +29,7 @@ class ApiPerubahanhargaController extends Controller {
     private function getPerubahanharga() {
         $id = $_GET['id'] ?? null;
         $noperubahan = $_GET['noperubahan'] ?? null;
-        $kodebarang = $_GET['kodebarang'] ?? null;
+        $kodebarang = $this->getFromQuery('kodebarang');
 
         $perubahanhargaModel = new Perubahanharga();
 
@@ -103,10 +103,16 @@ class ApiPerubahanhargaController extends Controller {
     }
 
     private function createPerubahanharga() {
-        $input = json_decode(file_get_contents('php://input'), true);
+        $rawInput = $GLOBALS['_RAW_INPUT'] ?? file_get_contents('php://input');
+        $input = json_decode($rawInput, true);
 
         if (!$input) {
-            $input = $_POST;
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+            if (strpos($contentType, 'application/x-www-form-urlencoded') !== false) {
+                $input = $this->parseFormUrlencoded($rawInput);
+            } else {
+                $input = $_POST;
+            }
         }
 
         $required = ['noperubahan', 'tanggalperubahan', 'keterangan', 'kodebarang'];
@@ -141,16 +147,22 @@ class ApiPerubahanhargaController extends Controller {
     }
 
     private function updatePerubahanharga() {
-        $input = json_decode(file_get_contents('php://input'), true);
+        $rawInput = $GLOBALS['_RAW_INPUT'] ?? file_get_contents('php://input');
+        $input = json_decode($rawInput, true);
 
         if (!$input) {
-            parse_str(file_get_contents('php://input'), $parsedData);
-            $input = $parsedData ?: $_POST;
+            $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+            if (strpos($contentType, 'application/x-www-form-urlencoded') !== false) {
+                $input = $this->parseFormUrlencoded($rawInput);
+            } else {
+                parse_str($rawInput, $parsedData);
+                $input = $parsedData ?: $_POST;
+            }
         }
 
         $id = $input['id'] ?? $_GET['id'] ?? null;
         $noperubahan = $input['noperubahan'] ?? $_GET['noperubahan'] ?? null;
-        $kodebarang = $input['kodebarang'] ?? $_GET['kodebarang'] ?? null;
+        $kodebarang = $input['kodebarang'] ?? $this->getFromQuery('kodebarang');
 
         $perubahanhargaModel = new Perubahanharga();
 
